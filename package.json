@@ -1,0 +1,41 @@
+{
+  "name": "quini-api",
+  "version": "1.0.0",
+  "description": "API REST autenticada para la gestión de una peña de quiniela",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --env-file=.env --import tsx --watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "type": "module",
+  "private": "true",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "9.1.7",
+    "lint-staged": "17.3.0",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.11",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.66.0"
+  },
+  "lint-staged": {
+    "*.{ts,js}": "eslint --fix",
+    "*.{json,md,yml}": "prettier --write"
+  }
+}
