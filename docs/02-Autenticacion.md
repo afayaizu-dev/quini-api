@@ -213,6 +213,30 @@ Si el caso "no existe" respondiera _inmediatamente_ (sin llamar a `verify`) y el
 
 `Cache-Control: no-store` en la respuesta es obligatorio por RFC 6749 (OAuth2): evita que un proxy/CDN/navegador cachee una respuesta que contiene tokens.
 
+### Rate limiting contra fuerza bruta
+
+`POST /auth/token` es el único endpoint donde alguien no autenticado puede probar credenciales repetidamente, así que lleva un limitador (`src/middleware/rate-limit.ts`) montado **antes** de la validación:
+
+```ts
+export const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  handler: (_req, res) => {
+    res.status(429).json({ error: "TOO_MANY_REQUESTS", message: "...", requestId: getRequestId() });
+  },
+});
+```
+
+```ts
+authRouter.post("/token", authRateLimit, validate({ body: TokenRequestSchema }), token);
+```
+
+- **`skipSuccessfulRequests: true`**: solo cuentan hacia el límite las respuestas de error (4xx/5xx). Un cliente legítimo que refresca su token cada pocos minutos son todas peticiones `200` y nunca activan el límite; el contador solo sube con intentos fallidos — el patrón típico de un ataque de fuerza bruta contra contraseñas o de escaneo de refresh tokens.
+- **10 intentos fallidos / 15 min, por IP** (clave por defecto de `express-rate-limit`): margen amplio para un error humano, estrecho para un script.
+- **`handler` personalizado**: en vez de la respuesta por defecto de la librería, devuelve la misma forma `{error, message, requestId}` que usa `error-handler.ts` para el resto de errores de la API — el cliente no puede distinguir un 429 de rate limit de cualquier otro error por la forma de la respuesta.
+- **Pendiente para producción** (F12, detrás de Caddy): hay que activar `app.set('trust proxy', ...)` para que la librería lea la IP real del cliente desde `X-Forwarded-For` en vez de la del propio proxy — si no, todo el tráfico compartiría un único contador.
+
 ---
 
 ## 8. Flujo 2 — Petición autenticada
@@ -401,12 +425,12 @@ Todas las respuestas de error tienen la misma forma, generada en un solo sitio:
 
 ## 13. Catálogo de endpoints
 
-| Método | Ruta                  | Middleware                                     | Body                                                                                                                | Éxito                                                         | Errores                                                      |
-| ------ | --------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
-| POST   | `/api/v1/auth/token`  | `validate(TokenRequestSchema)`                 | `grant_type=password` + `username`/`password`, **o** `grant_type=refresh_token` + `refresh_token` (form-urlencoded) | `200` `{access_token, refresh_token, token_type, expires_in}` | `401` credenciales/refresh inválidos, `400` body mal formado |
-| POST   | `/api/v1/auth/revoke` | `requireAuth`, `validate(RevokeRequestSchema)` | `{ refresh_token }`                                                                                                 | `204`                                                         | `401` sin access token válido                                |
-| POST   | `/api/v1/auth/logout` | `requireAuth`                                  | —                                                                                                                   | `204`                                                         | `401` sin access token válido                                |
-| GET    | `/api/v1/auth/me`     | `requireAuth`                                  | —                                                                                                                   | `200` `{userId, email, role}`                                 | `401` sin access token válido                                |
+| Método | Ruta                  | Middleware                                      | Body                                                                                                                | Éxito                                                         | Errores                                                                                          |
+| ------ | --------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| POST   | `/api/v1/auth/token`  | `authRateLimit`, `validate(TokenRequestSchema)` | `grant_type=password` + `username`/`password`, **o** `grant_type=refresh_token` + `refresh_token` (form-urlencoded) | `200` `{access_token, refresh_token, token_type, expires_in}` | `401` credenciales/refresh inválidos, `400` body mal formado, `429` demasiados intentos fallidos |
+| POST   | `/api/v1/auth/revoke` | `requireAuth`, `validate(RevokeRequestSchema)`  | `{ refresh_token }`                                                                                                 | `204`                                                         | `401` sin access token válido                                                                    |
+| POST   | `/api/v1/auth/logout` | `requireAuth`                                   | —                                                                                                                   | `204`                                                         | `401` sin access token válido                                                                    |
+| GET    | `/api/v1/auth/me`     | `requireAuth`                                   | —                                                                                                                   | `200` `{userId, email, role}`                                 | `401` sin access token válido                                                                    |
 
 ---
 
@@ -425,7 +449,6 @@ Documentados con ejemplos de uso en `commands.md` (raíz del proyecto).
 
 Cosas que **no** están hechas todavía y conviene tener en la cabeza para no darlas por sentadas:
 
-- **Rate limiting en `/auth/token`**: el plan (F4) prevé `express-rate-limit`, pero no está instalado ni montado. Sin él, un login por contraseña es vulnerable a fuerza bruta sin fricción.
 - **RS256 en producción** (D9): hoy todo firma con HS256 (secreto simétrico). El cambio a claves asimétricas está diseñado (`JWT_ALG` ya admite `"RS256"` en `env.ts`) pero no implementado.
 - **`mint-token.ts` no respeta `ENABLE_DEV_TOKENS`**: el `.env` ya define esa variable pensada para desactivar tokens de desarrollo, pero el script solo comprueba `NODE_ENV !== "production"`. Es una inconsistencia menor a revisar.
 - **F5 (invitaciones)** y **F6 (Google OAuth)** todavía no existen: hoy la única forma de crear usuarios es `admin:create`. El registro cerrado por invitación es la siguiente pieza del plan.
