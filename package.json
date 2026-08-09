@@ -22,7 +22,9 @@
     "db:generate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs migrate",
     "db:studio": "node --env-file=.env node_modules/drizzle-kit/bin.cjs studio",
-    "db:embedded": "node --env-file=.env --import tsx scripts/db-embedded.ts"
+    "db:embedded": "node --env-file=.env --import tsx scripts/db-embedded.ts",
+    "admin:create": "node --env-file=.env --import tsx scripts/create-admin.ts",
+    "token": "node --env-file=.env --import tsx scripts/mint-token.ts"
   },
   "keywords": [],
   "type": "module",

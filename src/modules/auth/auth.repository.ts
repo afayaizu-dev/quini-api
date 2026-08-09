@@ -31,6 +31,7 @@ interface CreateUserInput {
 
 export async function createUser(input: CreateUserInput) {
     const [user] = await db.insert(users).values(input).returning();
+    if (!user) throw new Error("createUser: insert no devolvió ninguna fila");
     return user;
 }
 

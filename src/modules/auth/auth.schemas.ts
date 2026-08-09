@@ -22,3 +22,9 @@ export const TokenResponseSchema = z.object({
 });
 
 export type TokenResponse = z.infer<typeof TokenResponseSchema>;
+
+export const RevokeRequestSchema = z.object({
+    refresh_token: z.string().min(1),
+});
+
+export type RevokeRequest = z.infer<typeof RevokeRequestSchema>;

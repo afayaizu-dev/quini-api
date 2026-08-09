@@ -16,6 +16,7 @@ export function createApp(): Application {
     app.use(requestId);
     app.use(httpLogger);
     app.use(express.json({ limit: "100kb" }));
+    app.use(express.urlencoded({ extended: false, limit: "100kb" }));
 
     app.get("/health", (_req, res) => {
         res.status(200).json({ status: "ok", uptime: process.uptime() });
