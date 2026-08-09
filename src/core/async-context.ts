@@ -1,10 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-interface RequestStore {
+interface RequestContext {
     requestId: string;
 }
 
-export const requestContext = new AsyncLocalStorage<RequestStore>();
+export const requestContext = new AsyncLocalStorage<RequestContext>();
 
 export function getRequestId(): string | undefined {
     return requestContext.getStore()?.requestId;
