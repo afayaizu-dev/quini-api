@@ -1,4 +1,4 @@
-# Plan inicial — API Quiniela (REST autenticada)
+# Plan inicial — API quini (REST autenticada)
 
 > **Estado**: propuesta de trabajo con decisiones cerradas. Nada implementado todavía.
 > **Fuente**: `prompts/00-plan-inicial.md`
@@ -223,9 +223,11 @@ Lo que **no** haremos: un servidor de autorización OAuth2 completo (registro de
 > ⚠️ **`embedded-postgres` solo publica prereleases.** Todas sus versiones llevan sufijo `-beta.N`; no existe ninguna estable. No es abandono: el paquete versiona siguiendo a PostgreSQL (líneas 17.x y 18.x) y arrastra ese sufijo. Dos consecuencias:
 >
 > 1. **Fija la versión exacta**, sin `^`: los rangos de semver no capturan prereleases y un `npm i -D embedded-postgres` a secas puede traerte otra línea sin avisar.
+>
 >    ```bash
 >    npm i -D --save-exact embedded-postgres@18.4.0-beta.17
 >    ```
+>
 > 2. **Sigue siendo obligatorio el humo de F3 en tu Mac ARM**: el paquete no declara `os` ni `cpu`, así que no damos por hecho que funcione en Apple Silicon hasta verlo arrancar. Si falla, el plan B (Testcontainers o servicio Postgres en CI) está en §19.
 
 ---
@@ -357,6 +359,7 @@ quini-api/
 │   │   │   └── invitations.schemas.ts
 │   │   ├── users/                  # /auth/me, perfil, listado (admin)
 │   │   ├── temporadas/             # (Q6) mismo patrón de 5 ficheros
+│   │   ├── equipos/                # (F10.5) catálogo normalizado, mismo patrón de 5 ficheros
 │   │   └── jornadas/               # mismo patrón de 5 ficheros
 │   ├── openapi/
 │   │   ├── registry.ts             # registro central de esquemas y rutas
@@ -512,16 +515,16 @@ Las reglas de la sección 4 del prompt se defienden **en dos capas**: Zod rechaz
 
 ### Reglas propias de la normalización de equipos
 
-> **Divergencia consciente respecto al prompt original**: el prompt modelaba `equipoLocal`/`equipoVisitante` como texto libre dentro de `partidos`. Se normaliza en una entidad `equipos` propia porque los nombres de equipo son largos (mala visualización en la quiniela) y porque el texto libre no protege contra duplicados por typo (`"Real Madrid"` vs `"Real  Madrid"`) ni permite mantener un nombre corto consistente en toda la app. El contrato de la API **no cambia** para el cliente: los endpoints de `jornadas` siguen aceptando `equipoLocal`/`equipoVisitante` como texto; es el `service` quien resuelve ese texto contra el catálogo de `equipos` antes de escribir en `partidos`.
+> **Divergencia consciente respecto al prompt original**: el prompt modelaba `equipoLocal`/`equipoVisitante` como texto libre dentro de `partidos`. Se normaliza en una entidad `equipos` propia porque los nombres de equipo son largos (mala visualización en la quini) y porque el texto libre no protege contra duplicados por typo (`"Real Madrid"` vs `"Real  Madrid"`) ni permite mantener un nombre corto consistente en toda la app. El contrato de la API **no cambia** para el cliente: los endpoints de `jornadas` siguen aceptando `equipoLocal`/`equipoVisitante` como texto; es el `service` quien resuelve ese texto contra el catálogo de `equipos` antes de escribir en `partidos`.
 
-| Regla                                                     | Implementación                                                                                                                                                                                          |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Catálogo cerrado, gestionado por admin                    | No hay alta automática al crear un partido: si `equipoLocal`/`equipoVisitante` no existe en `equipos`, la creación de la jornada falla (a decidir: 400 o 404) en vez de crear el equipo sobre la marcha |
-| Nombre largo único, insensible a mayúsculas               | `citext` + `UNIQUE (nombre_largo)` — mismo patrón que `users.email`                                                                                                                                     |
-| Nombre corto y largo no vacíos                            | `NOT NULL` + `CHECK (length(trim(...)) > 0)` en ambas columnas                                                                                                                                          |
-| Un partido no puede enfrentar a un equipo contra sí mismo | `CHECK (equipo_local_id <> equipo_visitante_id)` — solo es expresable como `CHECK` porque ahora son FK, no texto                                                                                        |
+| Regla                                                     | Implementación                                                                                                                                                                                                              |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Catálogo cerrado, gestionado por admin                    | No hay alta automática al crear un partido: si `equipoLocal`/`equipoVisitante` no existe en `equipos`, la creación de la jornada falla con **404 `NOT_FOUND`** en vez de crear el equipo sobre la marcha _(decisión F10.5)_ |
+| Nombre largo único, insensible a mayúsculas               | `citext` + `UNIQUE (nombre_largo)` — mismo patrón que `users.email`                                                                                                                                                         |
+| Nombre corto y largo no vacíos                            | `NOT NULL` + `CHECK (length(trim(...)) > 0)` en ambas columnas                                                                                                                                                              |
+| Un partido no puede enfrentar a un equipo contra sí mismo | `CHECK (equipo_local_id <> equipo_visitante_id)` — solo es expresable como `CHECK` porque ahora son FK, no texto                                                                                                            |
 
-**Pendiente de decidir antes de F11** (implementación de `jornadas`): si `equipos` necesita su propio módulo CRUD (`modules/equipos/`, análogo a `temporadas`) para que el admin lo gestione por API, o si de momento basta con un script de seed. Mientras no se decida, añade a la matriz de aceptación de `jornadas` (§14, F11) un caso nuevo: **POST con un nombre de equipo que no existe en el catálogo ⇒ 400/404**.
+**Decidido**: `equipos` tiene su propio módulo CRUD (`modules/equipos/`, análogo a `temporadas`), gestionado solo por admin vía API — ver **F10.5** (§14). Motivo: en producción Postgres no es accesible directamente (§15), así que el catálogo debe poder mantenerse sin entrar al VPS. La matriz de aceptación de `jornadas` (§14, F11) ya incluye el caso de equipo inexistente.
 
 ### Reglas del acceso cerrado _(Q2)_
 
@@ -562,6 +565,78 @@ sequenceDiagram
     I->>A: GET /api/v1/jornadas (Authorization: Bearer ...)
     A->>A: jwtVerify (firma, exp, iss, aud) → req.auth = { userId, role }
     A-->>I: 200 [...]
+```
+
+### Flujo 1 (detallado) — Login, petición protegida y refresh con rotación
+
+Corresponde al código ya implementado en F4 (`auth.service.ts`, `require-auth.ts`, `require-role.ts`): tres fases en un solo diagrama, para ver cómo se conectan `password.ts`, `tokens.ts` y la tabla `refresh_tokens`.
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant MW as require-auth / require-role
+    participant Svc as auth.service
+    participant Pass as password.ts
+    participant Tok as tokens.ts
+    participant DB as Postgres
+
+    rect rgb(240, 248, 255)
+    Note over C,DB: Login con contraseña
+    C->>Svc: POST /auth/token (grant_type=password)
+    Svc->>DB: findUserByEmail(email)
+    alt usuario no existe o solo Google
+        Svc->>Pass: verify(DUMMY_PASSWORD_HASH, password)
+        Note right of Pass: hash señuelo — mismo coste que un intento real
+        Svc-->>C: 401 UNAUTHORIZED
+    else usuario con contraseña
+        Svc->>Pass: verify(user.passwordHash, password)
+        alt contraseña incorrecta
+            Svc-->>C: 401 UNAUTHORIZED
+        else contraseña correcta
+            Svc->>Tok: signAccessToken({id, email, role})
+            Svc->>Tok: newRefreshToken() / hashRefresh()
+            Svc->>DB: createRefreshToken({userId, tokenHash, familyId, expiresAt})
+            Svc-->>C: 200 {access_token, refresh_token, expires_in}
+        end
+    end
+    end
+
+    rect rgb(255, 250, 240)
+    Note over C,DB: Petición protegida
+    C->>MW: GET /jornadas (Bearer access_token)
+    MW->>Tok: verifyAccessToken(token)
+    alt firma inválida / expirado / iss·aud incorrectos
+        Tok-->>MW: throw
+        MW-->>C: 401 UNAUTHORIZED
+    else token válido
+        Tok-->>MW: {userId, email, role}
+        MW->>MW: req.auth = payload
+        alt requireRole('admin') y role ≠ admin
+            MW-->>C: 403 FORBIDDEN
+        else autorizado
+            MW-->>C: 200 (continúa al controller)
+        end
+    end
+    end
+
+    rect rgb(245, 245, 245)
+    Note over C,DB: Refresh — rotación y detección de reuso
+    C->>Svc: POST /auth/token (grant_type=refresh_token)
+    Svc->>DB: findRefreshTokenByHash(hash)
+    alt no existe
+        Svc-->>C: 401 UNAUTHORIZED
+    else ya estaba revocado (reuso)
+        Svc->>DB: revokeFamily(familyId)
+        Note right of DB: cadena completa invalidada — posible robo
+        Svc-->>C: 401 UNAUTHORIZED
+    else vigente y sin usar
+        Svc->>DB: findUserById(userId)
+        Svc->>DB: revokeRefreshToken(id) — marca este como usado
+        Svc->>Tok: signAccessToken(user) + newRefreshToken()
+        Svc->>DB: createRefreshToken({..., familyId}) — misma familia
+        Svc-->>C: 200 {access_token, refresh_token nuevo}
+    end
+    end
 ```
 
 ### Flujo 2 — Alta por invitación _(Q2)_
@@ -657,7 +732,7 @@ Dos mecanismos, ambos **imposibles de activar en producción**:
 1. **Script CLI** (recomendado, sin superficie de ataque):
 
    ```bash
-   npm run token -- --email=dev@quiniela.local --role=admin --ttl=8h
+   npm run token -- --email=dev@quini.local --role=admin --ttl=8h
    ```
 
    Imprime el JWT listo para pegar en Insomnia. Solo firma, no toca la BD.
@@ -703,6 +778,16 @@ Base: `/api/v1`. La columna **Auth** indica lo mínimo exigido.
 | PUT    | `/temporadas/{codigo}`         | **admin** | Actualiza nombre y fechas (el `codigo` es inmutable) |
 | POST   | `/temporadas/{codigo}/activar` | **admin** | Transacción: desactiva la actual y activa esta       |
 | DELETE | `/temporadas/{codigo}`         | **admin** | 204; **409** si tiene jornadas                       |
+
+### Equipos
+
+| Método | Ruta            | Auth      | Descripción                                         |
+| ------ | --------------- | --------- | --------------------------------------------------- |
+| POST   | `/equipos`      | **admin** | Crea equipo (`nombreLargo`, `nombreCorto`)          |
+| GET    | `/equipos`      | Bearer    | Lista el catálogo completo                          |
+| GET    | `/equipos/{id}` | Bearer    | Detalle                                             |
+| PUT    | `/equipos/{id}` | **admin** | Actualiza nombre largo/corto                        |
+| DELETE | `/equipos/{id}` | **admin** | 204; **409** si tiene partidos jugados (`RESTRICT`) |
 
 ### Jornadas (especificación del prompt + temporada)
 
@@ -870,7 +955,7 @@ node -v && npm -v && docker -v && docker compose version && git --version
 > | Credenciales OAuth de Google | **Diferida**              | Solo **F6**            | Antes de empezar F6       |
 > | VPS + DNS del subdominio     | **No contratado todavía** | Solo **F12** y **F13** | Antes de empezar F12      |
 >
-> **Esto no bloquea nada del camino crítico.** F1 → F2 → F3 → F4 → F5 → F8 → F10 → F11 no necesita ni Google ni VPS: son ~26–35 h de trabajo con una API que arranca, autentica por contraseña, persiste en Postgres local y se prueba entera. Google y el despliegue se enganchan después sin rehacer nada — es justo la razón por la que F6 y F12 se diseñaron como ramas desacopladas del tronco.
+> **Esto no bloquea nada del camino crítico.** F1 → F2 → F3 → F4 → F5 → F8 → F10 → F10.5 → F11 no necesita ni Google ni VPS: son ~26–35 h de trabajo con una API que arranca, autentica por contraseña, persiste en Postgres local y se prueba entera. Google y el despliegue se enganchan después sin rehacer nada — es justo la razón por la que F6 y F12 se diseñaron como ramas desacopladas del tronco.
 >
 > Consecuencia práctica en F4/F5: usa el flujo de invitación + contraseña para todas las pruebas. El campo `password_hash` nullable y la tabla `oauth_accounts` se crean igualmente en las migraciones (no cuesta nada y evita una migración extra después), simplemente no se usan todavía.
 >
@@ -898,7 +983,7 @@ git init -b main
 npm init -y
 
 npm pkg set name="quini-api" private=true type="module" license="UNLICENSED"
-npm pkg set description="API REST autenticada para la gestión de una peña de quiniela"
+npm pkg set description="API REST autenticada para la gestión de una peña de quini"
 npm pkg set engines.node=">=22.6"
 
 npm i -D --save-exact typescript@^5.7.0 @types/node tsx
@@ -978,7 +1063,7 @@ CORS_ORIGINS=http://localhost:5173
 
 # --- Base de datos ---
 DB_MODE=docker                            # docker | embedded
-DATABASE_URL=postgresql://quiniela:quiniela@localhost:5432/quiniela
+DATABASE_URL=postgresql://quini:quini@localhost:5432/quini
 EMBEDDED_PG_PORT=54329
 EMBEDDED_PG_DIR=./.pgdata
 
@@ -1106,20 +1191,20 @@ curl -i -X POST http://localhost:3000/api/v1/echo -H 'Content-Type: application/
 services:
   postgres:
     image: postgres:18-alpine
-    container_name: quiniela-pg
+    container_name: quini-pg
     restart: unless-stopped
     environment:
-      POSTGRES_USER: quiniela
-      POSTGRES_PASSWORD: quiniela
-      POSTGRES_DB: quiniela
+      POSTGRES_USER: quini
+      POSTGRES_PASSWORD: quini
+      POSTGRES_DB: quini
       TZ: UTC
     ports:
       - "5432:5432"
     volumes:
-      - quiniela-pgdata:/var/lib/postgresql/data
+      - quini-pgdata:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U quiniela -d quiniela"]
+      test: ["CMD-SHELL", "pg_isready -U quini -d quini"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -1134,7 +1219,7 @@ services:
         condition: service_healthy
 
 volumes:
-  quiniela-pgdata:
+  quini-pgdata:
 ```
 
 **`docker/initdb/01-extensions.sql`**:
@@ -1152,7 +1237,7 @@ CREATE EXTENSION IF NOT EXISTS citext;
 npm pkg set scripts.db:up="docker compose -f docker/docker-compose.yml up -d"
 npm pkg set scripts.db:down="docker compose -f docker/docker-compose.yml down"
 npm pkg set scripts.db:reset="docker compose -f docker/docker-compose.yml down -v && npm run db:up"
-npm pkg set scripts.db:psql="docker compose -f docker/docker-compose.yml exec postgres psql -U quiniela -d quiniela"
+npm pkg set scripts.db:psql="docker compose -f docker/docker-compose.yml exec postgres psql -U quini -d quini"
 
 npm run db:up
 docker compose -f docker/docker-compose.yml ps
@@ -1264,12 +1349,12 @@ npm pkg set scripts.seed="node --env-file=.env --import tsx scripts/seed.ts"
 **Aceptación** (guarda estos comandos, los usarás a diario):
 
 ```bash
-npm run admin:create -- --email=admin@quiniela.local --nombre="Admin"
+npm run admin:create -- --email=admin@quini.local --nombre="Admin"
 
 # 1) token
 curl -s -X POST http://localhost:3000/api/v1/auth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=password&username=admin@quiniela.local&password=TuPass123!' | tee /tmp/tok.json
+  -d 'grant_type=password&username=admin@quini.local&password=TuPass123!' | tee /tmp/tok.json
 
 export TOKEN=$(jq -r .access_token /tmp/tok.json)
 export RT=$(jq -r .refresh_token /tmp/tok.json)
@@ -1283,7 +1368,7 @@ curl -i http://localhost:3000/api/v1/auth/me
 # 4) contraseña incorrecta → 401 (mismo mensaje que usuario inexistente)
 curl -i -X POST http://localhost:3000/api/v1/auth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=password&username=admin@quiniela.local&password=mal'
+  -d 'grant_type=password&username=admin@quini.local&password=mal'
 
 # 5) refresh con rotación
 curl -s -X POST http://localhost:3000/api/v1/auth/token \
@@ -1518,11 +1603,52 @@ npm run db:psql -- -c 'select codigo, activa from temporadas;'
 
 ---
 
+### F10.5 — Módulo Equipos (≈ 1–2 h)
+
+> **Nota de numeración**: esta fase se insertó después de cerrar F10, cuando se decidió normalizar `equipo_local`/`equipo_visitante` (antes texto libre) en una entidad propia (§7, "Reglas propias de la normalización de equipos"). Se numera **F10.5** en vez de renumerar F11–F14: son fases ya escritas y referenciadas en el roadmap, el checklist y el glosario; renumerarlas no aporta nada y multiplica el riesgo de una errata.
+
+**Objetivo**: catálogo cerrado de equipos, gestionado por admin vía API, para que `jornadas` (F11) pueda referenciarlo por FK en vez de texto libre.
+
+Esquema: tabla `equipos` (§7), ya migrada — `citext` único en `nombre_largo`, `CHECK` de no-vacío en ambos nombres.
+
+| Fichero                 | Responsabilidad                                                          | Detalle crítico                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `equipos.schemas.ts`    | `nombreLargo`/`nombreCorto` con `z.string().trim().min(1)`               | Sin `refine` especiales: la unicidad la garantiza la BD, no Zod                                         |
+| `equipos.repository.ts` | CRUD + `findByNombreLargo(nombre)`                                       | `findByNombreLargo` es lo que usará `jornadas.service.ts` para resolver `equipoLocal`/`equipoVisitante` |
+| `equipos.service.ts`    | `resolveEquipo(nombre)`: devuelve el equipo o lanza **404** si no existe | Punto único que usará el módulo `jornadas` — igual que `resolveTemporada` en F10                        |
+| `equipos.controller.ts` | CRUD estándar                                                            | `DELETE` con partidos jugados → **409** (por el `RESTRICT`)                                             |
+| `equipos.routes.ts`     | Lectura: cualquier autenticado. Escritura: `requireRole('admin')`        |                                                                                                         |
+
+**Matriz de aceptación**:
+
+| #   | Caso                                                   | Esperado |
+| --- | ------------------------------------------------------ | -------- |
+| 1   | POST equipo válido (admin)                             | 201      |
+| 2   | POST con `nombreLargo` duplicado (otra capitalización) | 409      |
+| 3   | POST con `nombreCorto: "  "`                           | 400      |
+| 4   | POST como `user`                                       | 403      |
+| 5   | GET lista (user)                                       | 200      |
+| 6   | DELETE equipo con partidos jugados                     | 409      |
+| 7   | DELETE equipo sin uso (admin)                          | 204      |
+
+**Aceptación**:
+
+```bash
+curl -s -X POST http://localhost:3000/api/v1/equipos \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"nombreLargo":"Real Madrid","nombreCorto":"RM"}' | jq
+npm run db:psql -- -c 'select nombre_largo, nombre_corto from equipos;'
+```
+
+**Qué aprendes**: normalizar un catálogo de referencia con la misma disciplina que una entidad de negocio, y resolver texto de entrada contra un catálogo cerrado (`resolveEquipo`) en vez de crear sobre la marcha.
+
+---
+
 ### F11 — Módulo Jornadas de punta a punta (≈ 4–6 h)
 
 **Objetivo**: implementar la especificación del prompt (con temporada) y dejarla como **plantilla** para los módulos siguientes.
 
-Esquema: `jornadas` y `partidos` con las restricciones de §7. Genera la migración y **lee el `.sql`**: comprueba que están `UNIQUE (temporada_id, numero_jornada)`, los `CHECK` y el `ON DELETE CASCADE`.
+Esquema: `jornadas` y `partidos` con las restricciones de §7. Genera la migración y **lee el `.sql`**: comprueba que están `UNIQUE (temporada_id, numero_jornada)`, los `CHECK` y el `ON DELETE CASCADE`. Depende de **F10.5**: `equipoLocal`/`equipoVisitante` llegan como texto en el body, pero `jornadas.service.ts` los resuelve contra el catálogo con `resolveEquipo` (de `equipos.service.ts`) antes de escribir `equipo_local_id`/`equipo_visitante_id`.
 
 | Fichero                  | Responsabilidad                                                                                                                                        | Detalle crítico                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -1534,35 +1660,36 @@ Esquema: `jornadas` y `partidos` con las restricciones de §7. Genera la migraci
 
 **Matriz de aceptación** (cada fila = un test de integración):
 
-| #   | Caso                                                    | Esperado                                                 |
-| --- | ------------------------------------------------------- | -------------------------------------------------------- |
-| 1   | POST jornada válida (admin)                             | 201 + `Location` + `id` UUID + `temporada` + 15 partidos |
-| 2   | POST mismo `numeroJornada` en la misma temporada        | 409 `CONFLICT`                                           |
-| 3   | **POST mismo `numeroJornada` en otra temporada** _(Q6)_ | **201** (no colisiona)                                   |
-| 4   | POST con 14 partidos                                    | 400                                                      |
-| 5   | POST con 16 partidos                                    | 400                                                      |
-| 6   | POST con `orden` duplicado (1,1,3…)                     | 400                                                      |
-| 7   | POST con hueco en `orden` (1,2,4…)                      | 400                                                      |
-| 8   | POST con `equipoLocal: "  "`                            | 400                                                      |
-| 9   | POST con `fecha: "06-09-2026"`                          | 400                                                      |
-| 10  | POST con `numeroJornada: 0` o negativo                  | 400                                                      |
-| 11  | POST sin token                                          | 401                                                      |
-| 12  | **POST con token de `user`** _(Q4)_                     | **403 `FORBIDDEN`**                                      |
-| 13  | POST sin temporada activa y sin `temporada` en el body  | 404                                                      |
-| 14  | GET lista (user)                                        | 200, solo la temporada activa, ordenada asc              |
-| 15  | GET lista `?temporada=2025-26`                          | 200, solo esa temporada                                  |
-| 16  | GET existente                                           | 200, partidos ordenados 1..15                            |
-| 17  | GET inexistente                                         | 404                                                      |
-| 18  | GET con `numeroJornada` no numérico                     | 400                                                      |
-| 19  | PUT válido (admin)                                      | 200 con el recurso actualizado                           |
-| 20  | PUT como `user`                                         | 403                                                      |
-| 21  | PUT inexistente                                         | 404                                                      |
-| 22  | PUT con partidos inválidos                              | 400 **y la jornada original intacta** (rollback)         |
-| 23  | DELETE existente (admin)                                | 204 sin cuerpo, partidos borrados                        |
-| 24  | DELETE como `user`                                      | 403                                                      |
-| 25  | DELETE inexistente                                      | 404                                                      |
-| 26  | Cualquiera con token expirado                           | 401                                                      |
-| 27  | Respuestas cumplen el esquema OpenAPI                   | contract test verde                                      |
+| #   | Caso                                                              | Esperado                                                 |
+| --- | ----------------------------------------------------------------- | -------------------------------------------------------- |
+| 1   | POST jornada válida (admin)                                       | 201 + `Location` + `id` UUID + `temporada` + 15 partidos |
+| 2   | POST mismo `numeroJornada` en la misma temporada                  | 409 `CONFLICT`                                           |
+| 3   | **POST mismo `numeroJornada` en otra temporada** _(Q6)_           | **201** (no colisiona)                                   |
+| 4   | POST con 14 partidos                                              | 400                                                      |
+| 5   | POST con 16 partidos                                              | 400                                                      |
+| 6   | POST con `orden` duplicado (1,1,3…)                               | 400                                                      |
+| 7   | POST con hueco en `orden` (1,2,4…)                                | 400                                                      |
+| 8   | POST con `equipoLocal: "  "`                                      | 400                                                      |
+| 8b  | **POST con `equipoLocal` que no existe en el catálogo** _(F10.5)_ | **404 `NOT_FOUND`**                                      |
+| 9   | POST con `fecha: "06-09-2026"`                                    | 400                                                      |
+| 10  | POST con `numeroJornada: 0` o negativo                            | 400                                                      |
+| 11  | POST sin token                                                    | 401                                                      |
+| 12  | **POST con token de `user`** _(Q4)_                               | **403 `FORBIDDEN`**                                      |
+| 13  | POST sin temporada activa y sin `temporada` en el body            | 404                                                      |
+| 14  | GET lista (user)                                                  | 200, solo la temporada activa, ordenada asc              |
+| 15  | GET lista `?temporada=2025-26`                                    | 200, solo esa temporada                                  |
+| 16  | GET existente                                                     | 200, partidos ordenados 1..15                            |
+| 17  | GET inexistente                                                   | 404                                                      |
+| 18  | GET con `numeroJornada` no numérico                               | 400                                                      |
+| 19  | PUT válido (admin)                                                | 200 con el recurso actualizado                           |
+| 20  | PUT como `user`                                                   | 403                                                      |
+| 21  | PUT inexistente                                                   | 404                                                      |
+| 22  | PUT con partidos inválidos                                        | 400 **y la jornada original intacta** (rollback)         |
+| 23  | DELETE existente (admin)                                          | 204 sin cuerpo, partidos borrados                        |
+| 24  | DELETE como `user`                                                | 403                                                      |
+| 25  | DELETE inexistente                                                | 404                                                      |
+| 26  | Cualquiera con token expirado                                     | 401                                                      |
+| 27  | Respuestas cumplen el esquema OpenAPI                             | contract test verde                                      |
 
 El caso **22** separa un CRUD correcto de uno que corrompe datos: si el `PUT` borra los partidos y luego falla al insertar, sin transacción te quedas con una jornada sin partidos.
 
@@ -1952,7 +2079,7 @@ Los `-c` del `command` solo se aplican a partir del siguiente reinicio del conte
 ```bash
 docker compose -f docker-compose.prod.yml up -d postgres
 docker compose -f docker-compose.prod.yml exec postgres \
-  psql -U quiniela -d quiniela -c 'show shared_buffers; show effective_cache_size;'
+  psql -U quini -d quini -c 'show shared_buffers; show effective_cache_size;'
 ```
 
 **Consumo de disco de Prometheus** (para que no te sorprenda): con ~1.000 series y un _scrape_ cada 15 s son ~5.760 muestras por serie y día; a ~2 bytes comprimidos por muestra salen **unos 10 MB/día**, es decir ~350 MB en los 30 días de retención. Los topes `--storage.tsdb.retention.time=30d` y `--storage.tsdb.retention.size=2GB` que ya están en F13 hacen de doble freno: si la cardinalidad se te descontrola, el tope por tamaño evita que llene el disco (y la alerta de disco > 80 % te avisa antes).
@@ -2071,7 +2198,7 @@ Diferencias respecto a desarrollo, todas importantes:
 ```dotenv
 NODE_ENV=production
 DB_MODE=docker
-DATABASE_URL=postgresql://quiniela:PASS_LARGA@postgres:5432/quiniela   # host = nombre del servicio
+DATABASE_URL=postgresql://quini:PASS_LARGA@postgres:5432/quini   # host = nombre del servicio
 API_BASE_URL=https://api.tudominio.com
 PUBLIC_APP_URL=https://app.tudominio.com
 CORS_ORIGINS=https://app.tudominio.com
@@ -2120,6 +2247,7 @@ Disparado por tag `v*` o manualmente:
 
 1. `docker build` + push a `ghcr.io/TU_USUARIO/quini-api:${{ github.sha }}` y `:latest`.
 2. SSH al VPS (clave en `secrets.SSH_PRIVATE_KEY`) y ejecutar:
+
    ```bash
    cd ~/quini-api
    export TAG=${{ github.sha }}
@@ -2128,6 +2256,7 @@ Disparado por tag `v*` o manualmente:
    docker compose -f docker-compose.prod.yml up -d api
    docker image prune -f
    ```
+
 3. Comprobación post-deploy: `curl -fsS https://api.tudominio.com/health/ready` y **fallar el workflow si no responde**.
 
 **Usa el SHA como tag, no solo `latest`**: con `latest` no puedes volver atrás. Rollback = `TAG=<sha_anterior> docker compose up -d api`, siempre que la migración sea compatible hacia atrás — motivo para preferir migraciones aditivas (añadir columna nullable antes de dejar de usar la vieja).
@@ -2139,13 +2268,13 @@ Disparado por tag `v*` o manualmente:
 15 3 * * * cd /home/deploy/quini-api && ./backup.sh >> backup.log 2>&1
 ```
 
-El script hace `docker compose exec -T postgres pg_dump -U ... -Fc` a `backups/quiniela-$(date +%F).dump`, borra los de más de 14 días y **copia el último fuera del VPS** (S3/B2/rsync). Un backup que vive solo en la máquina que puede morir no es un backup.
+El script hace `docker compose exec -T postgres pg_dump -U ... -Fc` a `backups/quini-$(date +%F).dump`, borra los de más de 14 días y **copia el último fuera del VPS** (S3/B2/rsync). Un backup que vive solo en la máquina que puede morir no es un backup.
 
 **Prueba de restauración** (hazla el día 1, no el día del desastre):
 
 ```bash
 docker compose -f docker-compose.prod.yml exec -T postgres \
-  pg_restore -U quiniela -d quiniela_restore_test --clean --if-exists < backups/quiniela-2026-08-06.dump
+  pg_restore -U quini -d quini_restore_test --clean --if-exists < backups/quini-2026-08-06.dump
 ```
 
 ### Operación diaria
@@ -2153,7 +2282,7 @@ docker compose -f docker-compose.prod.yml exec -T postgres \
 ```bash
 docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f --tail=100 api
-docker compose -f docker-compose.prod.yml exec postgres psql -U quiniela -d quiniela
+docker compose -f docker-compose.prod.yml exec postgres psql -U quini -d quini
 docker compose -f docker-compose.prod.yml restart api
 docker stats --no-stream
 ```
@@ -2172,7 +2301,7 @@ El log estructurado responde muy bien a **una** pregunta: _"¿qué pasó exactam
 - ¿Cuántos 401 por minuto hay ahora mismo? ¿Es un usuario despistado o alguien probando contraseñas?
 - ¿Se está agotando el pool de conexiones a Postgres?
 - ¿Se ha llenado el disco del VPS? (Causa nº1 de caída en VPS pequeños: Postgres y los logs crecen hasta que no cabe nada.)
-- ¿Está caída la API **ahora**, un domingo a las 19:00, cuando la peña rellena la quiniela?
+- ¿Está caída la API **ahora**, un domingo a las 19:00, cuando la peña rellena la quini?
 
 Los tres tipos de señal, y qué pregunta responde cada uno:
 
@@ -2218,6 +2347,7 @@ Todas las elegidas son open source y **sin cuenta ni suscripción**: se ejecutan
 
 - **Logs**: `docker compose logs --tail=200 api | grep` aguanta mucho más de lo que parece con 30 usuarios. Loki se justifica cuando tengas varios servicios, no uno.
 - **Trazas a demanda**: cuando necesites investigar algo lento, levanta un Jaeger todo-en-uno **temporal** con almacenamiento en memoria, pon `OTEL_ENABLED=true`, reproduce el problema, saca la conclusión y apaga las dos cosas. Observabilidad de usar y tirar: te da la respuesta sin pagar 200 MB permanentes.
+
   ```bash
   docker run -d --rm --name jaeger --network quini-api_default \
     -e COLLECTOR_OTLP_ENABLED=true -p 16686:16686 jaegertracing/all-in-one:latest
@@ -2311,31 +2441,32 @@ Principio: **instrumentar temprano, observar tarde**. La instrumentación es bar
 
 ## 17. Roadmap y estimación
 
-| Fase | Contenido                           | Estimación    | Depende de            | Entregable verificable                           |
-| ---- | ----------------------------------- | ------------- | --------------------- | ------------------------------------------------ |
-| F0   | Prerrequisitos, Google, DNS del VPS | 0,5 h         | —                     | Credenciales y DNS listos                        |
-| F1   | Bootstrap repo                      | 1–1,5 h       | F0                    | `typecheck` + `lint` verdes                      |
-| F2   | Express + config + errores          | 2–3 h         | F1                    | `/health` y contrato de errores                  |
-| F3   | PostgreSQL + Drizzle                | 3–4 h         | F1                    | Migración de `users` aplicada                    |
-| F4   | Auth contraseña + roles             | 4–6 h         | F2, F3                | Token → `/auth/me`, primer admin                 |
-| F5   | Invitaciones + registro cerrado     | 3–4 h         | F4                    | Invitar → registrar → 410 al reusar              |
-| F6   | Google (cerrado por invitación)     | 3–4 h         | F5                    | Login con Gmail; sin invitación → 403            |
-| F7   | OpenAPI + `/docs`                   | 2–3 h         | F5                    | `openapi.json` + UI + Spectral                   |
-| F8   | Testing                             | 4–5 h         | F6, F7                | `npm test` sin Docker                            |
-| F9   | Insomnia                            | 1–2 h         | F7                    | Colección versionada, 403 comprobado             |
-| F10  | Temporadas                          | 2–3 h         | F8                    | Una sola activa garantizada                      |
-| F11  | Jornadas                            | 4–6 h         | F10                   | 27 casos verdes                                  |
-| F12  | Hardening + CI + VPS                | 4–6 h         | F11                   | HTTPS en producción + backup restaurado          |
-| F13  | Observabilidad (§16)                | 3–4 h         | F12                   | Dashboards + alerta probada + monitor externo    |
-| F14  | Skill `/quini-api-new` (D26)        | 2–3 h         | **F11** (obligatorio) | La skill regenera `jornadas` y pasa sus 27 casos |
-|      | **Total**                           | **≈ 39–55 h** |                       |                                                  |
+| Fase  | Contenido                           | Estimación    | Depende de            | Entregable verificable                           |
+| ----- | ----------------------------------- | ------------- | --------------------- | ------------------------------------------------ |
+| F0    | Prerrequisitos, Google, DNS del VPS | 0,5 h         | —                     | Credenciales y DNS listos                        |
+| F1    | Bootstrap repo                      | 1–1,5 h       | F0                    | `typecheck` + `lint` verdes                      |
+| F2    | Express + config + errores          | 2–3 h         | F1                    | `/health` y contrato de errores                  |
+| F3    | PostgreSQL + Drizzle                | 3–4 h         | F1                    | Migración de `users` aplicada                    |
+| F4    | Auth contraseña + roles             | 4–6 h         | F2, F3                | Token → `/auth/me`, primer admin                 |
+| F5    | Invitaciones + registro cerrado     | 3–4 h         | F4                    | Invitar → registrar → 410 al reusar              |
+| F6    | Google (cerrado por invitación)     | 3–4 h         | F5                    | Login con Gmail; sin invitación → 403            |
+| F7    | OpenAPI + `/docs`                   | 2–3 h         | F5                    | `openapi.json` + UI + Spectral                   |
+| F8    | Testing                             | 4–5 h         | F6, F7                | `npm test` sin Docker                            |
+| F9    | Insomnia                            | 1–2 h         | F7                    | Colección versionada, 403 comprobado             |
+| F10   | Temporadas                          | 2–3 h         | F8                    | Una sola activa garantizada                      |
+| F10.5 | Equipos                             | 1–2 h         | F10                   | Catálogo gestionado por admin vía API            |
+| F11   | Jornadas                            | 4–6 h         | F10.5                 | 27 + 1 casos verdes                              |
+| F12   | Hardening + CI + VPS                | 4–6 h         | F11                   | HTTPS en producción + backup restaurado          |
+| F13   | Observabilidad (§16)                | 3–4 h         | F12                   | Dashboards + alerta probada + monitor externo    |
+| F14   | Skill `/quini-api-new` (D26)        | 2–3 h         | **F11** (obligatorio) | La skill regenera `jornadas` y pasa sus 27 casos |
+|       | **Total**                           | **≈ 39–55 h** |                       |                                                  |
 
 La instrumentación de métricas **no** aparece como fase propia: son ~30 líneas en F2 y unos contadores repartidos por F3–F11 (§16, última tabla). Ese reparto ya está dentro de las estimaciones de cada fase.
 
-**Camino crítico**: F1 → F2 → F3 → F4 → F5 → F8 → F10 → F11 → F12.
+**Camino crítico**: F1 → F2 → F3 → F4 → F5 → F8 → F10 → F10.5 → F11 → F12.
 F6 (Google), F7 (OpenAPI) y F9 (Insomnia) admiten reordenación. F13 va necesariamente al final: no puedes observar lo que aún no está desplegado. F14 exige F11 terminado: no puedes automatizar un patrón que todavía no existe.
 
-**Si quieres ver algo funcionando cuanto antes** (medio día): F1 → F2 → F3 → F4 mínimo (solo password grant, sin refresh) → F10 → F11. Luego añades invitaciones, Google, OpenAPI e Insomnia. Riesgo: la validación con Zod es tan central que posponerla obliga a reescribir controllers; **no** la dejes para el final.
+**Si quieres ver algo funcionando cuanto antes** (medio día): F1 → F2 → F3 → F4 mínimo (solo password grant, sin refresh) → F10 → F10.5 → F11. Luego añades invitaciones, Google, OpenAPI e Insomnia. Riesgo: la validación con Zod es tan central que posponerla obliga a reescribir controllers; **no** la dejes para el final.
 
 **Orden que recomiendo**: el secuencial (F0→F12). Cada fase se apoya en la anterior y ninguna obliga a volver atrás.
 
@@ -2363,7 +2494,7 @@ F6 (Google), F7 (OpenAPI) y F9 (Insomnia) admiten reordenación. F13 va necesari
 - [ ] Índice único parcial de **una invitación pendiente por email**
 - [ ] `timestamptz` en todas las fechas-hora
 
-**Autenticación y autorización**
+## Autenticación y autorización
 
 - [ ] `POST /auth/token` con `grant_type=password`
 - [ ] `grant_type=refresh_token` con rotación y detección de reuso
@@ -2379,14 +2510,14 @@ F6 (Google), F7 (OpenAPI) y F9 (Insomnia) admiten reordenación. F13 va necesari
 - [ ] 401 genérico y de tiempo constante
 - [ ] Generador de tokens de dev imposible en producción
 
-**Documentación**
+## Documentación
 
 - [ ] `openapi.json` generado desde Zod y commiteado
 - [ ] Swagger UI en `/docs` con auth funcional
 - [ ] Spectral en CI exigiendo descripciones, ejemplos, 401 y 403
 - [ ] CI falla si el OpenAPI está desactualizado
 
-**Testing**
+## Testing
 
 - [ ] `npm test` autónomo (BD propia, sin Docker)
 - [ ] Batería de 7 casos de auth (con el 403 de rol) en cada endpoint protegido
@@ -2394,7 +2525,7 @@ F6 (Google), F7 (OpenAPI) y F9 (Insomnia) admiten reordenación. F13 va necesari
 - [ ] Contract tests contra el OpenAPI
 - [ ] Umbrales de cobertura en CI
 
-**Producción (VPS)**
+## Producción (VPS)
 
 - [ ] SSH solo con clave, root deshabilitado, `ufw` con 22/80/443
 - [ ] `fail2ban` y `unattended-upgrades` activos
