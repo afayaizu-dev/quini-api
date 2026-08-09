@@ -324,6 +324,7 @@ quini-api/
 │   │   │   ├── oauth-accounts.ts
 │   │   │   ├── refresh-tokens.ts
 │   │   │   ├── temporadas.ts       # (Q6)
+│   │   │   ├── equipos.ts          # normalización de equipo_local/equipo_visitante
 │   │   │   ├── jornadas.ts         # jornadas + partidos
 │   │   │   └── index.ts            # re-exporta todo (lo lee drizzle-kit)
 │   │   └── migrate.ts              # aplica migraciones programáticamente
@@ -410,6 +411,8 @@ erDiagram
     USERS ||--o{ INVITATIONS : "emite"
     TEMPORADAS ||--o{ JORNADAS : "agrupa"
     JORNADAS ||--|{ PARTIDOS : "contiene 15"
+    EQUIPOS ||--o{ PARTIDOS : "juega como local"
+    EQUIPOS ||--o{ PARTIDOS : "juega como visitante"
 
     USERS {
         uuid id PK
@@ -472,8 +475,14 @@ erDiagram
         uuid id PK
         uuid jornada_id FK
         smallint orden "1..15"
-        text equipo_local
-        text equipo_visitante
+        uuid equipo_local_id FK
+        uuid equipo_visitante_id FK
+    }
+    EQUIPOS {
+        uuid id PK
+        citext nombre_largo UK "Real Madrid"
+        text nombre_corto "RM"
+        timestamptz created_at
     }
 ```
 
@@ -481,14 +490,15 @@ erDiagram
 
 Las reglas de la sección 4 del prompt se defienden **en dos capas**: Zod rechaza en el borde (400) y Postgres garantiza la integridad (409 / imposible). Nunca confíes solo en el código: dos peticiones concurrentes pasan la validación a la vez.
 
-| Regla del prompt                      | Defensa en Zod (→400)                          | Defensa en PostgreSQL                                                                                    |
-| ------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `numeroJornada` único y ≥ 1           | `z.number().int().positive()`                  | **`UNIQUE (temporada_id, numero_jornada)`** _(Q6)_ + `CHECK (numero_jornada >= 1)` → violación ⇒ **409** |
-| `fecha` ISO 8601 válida               | `z.string().date()`                            | Columna `DATE`                                                                                           |
-| Exactamente 15 partidos               | `.length(15)` en el array                      | Validado dentro de la transacción del service                                                            |
-| `orden` = 1..15 sin repetir ni huecos | `refine` que compara el conjunto con `[1..15]` | `UNIQUE (jornada_id, orden)` + `CHECK (orden BETWEEN 1 AND 15)`                                          |
-| Equipos obligatorios y no vacíos      | `z.string().trim().min(1)`                     | `NOT NULL` + `CHECK (length(trim(equipo_local)) > 0)`                                                    |
-| Borrado de jornada elimina partidos   | —                                              | `FOREIGN KEY ... ON DELETE CASCADE`                                                                      |
+| Regla del prompt                                | Defensa en Zod (→400)                                  | Defensa en PostgreSQL                                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `numeroJornada` único y ≥ 1                     | `z.number().int().positive()`                          | **`UNIQUE (temporada_id, numero_jornada)`** _(Q6)_ + `CHECK (numero_jornada >= 1)` → violación ⇒ **409** |
+| `fecha` ISO 8601 válida                         | `z.string().date()`                                    | Columna `DATE`                                                                                           |
+| Exactamente 15 partidos                         | `.length(15)` en el array                              | Validado dentro de la transacción del service                                                            |
+| `orden` = 1..15 sin repetir ni huecos           | `refine` que compara el conjunto con `[1..15]`         | `UNIQUE (jornada_id, orden)` + `CHECK (orden BETWEEN 1 AND 15)`                                          |
+| Equipo local y visitante no pueden ser el mismo | `refine` que compara `equipoLocal !== equipoVisitante` | `CHECK (equipo_local_id <> equipo_visitante_id)`                                                         |
+| Borrado de jornada elimina partidos             | —                                                      | `FOREIGN KEY (jornada_id) ... ON DELETE CASCADE`                                                         |
+| No borrar un equipo con partidos jugados        | —                                                      | `FOREIGN KEY (equipo_local_id / equipo_visitante_id) ... ON DELETE RESTRICT` → intento ⇒ **409**         |
 
 ### Reglas propias del modelo con temporadas _(Q6)_
 
@@ -499,6 +509,19 @@ Las reglas de la sección 4 del prompt se defienden **en dos capas**: Zod rechaz
 | Coherencia de fechas                              | `CHECK (fecha_fin > fecha_inicio)`                                                                                                                                                   |
 | No borrar una temporada con jornadas              | `FOREIGN KEY ... ON DELETE RESTRICT` → intento ⇒ **409**. Un `CASCADE` aquí borraría 38 jornadas por un `DELETE` mal escrito                                                         |
 | La fecha de la jornada cae dentro de la temporada | Regla de **negocio** (en el service), no `CHECK`: los aplazamientos se salen del rango y no quieres que la BD te bloquee                                                             |
+
+### Reglas propias de la normalización de equipos
+
+> **Divergencia consciente respecto al prompt original**: el prompt modelaba `equipoLocal`/`equipoVisitante` como texto libre dentro de `partidos`. Se normaliza en una entidad `equipos` propia porque los nombres de equipo son largos (mala visualización en la quiniela) y porque el texto libre no protege contra duplicados por typo (`"Real Madrid"` vs `"Real  Madrid"`) ni permite mantener un nombre corto consistente en toda la app. El contrato de la API **no cambia** para el cliente: los endpoints de `jornadas` siguen aceptando `equipoLocal`/`equipoVisitante` como texto; es el `service` quien resuelve ese texto contra el catálogo de `equipos` antes de escribir en `partidos`.
+
+| Regla                                                     | Implementación                                                                                                                                                                                          |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Catálogo cerrado, gestionado por admin                    | No hay alta automática al crear un partido: si `equipoLocal`/`equipoVisitante` no existe en `equipos`, la creación de la jornada falla (a decidir: 400 o 404) en vez de crear el equipo sobre la marcha |
+| Nombre largo único, insensible a mayúsculas               | `citext` + `UNIQUE (nombre_largo)` — mismo patrón que `users.email`                                                                                                                                     |
+| Nombre corto y largo no vacíos                            | `NOT NULL` + `CHECK (length(trim(...)) > 0)` en ambas columnas                                                                                                                                          |
+| Un partido no puede enfrentar a un equipo contra sí mismo | `CHECK (equipo_local_id <> equipo_visitante_id)` — solo es expresable como `CHECK` porque ahora son FK, no texto                                                                                        |
+
+**Pendiente de decidir antes de F11** (implementación de `jornadas`): si `equipos` necesita su propio módulo CRUD (`modules/equipos/`, análogo a `temporadas`) para que el admin lo gestione por API, o si de momento basta con un script de seed. Mientras no se decida, añade a la matriz de aceptación de `jornadas` (§14, F11) un caso nuevo: **POST con un nombre de equipo que no existe en el catálogo ⇒ 400/404**.
 
 ### Reglas del acceso cerrado _(Q2)_
 
