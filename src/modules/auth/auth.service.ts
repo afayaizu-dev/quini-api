@@ -9,10 +9,14 @@ import {
     revokeAllUserTokens,
     revokeFamily,
     revokeRefreshToken,
+    createUser,
 } from "./auth.repository.js";
 import type { TokenResponse } from "./auth.schemas.js";
 import { hash, verify } from "./password.js";
 import { hashRefresh, newRefreshToken, signAccessToken } from "./tokens.js";
+import { parseTtlToMs } from "../../core/ttl.js";
+import { db } from "../../db/index.js";
+import * as invitationsService from "../invitations/invitations.service.js";
 
 const DUMMY_PASSWORD_HASH = await hash(randomBytes(32).toString("hex"));
 
@@ -21,15 +25,6 @@ interface RequestMeta {
     ip?: string;
 }
 
-function parseTtlToMs(ttl: string): number {
-    const match = /^(\d+)(s|m|h|d)$/.exec(ttl);
-    if (!match) {
-        throw new Error(`TTL con formato no soportado: "${ttl}"`);
-    }
-    const [, amount, unit] = match;
-    const unitMs = { s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000 }[unit as "s" | "m" | "h" | "d"];
-    return Number(amount) * unitMs;
-}
 
 async function issueTokenPair(
     user: { id: string; email: string; role: string },
@@ -112,4 +107,19 @@ export async function revoke(refreshToken: string): Promise<void> {
 
 export async function logoutAll(userId: string): Promise<void> {
     await revokeAllUserTokens(userId);
+}
+
+
+export async function registerWithInvitation(
+    input: { token: string; password: string; nombre: string },
+    meta: RequestMeta,
+): Promise<TokenResponse> {
+    const passwordHash = await hash(input.password);
+
+    const user = await db.transaction(async (tx) => {
+        const invitation = await invitationsService.consume(input.token, tx);
+        return createUser({ email: invitation.email, passwordHash, nombre: input.nombre, role: invitation.role }, tx);
+    });
+
+    return issueTokenPair(user, meta);
 }

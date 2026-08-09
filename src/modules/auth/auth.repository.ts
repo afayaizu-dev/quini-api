@@ -1,5 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { db } from "../../db/index.js";
+import { db, type DbOrTx } from "../../db/index.js";
 import { refreshTokens } from "../../db/schema/refresh-tokens.js";
 import { users } from "../../db/schema/users.js";
 
@@ -29,8 +29,8 @@ interface CreateUserInput {
     role: "user" | "admin";
 }
 
-export async function createUser(input: CreateUserInput) {
-    const [user] = await db.insert(users).values(input).returning();
+export async function createUser(input: CreateUserInput, tx: DbOrTx = db) {
+    const [user] = await tx.insert(users).values(input).returning();
     if (!user) throw new Error("createUser: insert no devolvió ninguna fila");
     return user;
 }

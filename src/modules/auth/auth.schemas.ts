@@ -28,3 +28,12 @@ export const RevokeRequestSchema = z.object({
 });
 
 export type RevokeRequest = z.infer<typeof RevokeRequestSchema>;
+
+
+export const RegisterRequestSchema = z.object({
+    token: z.string().min(1),
+    password: z.string().min(12),
+    nombre: z.string().trim().min(1),
+});
+
+export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
