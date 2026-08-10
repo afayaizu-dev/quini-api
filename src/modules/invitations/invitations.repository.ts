@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, gt, isNull } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { invitations } from "../../db/schema/invitations.js";
 
@@ -23,4 +23,19 @@ export async function findInvitationByHash(tokenHash: string, tx: DbOrTx = db) {
 
 export async function markInvitationAccepted(id: string, tx: DbOrTx = db): Promise<void> {
     await tx.update(invitations).set({ acceptedAt: new Date() }).where(eq(invitations.id, id));
+}
+
+export async function findUsableInvitationByEmail(email: string, tx: DbOrTx = db) {
+    const [invitation] = await tx
+        .select()
+        .from(invitations)
+        .where(
+            and(
+                eq(invitations.email, email),
+                isNull(invitations.acceptedAt),
+                isNull(invitations.revokedAt),
+                gt(invitations.expiresAt, new Date()),
+            ),
+        );
+    return invitation;
 }

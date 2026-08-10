@@ -47,3 +47,10 @@ export class GoneError extends AppError {
         super(410, "GONE", message);
     }
 }
+
+
+export class RegistrationNotAllowedError extends AppError {
+    constructor(message = "No tienes invitación válida para registrarte.") {
+        super(403, "REGISTRATION_NOT_ALLOWED", message);
+    }
+}

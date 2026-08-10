@@ -1,7 +1,10 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { db, type DbOrTx } from "../../db/index.js";
+
 import { refreshTokens } from "../../db/schema/refresh-tokens.js";
 import { users } from "../../db/schema/users.js";
+import { oauthAccounts } from "../../db/schema/oauth-accounts.js";
+import { db, type DbOrTx } from "../../db/index.js";
+
 
 export async function findUserByEmail(email: string) {
     const [user] = await db.select().from(users).where(eq(users.email, email));
@@ -70,4 +73,26 @@ export async function revokeAllUserTokens(userId: string) {
         .update(refreshTokens)
         .set({ revokedAt: new Date() })
         .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
+}
+
+
+export async function findOAuthAccount(provider: string, providerUserId: string, tx: DbOrTx = db) {
+    const [account] = await tx
+        .select()
+        .from(oauthAccounts)
+        .where(and(eq(oauthAccounts.provider, provider), eq(oauthAccounts.providerUserId, providerUserId)));
+    return account;
+}
+
+interface CreateOAuthAccountInput {
+    userId: string;
+    provider: string;
+    providerUserId: string;
+    email: string;
+}
+
+export async function createOAuthAccount(input: CreateOAuthAccountInput, tx: DbOrTx = db) {
+    const [account] = await tx.insert(oauthAccounts).values(input).returning();
+    if (!account) throw new Error("createOAuthAccount: insert no devolvió ninguna fila");
+    return account;
 }

@@ -4,6 +4,15 @@ import { UnauthorizedError } from "../../core/errors.js";
 import * as authService from "./auth.service.js";
 import type { RevokeRequest, RegisterRequest, TokenRequest } from "./auth.schemas.js";
 import type { AccessTokenPayload } from "./tokens.js";
+import { env } from "../../config/env.js";
+import { ValidationError } from "../../core/errors.js";
+import * as googleAuth from "./google.js";
+import type { GoogleIdTokenRequest } from "./auth.schemas.js";
+
+
+
+const GOOGLE_STATE_COOKIE = "google_oauth";
+const GOOGLE_STATE_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
 
 function clientMeta(req: Request): { userAgent?: string; ip?: string } {
     const userAgent = req.header("user-agent");
@@ -54,4 +63,50 @@ export async function register(req: Request, res: Response): Promise<void> {
     const tokens = await authService.registerWithInvitation(body, clientMeta(req));
     res.setHeader("Cache-Control", "no-store");
     res.status(201).json(tokens);
+}
+
+export async function googleAuthorize(_req: Request, res: Response): Promise<void> {
+    const { url, state, codeVerifier } = await googleAuth.createAuthorizationRequest();
+
+    res.cookie(GOOGLE_STATE_COOKIE, JSON.stringify({ state, codeVerifier }), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: env.NODE_ENV === "production",
+        signed: true,
+        maxAge: GOOGLE_STATE_COOKIE_MAX_AGE_MS,
+    });
+
+    res.redirect(url);
+}
+
+export async function googleCallback(req: Request, res: Response): Promise<void> {
+    const { code, state } = req.query as { code?: string; state?: string };
+    const stored = req.signedCookies[GOOGLE_STATE_COOKIE] as string | undefined;
+
+    res.clearCookie(GOOGLE_STATE_COOKIE);
+
+    if (!code || !state || !stored) {
+        throw new ValidationError("Falta code o state.");
+    }
+
+    const { state: storedState, codeVerifier } = JSON.parse(stored) as { state: string; codeVerifier: string };
+
+    if (state !== storedState) {
+        throw new ValidationError("El parámetro state no coincide.");
+    }
+
+    const profile = await googleAuth.exchangeCodeForProfile(code, codeVerifier);
+    const tokens = await authService.loginWithGoogle(profile, clientMeta(req));
+
+    res.setHeader("Cache-Control", "no-store");
+    res.status(200).json(tokens);
+}
+
+export async function googleIdToken(req: Request, res: Response): Promise<void> {
+    const body = req.body as GoogleIdTokenRequest;
+    const profile = await googleAuth.verifyGoogleIdToken(body.id_token);
+    const tokens = await authService.loginWithGoogle(profile, clientMeta(req));
+
+    res.setHeader("Cache-Control", "no-store");
+    res.status(200).json(tokens);
 }

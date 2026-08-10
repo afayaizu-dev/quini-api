@@ -37,3 +37,9 @@ export const RegisterRequestSchema = z.object({
 });
 
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
+
+export const GoogleIdTokenRequestSchema = z.object({
+    id_token: z.string().min(1),
+});
+
+export type GoogleIdTokenRequest = z.infer<typeof GoogleIdTokenRequestSchema>;

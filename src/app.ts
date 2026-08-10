@@ -7,6 +7,8 @@ import { httpLogger } from "./middleware/http-logger.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { NotFoundError } from "./core/errors.js";
 import { router } from "./routes.js";
+import cookieParser from "cookie-parser";
+
 
 export function createApp(): Application {
     const app = express();
@@ -17,6 +19,8 @@ export function createApp(): Application {
     app.use(httpLogger);
     app.use(express.json({ limit: "100kb" }));
     app.use(express.urlencoded({ extended: false, limit: "100kb" }));
+    app.use(cookieParser(env.COOKIE_SECRET));
+
 
     app.get("/health", (_req, res) => {
         res.status(200).json({ status: "ok", uptime: process.uptime() });

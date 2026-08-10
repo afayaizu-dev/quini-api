@@ -1,6 +1,6 @@
 # Sistema de autenticación y autorización
 
-> **Ámbito de este documento**: lo implementado en **F4** (login por contraseña, tokens de acceso y refresco, revocación, logout y autorización por rol) y **F5** (invitaciones y registro cerrado) del plan (`00-Plan-inicial.md`). F6 (Google) todavía no está construido; cuando lo esté, este documento se ampliará.
+> **Ámbito de este documento**: lo implementado en **F4** (login por contraseña, tokens de acceso y refresco, revocación, logout y autorización por rol), **F5** (invitaciones y registro cerrado) y **F6** (login con Google) del plan (`00-Plan-inicial.md`).
 >
 > **Para quién**: documento de estudio. El objetivo no es solo describir "qué hace" el código, sino **por qué** está hecho así, para poder defenderlo en una entrevista o code review.
 
@@ -19,12 +19,13 @@
 9. [Flujo 3 — Refresh, rotación y detección de reuso](#9-flujo-3--refresh-rotación-y-detección-de-reuso)
 10. [Flujo 4 — Revoke y logout](#10-flujo-4--revoke-y-logout)
 11. [Flujo 5 — Invitaciones y registro cerrado](#11-flujo-5--invitaciones-y-registro-cerrado)
-12. [Autorización por rol](#12-autorización-por-rol)
-13. [Manejo de errores](#13-manejo-de-errores)
-14. [Catálogo de endpoints](#14-catálogo-de-endpoints)
-15. [Herramientas de desarrollo](#15-herramientas-de-desarrollo)
-16. [Lo que falta / decisiones pendientes](#16-lo-que-falta--decisiones-pendientes)
-17. [Glosario](#17-glosario)
+12. [Flujo 6 — Login con Google (Authorization Code + PKCE)](#12-flujo-6--login-con-google-authorization-code--pkce)
+13. [Autorización por rol](#13-autorización-por-rol)
+14. [Manejo de errores](#14-manejo-de-errores)
+15. [Catálogo de endpoints](#15-catálogo-de-endpoints)
+16. [Herramientas de desarrollo](#16-herramientas-de-desarrollo)
+17. [Lo que falta / decisiones pendientes](#17-lo-que-falta--decisiones-pendientes)
+18. [Glosario](#18-glosario)
 
 ---
 
@@ -74,11 +75,12 @@ Cada fichero tiene una única responsabilidad (arquitectura en capas, §5 del pl
 erDiagram
     USERS ||--o{ REFRESH_TOKENS : "posee"
     USERS ||--o{ INVITATIONS : "emite (invited_by)"
+    USERS ||--o{ OAUTH_ACCOUNTS : "vincula"
 
     USERS {
         uuid id PK
         citext email UK "insensible a mayusculas"
-        text password_hash "NULL si el usuario solo entra por Google (futuro F6)"
+        text password_hash "NULL si el usuario solo entra por Google"
         text role "'user' o 'admin', CHECK en BD"
         timestamptz created_at
     }
@@ -102,13 +104,22 @@ erDiagram
         timestamptz accepted_at "NULL = pendiente"
         timestamptz revoked_at "NULL = no revocada"
     }
+    OAUTH_ACCOUNTS {
+        uuid id PK
+        uuid user_id FK
+        text provider "'google', hoy el unico"
+        text provider_user_id "el 'sub' del id_token de Google"
+        text email "email de Google en el momento de vincular"
+        timestamptz created_at
+    }
 ```
 
-Tres detalles de diseño que valen una pregunta de entrevista:
+Cuatro detalles de diseño que valen una pregunta de entrevista:
 
 - **`token_hash` es `UNIQUE`**, no `user_id`: un usuario puede tener varios refresh tokens vivos a la vez (uno por dispositivo/sesión). Lo que nunca se repite es el hash de un token concreto.
 - **`family_id` no es lo mismo que `user_id`**. Cada _login_ nuevo genera una `family_id` nueva (`randomUUID()` en `issueTokenPair`). Cada _rotación_ dentro de ese login mantiene la misma `family_id`. Por eso al detectar un reuso se puede revocar "esta sesión concreta" sin desloguear al usuario de sus otros dispositivos — eso es justo lo que hace `revokeFamily`, distinto de `revokeAllUserTokens` que usa `logout`.
 - **`invitations` no tiene una columna `UNIQUE` simple en `email`** — tiene un **índice único parcial**: `UNIQUE(email) WHERE accepted_at IS NULL AND revoked_at IS NULL`. Esto permite que un email tenga varias invitaciones **a lo largo del tiempo** (una caducó, se generó otra), pero nunca dos **pendientes** a la vez. Es la base de datos, no el código de la aplicación, quien garantiza esa regla — inmune a bugs o a una segunda instancia del servidor escribiendo a la vez.
+- **`oauth_accounts` es `UNIQUE(provider, provider_user_id)`, no `UNIQUE(email)`**: la identidad real de una cuenta social es el par (proveedor, id del proveedor) — el `sub` de Google es estable para siempre, mientras que el email de una cuenta de Google **puede cambiar**. Buscar por email sería frágil; por eso `findOAuthAccount` busca por esa pareja, nunca por email.
 
 ---
 
@@ -438,7 +449,84 @@ Decisiones que merece la pena entender, no solo copiar:
 
 ---
 
-## 12. Autorización por rol
+## 12. Flujo 6 — Login con Google (Authorization Code + PKCE)
+
+**Objetivo**: entrar con Gmail y recibir los mismos tokens propios que con contraseña, **solo** si ya tienes cuenta o tienes invitación válida (Q2 sigue aplicando: cerrar solo el registro por contraseña y dejar Google abierto sería la puerta trasera clásica).
+
+Tres endpoints nuevos en `auth.routes.ts`, un fichero nuevo `google.ts` que encapsula todo lo específico de Google, y una ampliación de `auth.service.ts`:
+
+```mermaid
+sequenceDiagram
+    participant C as Navegador
+    participant Ctrl as auth.controller
+    participant G as google.ts (OAuth2Client)
+    participant Svc as auth.service
+    participant Repo as auth.repository
+    participant DB as PostgreSQL
+
+    C->>Ctrl: GET /auth/google
+    Ctrl->>G: createAuthorizationRequest()
+    G->>G: state = random(32B)<br/>{codeVerifier, codeChallenge} = generateCodeVerifierAsync()
+    G-->>Ctrl: { url, state, codeVerifier }
+    Ctrl->>C: Set-Cookie google_oauth={state,codeVerifier} (firmada, httpOnly, 10 min)<br/>302 → url de Google
+
+    Note over C: el usuario inicia sesión y da consentimiento en Google
+
+    C->>Ctrl: GET /auth/google/callback?code=...&state=...
+    Ctrl->>Ctrl: leer cookie google_oauth, borrarla (un solo uso)
+    alt state de la URL != state de la cookie
+        Ctrl-->>C: 400 VALIDATION_ERROR
+    else state coincide
+        Ctrl->>G: exchangeCodeForProfile(code, codeVerifier)
+        G->>G: client.getToken({code, codeVerifier})
+        alt code inválido/caducado
+            G-->>Ctrl: throw → 401 UNAUTHORIZED
+        else code válido
+            G->>G: verifyIdToken({idToken, audience: clientId})
+            Note right of G: comprueba firma, exp, iss, aud —<br/>y ADEMÁS email_verified === true (manual)
+            G-->>Ctrl: { providerUserId, email, name }
+            Ctrl->>Svc: loginWithGoogle(profile)
+            Svc->>Repo: findOAuthAccount("google", providerUserId)
+            alt ya vinculada
+                Svc-->>Ctrl: issueTokenPair(user existente)
+            else no vinculada
+                Svc->>Repo: findUserByEmail(email)
+                alt existe user con ese email
+                    Svc->>Repo: createOAuthAccount(...) — vincula
+                    Svc-->>Ctrl: issueTokenPair(user existente)
+                else no existe ningún user
+                    Svc->>DB: BEGIN
+                    Svc->>Repo: invitations.consumeByEmail(email, tx)
+                    alt sin invitación pendiente
+                        Svc-->>Ctrl: throw → 403 REGISTRATION_NOT_ALLOWED
+                    else invitación pendiente
+                        Svc->>Repo: createUser({passwordHash: null, role: invitacion.role}, tx)
+                        Svc->>Repo: createOAuthAccount(..., tx)
+                        Svc->>DB: COMMIT
+                        Svc-->>Ctrl: issueTokenPair(user nuevo)
+                    end
+                end
+            end
+            Ctrl-->>C: 200 { access_token, refresh_token, ... }
+        end
+    end
+```
+
+Decisiones que merece la pena entender:
+
+- **PKCE sin escribir SHA-256 a mano**: `client.generateCodeVerifierAsync()` (de `google-auth-library`) genera el `codeVerifier` aleatorio y calcula el `codeChallenge` (SHA-256 + base64url) por ti. El `code_challenge` viaja en la URL de Google; el `codeVerifier` **nunca sale de tu servidor** hasta el intercambio final — así, aunque alguien intercepte la URL de autorización, no puede canjear el `code` sin el `codeVerifier` original.
+- **`state` es cosa nuestra, no de PKCE**: lo generamos nosotros (`randomBytes(32)`) para poder comprobar que la petición al `/callback` es respuesta de un flujo que **nosotros** iniciamos, no un link fabricado por un atacante (CSRF). Se guarda junto al `codeVerifier` en una única cookie firmada, de vida corta (10 min) y de un solo uso — se borra siempre en el callback, tanto si sale bien como si sale mal.
+- **`sameSite: "lax"`** en esa cookie (no `"strict"`): tiene que sobrevivir a una navegación de nivel superior que llega **desde otro dominio** (Google redirigiendo a tu callback); con `"strict"` el navegador no la habría enviado.
+- **`email_verified === true` se comprueba a mano**, aunque `verifyIdToken` ya valide firma/`exp`/`iss`/`aud` internamente. Si confiaras en un email de Google no verificado, alguien podría vincularse a la cuenta de otra persona simplemente afirmando tener su email — es el "detalle crítico" que marca el plan.
+- **Tres desenlaces distintos según lo que ya exista**: cuenta ya vinculada → solo login; email ya registrado (por contraseña o invitación previa) → se **vincula** la cuenta de Google a ese usuario existente; nada de lo anterior → exige invitación **por email** (`consumeByEmail`, no por token — aquí no hay ningún token de invitación en la URL) y crea el usuario con `passwordHash: null` en la misma transacción que el `oauth_accounts`.
+- **Solo pedimos `access_type: "online"`**: no le pedimos a Google un refresh token suyo (eso exigiría `access_type: "offline"`). No lo necesitamos — una vez autenticado, el sistema de sesión es el nuestro (nuestro propio access/refresh token), Google ya cumplió su función en el momento del login.
+- **`POST /auth/google/id-token`** existe para cuando un frontend obtiene el `id_token` directamente con la librería JS de Google (sin redirecciones, sin `state`, sin PKCE — esa parte ya la resuelve el SDK de Google en el navegador). Llama a la misma `verifyGoogleIdToken` + `loginWithGoogle`, así que las reglas de negocio (vincular, exigir invitación, no duplicar) son idénticas por los dos caminos.
+
+Verificado a mano: login nuevo con invitación (crea usuario + `oauth_accounts`, `password_hash` `NULL`), repetir login con la misma cuenta (no duplica nada), `state` manipulado (400), `code` inválido (401), cuenta de Google sin invitación (403 `REGISTRATION_NOT_ALLOWED`).
+
+---
+
+## 13. Autorización por rol
 
 ```ts
 // src/middleware/require-role.ts
@@ -462,7 +550,7 @@ router.post("/jornadas", requireAuth, requireRole("admin"), crearJornada);
 
 ---
 
-## 13. Manejo de errores
+## 14. Manejo de errores
 
 Un único punto de salida para todos los errores: `src/middleware/error-handler.ts`, registrado el último en `app.ts` (después de todas las rutas). Cualquier `throw` dentro de un handler `async` de Express 5 llega ahí automáticamente, sin necesidad de `try/catch` en cada controller.
 
@@ -496,7 +584,7 @@ Todas las respuestas de error tienen la misma forma, generada en un solo sitio:
 
 ---
 
-## 14. Catálogo de endpoints
+## 15. Catálogo de endpoints
 
 | Método | Ruta                                  | Middleware                                                                | Body                                                                                                                | Éxito                                                         | Errores                                                                                          |
 | ------ | ------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -507,10 +595,13 @@ Todas las respuestas de error tienen la misma forma, generada en un solo sitio:
 | POST   | `/api/v1/auth/register`               | `authRateLimit`, `validate(RegisterRequestSchema)`                        | `{ token, password, nombre }`                                                                                       | `201` `{access_token, refresh_token, token_type, expires_in}` | `404` token inexistente, `410` token usado/revocado/caducado, `429` demasiados intentos fallidos |
 | POST   | `/api/v1/invitaciones`                | `requireAuth`, `requireRole("admin")`, `validate(CreateInvitationSchema)` | `{ email, role }`                                                                                                   | `201` `{id, email, expiresAt, url}`                           | `401` sin token, `403` no es admin, `409` invitación pendiente duplicada                         |
 | GET    | `/api/v1/invitaciones/:token/validar` | `invitationRateLimit`                                                     | —                                                                                                                   | `200` `{email, role, expiresAt}`                              | `404` no existe, `410` usada/revocada/caducada, `429` demasiados intentos fallidos               |
+| GET    | `/api/v1/auth/google`                 | —                                                                         | —                                                                                                                   | `302` redirige a Google                                       | —                                                                                                |
+| GET    | `/api/v1/auth/google/callback`        | `authRateLimit`                                                           | query `?code=&state=`                                                                                               | `200` `{access_token, refresh_token, token_type, expires_in}` | `400` state no coincide, `401` code inválido o email no verificado, `403` sin invitación         |
+| POST   | `/api/v1/auth/google/id-token`        | `authRateLimit`, `validate(GoogleIdTokenRequestSchema)`                   | `{ id_token }`                                                                                                      | `200` `{access_token, refresh_token, token_type, expires_in}` | `401` id_token inválido o email no verificado, `403` sin invitación                              |
 
 ---
 
-## 15. Herramientas de desarrollo
+## 16. Herramientas de desarrollo
 
 | Script                 | Para qué                                                                                                                                                     | Guardas                                                |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
@@ -521,19 +612,20 @@ Documentados con ejemplos de uso en `commands.md` (raíz del proyecto).
 
 ---
 
-## 16. Lo que falta / decisiones pendientes
+## 17. Lo que falta / decisiones pendientes
 
 Cosas que **no** están hechas todavía y conviene tener en la cabeza para no darlas por sentadas:
 
 - **RS256 en producción** (D9): hoy todo firma con HS256 (secreto simétrico). El cambio a claves asimétricas está diseñado (`JWT_ALG` ya admite `"RS256"` en `env.ts`) pero no implementado.
 - **`mint-token.ts` no respeta `ENABLE_DEV_TOKENS`**: el `.env` ya define esa variable pensada para desactivar tokens de desarrollo, pero el script solo comprueba `NODE_ENV !== "production"`. Es una inconsistencia menor a revisar.
 - **No hay forma de revocar una invitación pendiente antes de que se use o caduque**: la columna `revoked_at` existe en el esquema, pero ninguna ruta la escribe todavía. Si un admin invita por error, hoy solo puede esperar a que caduque (`INVITATION_TTL`, 7 días).
-- **F6 (Google OAuth)** todavía no existe: hoy solo se puede entrar con contraseña, creada por `admin:create` o por invitación aceptada.
-- **Tests automatizados (F8)**: todo lo descrito aquí (F4 y F5) se ha verificado **a mano con curl** durante el desarrollo. F8 convierte esta misma checklist en Vitest + Supertest contra una Postgres real (embebida), incluyendo casos que a mano no se probaron: token expirado, token firmado con otra clave/`aud`, el 403 de un `role: "user"` contra una ruta de admin, y la condición de carrera de dos registros concurrentes con la misma invitación (la transacción actual no bloquea explícitamente la fila con `FOR UPDATE`).
+- **La app de Google sigue en modo "Testing"**: solo pueden iniciar sesión las cuentas añadidas como "test users" en la pantalla de consentimiento de Google Cloud. Antes de que usuarios reales usen el login con Google en producción, hay que publicar la app (y posiblemente pasar la verificación de Google si se piden scopes sensibles — no es el caso aquí, solo `openid`/`email`/`profile`).
+- **`POST /auth/google/id-token` no se ha probado a mano**: requeriría un frontend con la librería JS de Google para obtener un `id_token` real sin pasar por la redirección. La lógica de negocio es la misma que `callback` (mismo `loginWithGoogle`), pero queda pendiente de una prueba end-to-end.
+- **Tests automatizados (F8)**: todo lo descrito aquí (F4, F5 y F6) se ha verificado **a mano** (con `curl` y, para Google, con el navegador) durante el desarrollo. F8 convierte esta misma checklist en Vitest + Supertest contra una Postgres real (embebida), incluyendo casos que a mano no se probaron: token expirado, token firmado con otra clave/`aud`, el 403 de un `role: "user"` contra una ruta de admin, la condición de carrera de dos registros concurrentes con la misma invitación (sin `FOR UPDATE` explícito), y `POST /auth/google/id-token` con un `id_token` simulado.
 
 ---
 
-## 17. Glosario
+## 18. Glosario
 
 - **JWT (JSON Web Token)**: token autocontenido, firmado, que el servidor puede verificar sin consultar una base de datos (solo comprobando la firma).
 - **Token opaco**: al contrario que un JWT, no lleva información legible dentro; es solo un identificador aleatorio que el servidor debe buscar en su propia base de datos para saber a quién pertenece y si sigue siendo válido.
@@ -543,3 +635,6 @@ Cosas que **no** están hechas todavía y conviene tener en la cabeza para no da
 - **Timing attack**: técnica para deducir información (p. ej. si un email existe) midiendo cuánto tarda el servidor en responder, en vez de leer el mensaje de error.
 - **`aud` (audience)** / **`iss` (issuer)**: claims estándar de JWT que dicen "para quién es este token" y "quién lo emitió"; verificarlos evita aceptar tokens válidos pero pensados para otro servicio.
 - **Índice único parcial**: un `UNIQUE` que solo aplica a las filas que cumplen una condición (`WHERE ...`), no a toda la tabla. Usado en `invitations` para permitir varias invitaciones históricas por email, pero solo una **pendiente** a la vez.
+- **Authorization Code flow**: el patrón OAuth2 en el que el cliente (nuestro backend) nunca ve las credenciales del usuario en el proveedor (Google); en su lugar, el usuario se autentica en Google y esta le redirige de vuelta con un `code` de un solo uso, que el backend canjea por tokens directamente con Google (sin pasar por el navegador).
+- **PKCE (Proof Key for Code Exchange)**: capa extra sobre el Authorization Code flow que evita que alguien que intercepte el `code` pueda canjearlo por tokens. El cliente genera un secreto (`code_verifier`), envía solo su hash (`code_challenge`) en la petición inicial, y debe presentar el `code_verifier` original al canjear el `code` — quien no lo tenga, no puede completar el intercambio aunque haya robado el `code`.
+- **ID token vs. access token (de Google)**: el `id_token` es un JWT que **identifica a la persona** (contiene `sub`, `email`, `email_verified`...) y es lo único que verificamos; el `access_token` de Google serviría para llamar a APIs de Google en su nombre (Gmail, Calendar...), algo que este proyecto no necesita y por eso ni se pide (`access_type: "online"`, sin `refresh_token` de Google).

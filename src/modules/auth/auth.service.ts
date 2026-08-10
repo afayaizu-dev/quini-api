@@ -1,15 +1,17 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { env } from "../../config/env.js";
-import { UnauthorizedError } from "../../core/errors.js";
+import { RegistrationNotAllowedError, UnauthorizedError } from "../../core/errors.js";
 import {
+    createOAuthAccount,
     createRefreshToken,
+    createUser,
+    findOAuthAccount,
     findRefreshTokenByHash,
     findUserByEmail,
     findUserById,
     revokeAllUserTokens,
     revokeFamily,
     revokeRefreshToken,
-    createUser,
 } from "./auth.repository.js";
 import type { TokenResponse } from "./auth.schemas.js";
 import { hash, verify } from "./password.js";
@@ -24,6 +26,14 @@ interface RequestMeta {
     userAgent?: string;
     ip?: string;
 }
+
+
+interface GoogleProfile {
+    providerUserId: string;
+    email: string;
+    name: string;
+}
+
 
 
 async function issueTokenPair(
@@ -119,6 +129,46 @@ export async function registerWithInvitation(
     const user = await db.transaction(async (tx) => {
         const invitation = await invitationsService.consume(input.token, tx);
         return createUser({ email: invitation.email, passwordHash, nombre: input.nombre, role: invitation.role }, tx);
+    });
+
+    return issueTokenPair(user, meta);
+}
+
+
+export async function loginWithGoogle(profile: GoogleProfile, meta: RequestMeta): Promise<TokenResponse> {
+    const existingAccount = await findOAuthAccount("google", profile.providerUserId);
+    if (existingAccount) {
+        const user = await findUserById(existingAccount.userId);
+        if (!user) throw new UnauthorizedError();
+        return issueTokenPair(user, meta);
+    }
+
+    const existingUser = await findUserByEmail(profile.email);
+    if (existingUser) {
+        await createOAuthAccount({
+            userId: existingUser.id,
+            provider: "google",
+            providerUserId: profile.providerUserId,
+            email: profile.email,
+        });
+        return issueTokenPair(existingUser, meta);
+    }
+
+    const user = await db.transaction(async (tx) => {
+        const invitation = await invitationsService.consumeByEmail(profile.email, tx);
+        if (!invitation) {
+            throw new RegistrationNotAllowedError();
+        }
+
+        const newUser = await createUser(
+            { email: profile.email, passwordHash: null, nombre: profile.name, role: invitation.role },
+            tx,
+        );
+        await createOAuthAccount(
+            { userId: newUser.id, provider: "google", providerUserId: profile.providerUserId, email: profile.email },
+            tx,
+        );
+        return newUser;
     });
 
     return issueTokenPair(user, meta);

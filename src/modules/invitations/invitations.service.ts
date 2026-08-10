@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { env } from "../../config/env.js";
 import { parseTtlToMs } from "../../core/ttl.js";
 import { ConflictError, GoneError, NotFoundError } from "../../core/errors.js";
-import { createInvitation, findInvitationByHash, markInvitationAccepted } from "./invitations.repository.js";
+import { createInvitation, findInvitationByHash, markInvitationAccepted, findUsableInvitationByEmail } from "./invitations.repository.js";
 import { type DbOrTx } from "../../db/index.js";
 
 export function newInvitationToken(): string {
@@ -86,4 +86,18 @@ export async function consume(
     await markInvitationAccepted(invitation.id, tx);
 
     return { id: invitation.id, email: invitation.email, role: invitation.role as "user" | "admin" };
+}
+
+export async function consumeByEmail(
+    email: string,
+    tx: DbOrTx,
+): Promise<{ id: string; role: "user" | "admin" } | null> {
+    const invitation = await findUsableInvitationByEmail(email, tx);
+    if (!invitation) {
+        return null;
+    }
+
+    await markInvitationAccepted(invitation.id, tx);
+
+    return { id: invitation.id, role: invitation.role as "user" | "admin" };
 }
