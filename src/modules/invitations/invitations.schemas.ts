@@ -15,3 +15,9 @@ export const InvitationResponseSchema = z.object({
 });
 
 export type InvitationResponse = z.infer<typeof InvitationResponseSchema>;
+
+export const InvitationValidationSchema = z.object({
+    email: z.email(),
+    role: z.enum(["user", "admin"]),
+    expiresAt: z.iso.datetime(),
+});

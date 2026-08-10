@@ -1,0 +1,26 @@
+extends: ["spectral:oas"]
+
+rules:
+  info-contact: off
+  operation-tags: warn
+
+  operation-must-have-example:
+    description: Cada respuesta 2xx debe declarar al menos un ejemplo.
+    given: "$.paths[*][*].responses[?(@property >= '200' && @property < '300')].content[*]"
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required: ["example"]
+            - required: ["examples"]
+
+  secured-operation-must-declare-401:
+    description: Toda operación con "security" debe declarar la respuesta 401.
+    given: "$.paths[*][*][?(@.security)]"
+    severity: error
+    then:
+      field: responses.401
+      function: truthy
