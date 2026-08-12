@@ -1,0 +1,903 @@
+type: spec.insomnia.rest/5.0
+schema_version: "5.1"
+name: quini-api 1.0.0
+meta:
+  id: wrk_16ffd88b326043ada2628bde0acb62cf
+  created: 1786566722490
+  modified: 1786566722490
+  description: ""
+collection:
+  - name: quini-api
+    meta:
+      id: fld_dd832c0c161f480fbc77c246a724716e
+      created: 1786568925973
+      modified: 1786570972594
+      sortKey: -1786568925973
+      description: ""
+    children:
+      - name: auth
+        meta:
+          id: fld_8782d18ac74c447ebc2f3e797e348d01
+          created: 1786566722496
+          modified: 1786569065510
+          sortKey: -1786568935209
+          description: "Autenticación: login, tokens, Google."
+        children:
+          - url: "{{ _.base_url }}/auth/token"
+            name: Obtiene tokens (password grant o refresh_token grant)
+            meta:
+              id: req_0ef9d7669c2c4d4b985d74f173de22df
+              created: 1786566722501
+              modified: 1786571877172
+              isPrivate: false
+              description: Compatible en forma con el password grant de OAuth2 (RFC 6749).
+                También acepta grant_type=refresh_token para rotar el refresh
+                token, con detección de reuso. Ver docs/02-Autenticacion.md.
+              sortKey: -1786566722501
+            method: POST
+            body:
+              mimeType: application/x-www-form-urlencoded
+              params:
+                - name: grant_type
+                  value: password
+                  description: ""
+                  disabled: false
+                - name: username
+                  value: user@quini.local
+                  description: ""
+                  disabled: false
+                - name: password
+                  value: una-contraseña-de-al-menos-12
+                  description: ""
+                  disabled: false
+            headers:
+              - name: Content-Type
+                value: application/x-www-form-urlencoded
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/auth/logout"
+            name: Revoca todos los refresh tokens del usuario autenticado
+            meta:
+              id: req_23445d3131c147f994c61d9902e3ba47
+              created: 1786566722502
+              modified: 1786566722502
+              isPrivate: false
+              description: Cierra sesión en todos los dispositivos.
+              sortKey: -1786566722502
+            method: POST
+            authentication:
+              type: bearer
+              token: "{{ _.bearerToken }}"
+              prefix: ""
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/auth/revoke"
+            name: Revoca un refresh token concreto
+            meta:
+              id: req_728d11245ece429ca6835dc2f52762e3
+              created: 1786566722502
+              modified: 1786566722502
+              isPrivate: false
+              description: Cierra sesión en un solo dispositivo/sesión. Si el token ya no
+                existe o ya estaba revocado, no falla (operación idempotente).
+              sortKey: -1786566722502
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "refresh_token": "string"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+                disabled: false
+            authentication:
+              type: bearer
+              token: "{{ _.bearerToken }}"
+              prefix: ""
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/auth/me"
+            name: Devuelve la identidad del usuario autenticado
+            meta:
+              id: req_01792b0dd38c4d20a8b0a0f2f252229e
+              created: 1786566722503
+              modified: 1786569607733
+              isPrivate: false
+              description: Lee el payload del access token ya verificado por requireAuth — no
+                consulta la base de datos.
+              sortKey: -1786566722503
+            method: GET
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/auth/register"
+            name: Completa el registro a partir de una invitación
+            meta:
+              id: req_687b4026e5144fd4adb6b58009040d7b
+              created: 1786566722503
+              modified: 1786570877778
+              isPrivate: false
+              description: Consume una invitación de un solo uso (por token) y crea el usuario
+                con el rol de la invitación, en una transacción. Ver
+                docs/02-Autenticacion.md.
+              sortKey: -1786566722503
+            method: POST
+            body:
+              mimeType: application/json
+              text: |
+                {
+                  "token": "IUKJh10C3UdUUaK4_wkVBb7wXtnODUhbq5AjHwyl1uM",
+                  "password": "una-contraseña-de-al-menos-12",
+                  "nombre": "Usuario de prueba"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/auth/google/id-token"
+            name: Login con Google a partir de un id_token ya obtenido por el frontend
+            meta:
+              id: req_1efab4d0229b47fa83453974d9c7a6ee
+              created: 1786566722504
+              modified: 1786566722504
+              isPrivate: false
+              description: Mismo camino de verificación que /auth/google/callback, sin
+                redirecciones ni PKCE.
+              sortKey: -1786566722504
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "id_token": "string"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/auth/google"
+            name: Inicia el login con Google (Authorization Code + PKCE)
+            meta:
+              id: req_c711069ed0ef47f59c8e580bb5e3225f
+              created: 1786566722504
+              modified: 1786566722504
+              isPrivate: false
+              description: Redirige a Google. Ver docs/02-Autenticacion.md.
+              sortKey: -1786566722504
+            method: GET
+            authentication:
+              type: oauth2
+              grantType: authorization_code
+              accessTokenUrl: /api/v1/auth/google/callback
+              authorizationUrl: /api/v1/auth/google
+              clientId: "{{ _.oauth2ClientId }}"
+              clientSecret: "{{ _.oauth2ClientSecret }}"
+              scope: ""
+              redirectUrl: "{{ _.oauth2RedirectUrl }}"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/auth/google/callback"
+            name: Callback de Google tras el consentimiento
+            meta:
+              id: req_c9c280556b6145cdb80b1fd04bf3f9b2
+              created: 1786566722504
+              modified: 1786566722504
+              isPrivate: false
+              description: Google redirige aquí tras el consentimiento. Verifica state (CSRF)
+                y canjea el code por el id_token.
+              sortKey: -1786566722504
+            method: GET
+            parameters:
+              - name: code
+                value: string
+                disabled: false
+              - name: state
+                value: string
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+      - name: invitaciones
+        meta:
+          id: fld_9f0135df2941485bb0e131845b1fea19
+          created: 1786566722500
+          modified: 1786569069412
+          sortKey: -1786568935109
+          description: Alta cerrada por invitación.
+        children:
+          - url: "{{ _.base_url }}/invitaciones"
+            name: Crea una invitación de un solo uso
+            meta:
+              id: req_3d2b4a0a3ac14a4eb48e0fedbe4d8d9a
+              created: 1786566722504
+              modified: 1786571954114
+              isPrivate: false
+              description: Solo un admin puede invitar. El token en claro se devuelve una sola
+                vez en la respuesta; después es irrecuperable.
+              sortKey: -1786566722504
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "email": "user@quini.local",
+                  "role": "user"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+                disabled: false
+            authentication:
+              type: bearer
+              token: eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InVzZXJAcXVpbmkubG9jYWwiLCJyb2xlIjoidXNlciIsInN1YiI6IjAxOWZmN2VjLTQ3ZDEtNzVlYS1hYmY5LWExMGNjYWU5MjYzNCIsImlzcyI6ImFwaS1xdWluaSIsImF1ZCI6ImFwaS1xdWluaS1jbGllbnRzIiwiaWF0IjoxNzg2NTcxODc3LCJleHAiOjE3ODY1NzI3Nzd9.spXQzT6fR2ku-GP42NZJE854YfXMSXN1w6vwxwdvSEc
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/invitaciones/:token/validar"
+            name: Comprueba si un token de invitación sigue siendo válido
+            meta:
+              id: req_433fefc568ba43b8973ccc92ea0117d8
+              created: 1786566722505
+              modified: 1786566722505
+              isPrivate: false
+              description: Endpoint público (sin autenticación), pensado para que el frontend
+                valide el link antes de mostrar el formulario de registro.
+              sortKey: -1786566722505
+            method: GET
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+    authentication:
+      type: oauth2
+      grantType: password
+      accessTokenUrl: "{{ _.base_url }}/auth/token"
+      clientId: ""
+      username: "{{ _.username }}"
+      password: "{{ _.password }}"
+      credentialsInBody: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_8cec3e92a0fc86a9443aa9ab10a0443cc4f72f8f
+    created: 1786566722699
+    modified: 1786566722699
+environments:
+  name: Base environment
+  meta:
+    id: env_45d3d2b9139745f5b4fe90fb07e2614e
+    created: 1786566722495
+    modified: 1786569903486
+    isPrivate: false
+  data:
+    base_url: http://localhost:3000/api/v1
+    access_token: ""
+    refresh_token: ""
+  subEnvironments:
+    - name: OpenAPI env null
+      meta:
+        id: env_149ac635321b4e2cbccdbd48160f1611
+        created: 1786566722495
+        modified: 1786566722495
+        isPrivate: false
+        sortKey: 1786566722495
+      data:
+        scheme:
+          - http
+        base_path: /api/v1
+        host: ""
+        bearerToken: bearerToken
+        oauth2ClientId: clientId
+        oauth2ClientSecret: clientSecret
+        oauth2Username: username
+        oauth2Password: password
+        oauth2RedirectUrl: http://localhost/
+    - name: Local-admin
+      meta:
+        id: env_38e71be7353e45c3a4df1834b24764f0
+        created: 1786571002629
+        modified: 1786571083049
+        isPrivate: false
+        sortKey: 1786571002629
+      data:
+        base_url: http://localhost:3000/api/v1
+        username: admin@quini.local
+        password: "123456789012"
+        access_token: ""
+        refresh_token: ""
+    - name: Local-user
+      meta:
+        id: env_36f14ea7934f4265b9722f5d37c8be61
+        created: 1786571043955
+        modified: 1786571100762
+        isPrivate: false
+        sortKey: 1786571043955
+      data:
+        base_url: http://localhost:3000/api/v1
+        username: user@quini.local
+        password: "una-contraseña-de-al-menos-12"
+        access_token: ""
+        refresh_token: ""
+spec:
+  contents:
+    openapi: 3.1.0
+    info:
+      title: quini-api
+      version: 1.0.0
+      description: API REST autenticada para la gestión de una peña de quiniela.
+    servers:
+      - url: /api/v1
+    tags:
+      - name: auth
+        description: "Autenticación: login, tokens, Google."
+      - name: invitaciones
+        description: Alta cerrada por invitación.
+    paths:
+      /auth/token:
+        post:
+          operationId: authToken
+          summary: Obtiene tokens (password grant o refresh_token grant)
+          description: Compatible en forma con el password grant de OAuth2 (RFC 6749).
+            También acepta grant_type=refresh_token para rotar el refresh token,
+            con detección de reuso. Ver docs/02-Autenticacion.md.
+          tags:
+            - auth
+          requestBody:
+            required: true
+            content:
+              application/x-www-form-urlencoded:
+                schema:
+                  oneOf:
+                    - type: object
+                      properties:
+                        grant_type:
+                          type: string
+                          const: password
+                        username:
+                          type: string
+                          minLength: 1
+                        password:
+                          type: string
+                          minLength: 1
+                      required:
+                        - grant_type
+                        - username
+                        - password
+                    - type: object
+                      properties:
+                        grant_type:
+                          type: string
+                          const: refresh_token
+                        refresh_token:
+                          type: string
+                          minLength: 1
+                      required:
+                        - grant_type
+                        - refresh_token
+                  type: object
+                examples:
+                  password:
+                    summary: Login con contraseña
+                    value:
+                      grant_type: password
+                      username: admin@quini.local
+                      password: TuPass123456
+                  refresh:
+                    summary: Renovar con refresh_token
+                    value:
+                      grant_type: refresh_token
+                      refresh_token: kUyRts-...
+          responses:
+            "200":
+              description: Tokens emitidos correctamente.
+              content:
+                application/json:
+                  example:
+                    access_token: eyJhbGciOiJIUzI1NiJ9...
+                    token_type: Bearer
+                    expires_in: 900
+                    refresh_token: kUyRts-...
+                  schema:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                        const: Bearer
+                      expires_in:
+                        type: integer
+                        exclusiveMinimum: 0
+                        maximum: 9007199254740991
+                      refresh_token:
+                        type: string
+                    required:
+                      - access_token
+                      - token_type
+                      - expires_in
+                      - refresh_token
+                    additionalProperties: false
+            "400":
+              description: Body mal formado o campos faltantes.
+            "401":
+              description: Credenciales incorrectas o refresh token inválido/reutilizado.
+            "429":
+              description: Demasiados intentos fallidos (rate limit).
+      /auth/revoke:
+        post:
+          operationId: authRevoke
+          summary: Revoca un refresh token concreto
+          description: Cierra sesión en un solo dispositivo/sesión. Si el token ya no
+            existe o ya estaba revocado, no falla (operación idempotente).
+          tags:
+            - auth
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  refresh_token: kUyRts-...
+                schema:
+                  type: object
+                  properties:
+                    refresh_token:
+                      type: string
+                      minLength: 1
+                  required:
+                    - refresh_token
+          responses:
+            "204":
+              description: Revocado (o ya lo estaba).
+            "401":
+              description: Sin access token válido.
+      /auth/logout:
+        post:
+          operationId: authLogout
+          summary: Revoca todos los refresh tokens del usuario autenticado
+          description: Cierra sesión en todos los dispositivos.
+          tags:
+            - auth
+          responses:
+            "204":
+              description: Todas las sesiones cerradas.
+            "401":
+              description: Sin access token válido.
+      /auth/me:
+        get:
+          operationId: authMe
+          summary: Devuelve la identidad del usuario autenticado
+          description: Lee el payload del access token ya verificado por requireAuth — no
+            consulta la base de datos.
+          tags:
+            - auth
+          responses:
+            "200":
+              description: Payload del access token.
+              content:
+                application/json:
+                  example:
+                    userId: 019fe824-d230-782b-9157-e345641ed2f9
+                    email: admin@quini.local
+                    role: admin
+                  schema:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      email:
+                        type: string
+                        format: email
+                        pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                      role:
+                        type: string
+                        enum:
+                          - user
+                          - admin
+                    required:
+                      - userId
+                      - email
+                      - role
+                    additionalProperties: false
+            "401":
+              description: Sin access token válido.
+      /auth/register:
+        post:
+          operationId: authRegister
+          summary: Completa el registro a partir de una invitación
+          description: Consume una invitación de un solo uso (por token) y crea el usuario
+            con el rol de la invitación, en una transacción. Ver
+            docs/02-Autenticacion.md.
+          tags:
+            - auth
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  token: 5rJnTHUDGC2bHp0KgNbp5Z0aeIlJWTTKWZ9wQcGlImQ
+                  password: OtraPass123456
+                  nombre: Pepe
+                schema:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      minLength: 1
+                    password:
+                      type: string
+                      minLength: 12
+                    nombre:
+                      type: string
+                      minLength: 1
+                  required:
+                    - token
+                    - password
+                    - nombre
+          responses:
+            "201":
+              description: Usuario creado y tokens emitidos.
+              content:
+                application/json:
+                  example:
+                    access_token: eyJhbGciOiJIUzI1NiJ9...
+                    token_type: Bearer
+                    expires_in: 900
+                    refresh_token: kUyRts-...
+                  schema:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                        const: Bearer
+                      expires_in:
+                        type: integer
+                        exclusiveMinimum: 0
+                        maximum: 9007199254740991
+                      refresh_token:
+                        type: string
+                    required:
+                      - access_token
+                      - token_type
+                      - expires_in
+                      - refresh_token
+                    additionalProperties: false
+            "404":
+              description: El token de invitación no existe.
+            "410":
+              description: La invitación ya fue usada, revocada o caducó.
+            "429":
+              description: Demasiados intentos fallidos (rate limit).
+      /auth/google:
+        get:
+          operationId: authGoogleAuthorize
+          summary: Inicia el login con Google (Authorization Code + PKCE)
+          description: Redirige a Google. Ver docs/02-Autenticacion.md.
+          tags:
+            - auth
+          responses:
+            "302":
+              description: Redirección a la pantalla de consentimiento de Google.
+      /auth/google/callback:
+        get:
+          operationId: authGoogleCallback
+          summary: Callback de Google tras el consentimiento
+          description: Google redirige aquí tras el consentimiento. Verifica state (CSRF)
+            y canjea el code por el id_token.
+          tags:
+            - auth
+          parameters:
+            - name: code
+              in: query
+              required: true
+              schema:
+                type: string
+            - name: state
+              in: query
+              required: true
+              schema:
+                type: string
+          responses:
+            "200":
+              description: Tokens emitidos (usuario vinculado, existente, o nuevo por
+                invitación).
+              content:
+                application/json:
+                  example:
+                    access_token: eyJhbGciOiJIUzI1NiJ9...
+                    token_type: Bearer
+                    expires_in: 900
+                    refresh_token: kUyRts-...
+                  schema:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                        const: Bearer
+                      expires_in:
+                        type: integer
+                        exclusiveMinimum: 0
+                        maximum: 9007199254740991
+                      refresh_token:
+                        type: string
+                    required:
+                      - access_token
+                      - token_type
+                      - expires_in
+                      - refresh_token
+                    additionalProperties: false
+            "400":
+              description: El parámetro state no coincide (posible CSRF).
+            "401":
+              description: code inválido/caducado, o email de Google no verificado.
+            "403":
+              description: No existe usuario ni invitación válida para ese email
+                (REGISTRATION_NOT_ALLOWED).
+      /auth/google/id-token:
+        post:
+          operationId: authGoogleIdToken
+          summary: Login con Google a partir de un id_token ya obtenido por el frontend
+          description: Mismo camino de verificación que /auth/google/callback, sin
+            redirecciones ni PKCE.
+          tags:
+            - auth
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  id_token: eyJhbGciOiJSUzI1NiIsImtpZCI6...
+                schema:
+                  type: object
+                  properties:
+                    id_token:
+                      type: string
+                      minLength: 1
+                  required:
+                    - id_token
+          responses:
+            "200":
+              description: Tokens emitidos.
+              content:
+                application/json:
+                  example:
+                    access_token: eyJhbGciOiJIUzI1NiJ9...
+                    token_type: Bearer
+                    expires_in: 900
+                    refresh_token: kUyRts-...
+                  schema:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                        const: Bearer
+                      expires_in:
+                        type: integer
+                        exclusiveMinimum: 0
+                        maximum: 9007199254740991
+                      refresh_token:
+                        type: string
+                    required:
+                      - access_token
+                      - token_type
+                      - expires_in
+                      - refresh_token
+                    additionalProperties: false
+            "401":
+              description: id_token inválido o email no verificado.
+            "403":
+              description: No existe usuario ni invitación válida para ese email.
+      /invitaciones:
+        post:
+          operationId: invitationsCreate
+          summary: Crea una invitación de un solo uso
+          description: Solo un admin puede invitar. El token en claro se devuelve una sola
+            vez en la respuesta; después es irrecuperable.
+          tags:
+            - invitaciones
+          x-required-role: admin
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  email: pepe@example.com
+                  role: user
+                schema:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                      pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                    role:
+                      type: string
+                      enum:
+                        - user
+                        - admin
+                  required:
+                    - email
+                    - role
+          responses:
+            "201":
+              description: Invitación creada.
+              content:
+                application/json:
+                  example:
+                    id: 019fe8c3-a54e-7b7f-8c8f-e57f0da23eba
+                    email: pepe@example.com
+                    expiresAt: 2026-08-16T23:02:43.782Z
+                    url: http://localhost:5173/registro?token=5rJnTHUDGC2bHp0KgNbp5Z0aeIlJWTTKWZ9wQcGlImQ
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      email:
+                        type: string
+                        format: email
+                        pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      url:
+                        type: string
+                        format: uri
+                    required:
+                      - id
+                      - email
+                      - expiresAt
+                      - url
+                    additionalProperties: false
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "409":
+              description: Ya existe una invitación pendiente para ese email.
+      /invitaciones/{token}/validar:
+        get:
+          operationId: invitationsValidate
+          summary: Comprueba si un token de invitación sigue siendo válido
+          description: Endpoint público (sin autenticación), pensado para que el frontend
+            valide el link antes de mostrar el formulario de registro.
+          tags:
+            - invitaciones
+          parameters:
+            - name: token
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            "200":
+              description: Invitación usable.
+              content:
+                application/json:
+                  example:
+                    email: pepe@example.com
+                    role: user
+                    expiresAt: 2026-08-16T23:02:43.782Z
+                  schema:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                      role:
+                        type: string
+                        enum:
+                          - user
+                          - admin
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - email
+                      - role
+                      - expiresAt
+                    additionalProperties: false
+            "404":
+              description: El token no existe.
+            "410":
+              description: La invitación ya fue usada, revocada o caducó.
+            "429":
+              description: Demasiados intentos fallidos (rate limit).
+    components:
+      securitySchemes:
+        bearerAuth:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+        oauth2Password:
+          type: oauth2
+          flows:
+            password:
+              tokenUrl: /api/v1/auth/token
+        oauth2Google:
+          type: oauth2
+          flows:
+            authorizationCode:
+              authorizationUrl: /api/v1/auth/google
+              tokenUrl: /api/v1/auth/google/callback
+              scopes:
+                openid: Identificar al usuario
+                email: Leer el email
+                profile: Leer el nombre
+  meta:
+    id: spc_c681d7e8b2824d02bfc73fb32789ac46
+    created: 1786566722492
+    modified: 1786566722492
