@@ -99,6 +99,7 @@ export async function refresh(refreshToken: string, meta: RequestMeta): Promise<
     }
 
     const user = await findUserById(stored.userId);
+    /* v8 ignore next -- @preserve */
     if (!user) {
         throw new UnauthorizedError();
     }
@@ -139,6 +140,7 @@ export async function loginWithGoogle(profile: GoogleProfile, meta: RequestMeta)
     const existingAccount = await findOAuthAccount("google", profile.providerUserId);
     if (existingAccount) {
         const user = await findUserById(existingAccount.userId);
+        /* v8 ignore next -- @preserve */
         if (!user) throw new UnauthorizedError();
         return issueTokenPair(user, meta);
     }

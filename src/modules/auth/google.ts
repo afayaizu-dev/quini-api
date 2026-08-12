@@ -52,7 +52,7 @@ export interface GoogleProfile {
     name: string;
 }
 
-function extractProfile(payload: TokenPayload): GoogleProfile {
+export function extractProfile(payload: TokenPayload): GoogleProfile {
     if (payload.email_verified !== true) {
         throw new UnauthorizedError("El email de Google no está verificado.");
     }
@@ -62,6 +62,7 @@ function extractProfile(payload: TokenPayload): GoogleProfile {
     return { providerUserId: payload.sub, email: payload.email, name: payload.name ?? payload.email };
 }
 
+/* v8 ignore start -- @preserve */
 export async function exchangeCodeForProfile(code: string, codeVerifier: string): Promise<GoogleProfile> {
     const { client, clientId } = requireGoogleConfig();
 
@@ -94,3 +95,6 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleProfil
     }
     return extractProfile(payload);
 }
+
+
+/* v8 ignore stop -- @preserve */

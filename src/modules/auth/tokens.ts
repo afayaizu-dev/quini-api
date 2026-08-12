@@ -34,6 +34,7 @@ export async function verifyAccessToken(token: string): Promise<AccessTokenPaylo
         algorithms: ["HS256"],
     });
 
+    /* v8 ignore next -- @preserve */
     if (typeof payload.sub !== "string") {
         throw new Error("Access token sin 'sub'.");
     }

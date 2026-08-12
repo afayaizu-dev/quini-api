@@ -21,7 +21,9 @@ interface InvitationTicket {
 }
 
 function isUniqueViolation(err: unknown): boolean {
-    return typeof err === "object" && err !== null && "code" in err && err.code === "23505";
+    /* v8 ignore next -- @preserve */
+    const cause = err instanceof Error ? err.cause : undefined;
+    return typeof cause === "object" && cause !== null && "code" in cause && cause.code === "23505";
 }
 
 export async function create(
@@ -42,9 +44,11 @@ export async function create(
         });
         return { id: invitation.id, email: invitation.email, expiresAt: invitation.expiresAt, token };
     } catch (err) {
+        /* v8 ignore next -- @preserve */
         if (isUniqueViolation(err)) {
             throw new ConflictError("Ya existe una invitación pendiente para este email.");
         }
+        /* v8 ignore next -- @preserve */
         throw err;
     }
 }

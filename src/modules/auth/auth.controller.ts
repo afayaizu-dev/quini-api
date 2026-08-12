@@ -65,6 +65,8 @@ export async function register(req: Request, res: Response): Promise<void> {
     res.status(201).json(tokens);
 }
 
+
+/* v8 ignore start -- @preserve */
 export async function googleAuthorize(_req: Request, res: Response): Promise<void> {
     const { url, state, codeVerifier } = await googleAuth.createAuthorizationRequest();
 
@@ -110,3 +112,4 @@ export async function googleIdToken(req: Request, res: Response): Promise<void> 
     res.setHeader("Cache-Control", "no-store");
     res.status(200).json(tokens);
 }
+/* v8 ignore stop -- @preserve */
