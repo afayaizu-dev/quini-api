@@ -9,5 +9,4 @@ import { invitationRateLimit } from "../../middleware/rate-limit.js";
 export const invitationsRouter = Router();
 
 invitationsRouter.post("/", requireAuth, requireRole("admin"), validate({ body: CreateInvitationSchema }), create);
-invitationsRouter.get("/:token/validar", validateInvitation);
 invitationsRouter.get("/:token/validar", invitationRateLimit, validateInvitation);

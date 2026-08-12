@@ -10,3 +10,7 @@ export const db = drizzle(pool, { schema });
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type DbOrTx = typeof db | Tx;
+
+export async function closeDb(): Promise<void> {
+    await pool.end();
+}
