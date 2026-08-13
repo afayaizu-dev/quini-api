@@ -63,6 +63,7 @@ Convenciones observadas en `invitations.repository.ts`:
 - **Lecturas**: `tx.select().from(table).where(eq(table.columna, valor))`, combinando condiciones con `and(...)` cuando hace falta (`eq`, `and`, `gt`, `isNull` son los operadores ya en uso).
 - **Actualizaciones**: `tx.update(table).set({...}).where(eq(...))`.
 - **Nunca se abre una transacción dentro del propio repository** — quien decide el límite transaccional es siempre el `service` (o un `service` de otro módulo que orquesta varios).
+- **Nombrar las funciones y el choque con `service.ts`**: `invitations.repository.ts` usa nombres compuestos (`createInvitation`, `findInvitationByHash`, `markInvitationAccepted`) precisamente para poder importarlos por nombre directo en el `service` sin chocar con las funciones que el propio `service` exporta. Si en cambio se usan verbos genéricos (`create`, `update`, `findAll`...) — como en `temporadas` —, el `service` que los consume **debe** importarlos como namespace: `import * as temporadasRepository from "./temporadas.repository.js"` y llamarlos como `temporadasRepository.create(...)`. Las dos convenciones de nombrado son válidas; lo que no vale es mezclar verbos genéricos en el repository con un `import { create, update } from "./x.repository.js"` sin namespace en el service — eso choca con el `create`/`update` que el propio service también exporta.
 
 ## 5. `service.ts` — reglas de negocio y traducción de errores
 
@@ -82,6 +83,7 @@ Convenciones observadas en `invitations.controller.ts`:
 - **Contexto de usuario autenticado**: un helper (`requireAuthContext(req)`) extrae `req.auth` y lanza `UnauthorizedError` si falta, en vez de repetir la comprobación en cada handler.
 - **La forma de la respuesta se construye explícitamente** — no se hace `res.json(row)` a secas cuando la fila de BD y el contrato público difieren (p. ej. añadir un campo `url` calculado a partir de `env.PUBLIC_APP_URL` en invitaciones). El `controller` es la última capa que puede dar forma a lo que ve el cliente.
 - **Códigos de estado por operación**: `201` en creación, `200` en lectura/acciones, `204` en borrado sin cuerpo (ver `equipos`/`temporadas` en el plan).
+- **Mismo choque de nombres, un nivel más arriba**: si `service.ts` expone verbos genéricos (`create`, `update`, `remove`...), `controller.ts` los importa igual que el `service` importa al `repository` — como namespace: `import * as temporadasService from "./temporadas.service.js"`, porque el propio `controller` también exporta `create`/`update`/`remove`. `routes.ts`, un nivel más arriba, normalmente **no** tiene este problema: ahí se importan las funciones del `controller` por nombre directo, porque no hay otro `create` en ese fichero con el que choquen.
 
 ## 7. `routes.ts` — middlewares y montaje
 
@@ -188,6 +190,7 @@ flowchart TD
 - No cubre todavía **paginación ni filtrado por query params** en listados (`GET /temporadas`, `GET /jornadas`) — ningún módulo actual lo necesita aún con este volumen de datos; cuando aparezca, este documento debe ganar una sección propia.
 - No cubre el patrón para **operaciones que abarcan varios módulos en una sola transacción** (el caso `auth` + `invitations` al registrar) más allá de mencionar que `tx` se pasa hacia abajo — merece un ejemplo propio cuando `jornadas` empiece a tocar `equipos` en F11.
 - Pendiente decidir si `<nombre>.openapi.ts` (visto en `invitations`) es parte fija de la plantilla de 5+1 ficheros o un añadido específico — revisar tras F10.5/F11 con más de un caso.
+- Extraer `isUniqueViolation`/`isForeignKeyViolation` (códigos `23505`/`23503` de Postgres) a un helper compartido, p. ej. `src/core/pg-errors.ts`, en cuanto un segundo módulo (`equipos` o `jornadas`) las necesite tal cual. Con un solo caso repetido (`invitations` + `temporadas`) todavía no está claro cuál es la forma correcta de la abstracción — no adivinarla antes de tiempo.
 
 ## 13. Glosario
 

@@ -1,6 +1,6 @@
 # Insomnia: colección, entornos y helper de OAuth2
 
-> **Ámbito de este documento**: lo implementado en **F9** del plan (`00-Plan-inicial.md`) — importar `openapi/openapi.json` en Insomnia, configurar el helper de OAuth2 para no pegar tokens a mano, y (pendiente) los entornos de rol, el flujo de Google y la exportación versionada de la colección.
+> **Ámbito de este documento**: lo implementado en **F9** del plan (`00-Plan-inicial.md`) — importar `openapi/openapi.json` en Insomnia, configurar el helper de OAuth2 para no pegar tokens a mano, los entornos de rol, y la exportación versionada de la colección. Queda pendiente (baja prioridad) el flujo de Google con Authorization Code + PKCE.
 >
 > **Para quién**: documento de estudio y, sobre todo, **chuleta**. La parte de código de este proyecto se entiende leyendo los ficheros; Insomnia es una herramienta de interfaz gráfica que cambia de versión en versión, y aquí quedan anotadas las trampas concretas con las que nos tropezamos configurándola, para no tener que redescubrirlas la próxima vez.
 
@@ -14,15 +14,16 @@
 4. [La trampa de los dos niveles de entornos](#4-la-trampa-de-los-dos-niveles-de-entornos)
 5. [El helper de OAuth2 (Resource Owner Password Credentials)](#5-el-helper-de-oauth2-resource-owner-password-credentials)
 6. [Herencia de autenticación entre carpetas](#6-herencia-de-autenticación-entre-carpetas)
-7. [Chuleta: síntoma → causa real → solución](#7-chuleta-síntoma--causa-real--solución)
-8. [Lo que falta](#8-lo-que-falta)
-9. [Glosario](#9-glosario)
+7. [Login con Google (Authorization Code + PKCE)](#7-login-con-google-authorization-code--pkce)
+8. [Chuleta: síntoma → causa real → solución](#8-chuleta-síntoma--causa-real--solución)
+9. [Lo que falta](#9-lo-que-falta)
+10. [Glosario](#10-glosario)
 
 ---
 
 ## 1. Objetivo de F9
 
-Tener una colección de Insomnia **funcional y versionada** (exportada a `insomnia/quini-api.insomnia.yaml`, pendiente de commit) que:
+Tener una colección de Insomnia **funcional y versionada** (exportada a `insomnia/quini-api.insomnia.yaml`, comiteada y pusheada) que:
 
 - Se genera automáticamente a partir de `openapi/openapi.json` (F7) — no se escriben peticiones a mano.
 - Obtiene y renueva el access token sola, vía un helper de OAuth2, sin que haya que copiar `Authorization: Bearer ...` en cada petición.
@@ -111,33 +112,69 @@ En resumen, la cadena completa que tiene que estar en "Inherit from Parent" (o l
 
 ---
 
-## 7. Chuleta: síntoma → causa real → solución
+## 7. Login con Google (Authorization Code + PKCE)
 
-| Síntoma / error                                                                                                                             | Causa real                                                                                                                                        | Solución                                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| No aparece pestaña "Auth" en ningún sitio evidente                                                                                          | Hay que hacer clic directamente sobre el **nombre de la carpeta** (o de la colección) en el árbol, no sobre una petición dentro de ella           | Clic en el nodo de la carpeta/colección → se abre un panel propio con pestañas `Auth`/`Headers`/`Docs`                                                |
-| Solo aparecen "Authorization Code", "Implicit", "Resource Owner Password Credentials", "Client Credentials" en el desplegable de grant type | Es el nombre formal RFC 6749; no existe una opción literal llamada "Password Credentials"                                                         | Elegir **Resource Owner Password Credentials**                                                                                                        |
-| El import no genera una carpeta raíz única                                                                                                  | Insomnia crea una carpeta por cada `tag` de la spec (aquí: `auth`, `invitaciones`), sin contenedor común                                          | Crear una carpeta nueva y mover dentro las carpetas generadas, o configurar el OAuth2 por separado en cada una                                        |
-| `Error: Couldn't resolve host name`                                                                                                         | Una variable de la URL (`{{ _.base_url }}`) no se resolvió — se intentó conectar literalmente al texto sin resolver                               | Comprobar qué entorno está activo y en qué variables vive `base_url` (ver fila siguiente)                                                             |
-| `TypeError: Failed to construct 'URL': Invalid URL`                                                                                         | Igual que arriba: la URL resultante, tras sustituir variables, no es válida                                                                       | Mismo diagnóstico: revisar el entorno activo y dónde vive la variable                                                                                 |
-| "1 environment variable is missing: bearerToken"                                                                                            | El import puso "Bearer Token" como Auth de esa petición concreta, con una variable que no existe                                                  | Cambiar el Auth de esa petición a "Inherit from Parent"                                                                                               |
-| El "URL PREVIEW" de una petición se queda en `...`                                                                                          | La variable referenciada en la URL no se resuelve — normalmente, vive en el entorno equivocado                                                    | Comprobar que la variable está en **Collection Environments**, no en **Project Environments**                                                         |
-| `401 UNAUTHORIZED` de la propia API, aunque el OAuth2 parece bien configurado                                                               | El campo **Access Token URL** del OAuth2 se quedó vacío                                                                                           | Rellenarlo con `{{ _.base_url }}/auth/token`                                                                                                          |
-| Una carpeta intermedia corta la herencia de Auth                                                                                            | Esa carpeta tiene su propio Auth en "No Auth" en vez de "Inherit from Parent"                                                                     | Poner "Inherit from Parent" en **todos** los niveles de la cadena, no solo en la petición final                                                       |
-| Al cambiar de entorno (`Local-admin` → `Local-user`), la petición sigue usando el token del admin (comprobado decodificando el JWT enviado) | Bug conocido de Insomnia: el token OAuth2 de una carpeta se cachea y no siempre se refresca al cambiar de entorno, ni con "Clear OAuth 2 session" | Workaround manual: pedir el token con `POST /auth/token` aparte y pegarlo como "Bearer Token" en la petición concreta que se está probando (ver §4.1) |
+Sirve para probar `POST /auth/google/id-token` con un `id_token` **real** de Google, sin necesitar un frontend con la librería JS de Google — cerrando un hueco que quedó pendiente desde F6 (ver `docs/02-Autenticacion.md`).
+
+**Prerrequisitos**:
+
+- Tu app de Google sigue en modo "Testing" en Google Cloud Console — la cuenta de Google con la que inicies sesión tiene que estar en la lista de "test users", o Google rechaza el login.
+- El email de esa cuenta real casi seguro no tiene invitación ni usuario en tu BD de desarrollo. Invítalo antes con `POST /invitaciones` (con el helper de admin ya funcionando) para obtener un `200` en vez de un `403 REGISTRATION_NOT_ALLOWED` — ambos son resultados válidos, pero el `200` es el que de verdad ejercita todo el flujo de creación.
+
+**Configuración** (carpeta nueva, p. ej. `Google (Authorization Code)` → pestaña Auth → OAuth 2.0 → Grant Type: Authorization Code):
+
+| Campo             | Valor                                                             |
+| ----------------- | ----------------------------------------------------------------- |
+| Authorization URL | `https://accounts.google.com/o/oauth2/v2/auth`                    |
+| Access Token URL  | `https://oauth2.googleapis.com/token`                             |
+| Client ID         | el de `.env` (`GOOGLE_CLIENT_ID`)                                 |
+| Client Secret     | el de `.env` (`GOOGLE_CLIENT_SECRET`)                             |
+| Redirect URI      | **`https://app.insomnia.rest/oauth/redirect`** (ver trampa abajo) |
+| Scope             | `openid email profile`                                            |
+| PKCE              | activado                                                          |
+
+**La trampa del Redirect URI**: Insomnia no usa la URL de callback de tu propio backend (`.../auth/google/callback`) para capturar la redirección — usa una URI propia suya que intercepta internamente. Buscando en la documentación de Insomnia se sugiere `http://insomnia`, pero **en la versión 13.1.0 la real es `https://app.insomnia.rest/oauth/redirect`**. Si usas cualquier otra, Google responde con:
+
+```
+Error 400: redirect_uri_mismatch
+```
+
+Hay que **añadir esa URI a la lista de "Authorized redirect URIs"** del Client ID en Google Cloud Console (Console → APIs & Services → Credentials), sin quitar la que ya tienes para tu backend real — un mismo Client ID admite varias.
+
+**Tras el login**, Insomnia muestra la respuesta de Google con dos tokens: `access_token` y **`identity_token`** (así llama Insomnia al `id_token` — mismo JWT, solo el nombre del campo cambia). Es el `identity_token` el que hay que copiar.
+
+**Última trampa**: al pegar el `identity_token` en la petición `POST /auth/google/id-token`, comprueba que va **solo en el body** (`{ "id_token": "..." }`) y no también en la pestaña "Params" de la petición como query string — si se cuela ahí, la petición puede acabar devolviendo un `500 INTERNAL_ERROR` en vez del `200` esperado, con un body de la petición inconsistente con lo que crees que has enviado.
 
 ---
 
-## 8. Lo que falta
+## 8. Chuleta: síntoma → causa real → solución
+
+| Síntoma / error                                                                                                                             | Causa real                                                                                                                                        | Solución                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No aparece pestaña "Auth" en ningún sitio evidente                                                                                          | Hay que hacer clic directamente sobre el **nombre de la carpeta** (o de la colección) en el árbol, no sobre una petición dentro de ella           | Clic en el nodo de la carpeta/colección → se abre un panel propio con pestañas `Auth`/`Headers`/`Docs`                                                              |
+| Solo aparecen "Authorization Code", "Implicit", "Resource Owner Password Credentials", "Client Credentials" en el desplegable de grant type | Es el nombre formal RFC 6749; no existe una opción literal llamada "Password Credentials"                                                         | Elegir **Resource Owner Password Credentials**                                                                                                                      |
+| El import no genera una carpeta raíz única                                                                                                  | Insomnia crea una carpeta por cada `tag` de la spec (aquí: `auth`, `invitaciones`), sin contenedor común                                          | Crear una carpeta nueva y mover dentro las carpetas generadas, o configurar el OAuth2 por separado en cada una                                                      |
+| `Error: Couldn't resolve host name`                                                                                                         | Una variable de la URL (`{{ _.base_url }}`) no se resolvió — se intentó conectar literalmente al texto sin resolver                               | Comprobar qué entorno está activo y en qué variables vive `base_url` (ver fila siguiente)                                                                           |
+| `TypeError: Failed to construct 'URL': Invalid URL`                                                                                         | Igual que arriba: la URL resultante, tras sustituir variables, no es válida                                                                       | Mismo diagnóstico: revisar el entorno activo y dónde vive la variable                                                                                               |
+| "1 environment variable is missing: bearerToken"                                                                                            | El import puso "Bearer Token" como Auth de esa petición concreta, con una variable que no existe                                                  | Cambiar el Auth de esa petición a "Inherit from Parent"                                                                                                             |
+| El "URL PREVIEW" de una petición se queda en `...`                                                                                          | La variable referenciada en la URL no se resuelve — normalmente, vive en el entorno equivocado                                                    | Comprobar que la variable está en **Collection Environments**, no en **Project Environments**                                                                       |
+| `401 UNAUTHORIZED` de la propia API, aunque el OAuth2 parece bien configurado                                                               | El campo **Access Token URL** del OAuth2 se quedó vacío                                                                                           | Rellenarlo con `{{ _.base_url }}/auth/token`                                                                                                                        |
+| Una carpeta intermedia corta la herencia de Auth                                                                                            | Esa carpeta tiene su propio Auth en "No Auth" en vez de "Inherit from Parent"                                                                     | Poner "Inherit from Parent" en **todos** los niveles de la cadena, no solo en la petición final                                                                     |
+| Al cambiar de entorno (`Local-admin` → `Local-user`), la petición sigue usando el token del admin (comprobado decodificando el JWT enviado) | Bug conocido de Insomnia: el token OAuth2 de una carpeta se cachea y no siempre se refresca al cambiar de entorno, ni con "Clear OAuth 2 session" | Workaround manual: pedir el token con `POST /auth/token` aparte y pegarlo como "Bearer Token" en la petición concreta que se está probando (ver §4.1)               |
+| `FATAL Expected an Insomnia v4 export file; unexpected data found` al correr `inso run test`                                                | El paquete de npm `insomnia-inso` está descontinuado y congelado en v3.6.0, que solo entiende el formato v4; Insomnia 13 exporta en v5            | Sin solución limpia hoy — el `inso` mantenido de verdad se distribuye por GitHub releases de `Kong/insomnia`, no por npm (ver §9)                                   |
+| `Error 400: redirect_uri_mismatch` al iniciar sesión con Google desde el helper OAuth2 de Insomnia                                          | El Redirect URI configurado no es uno de los registrados en Google Cloud Console para ese Client ID                                               | Usar `https://app.insomnia.rest/oauth/redirect` (la real en v13.1.0, no `http://insomnia`) y añadirla a "Authorized redirect URIs" en Google Cloud Console (ver §7) |
+| `500 INTERNAL_ERROR` al enviar un `id_token`/`identity_token` real a `POST /auth/google/id-token`, aunque el body parece correcto           | El valor se coló también como query string en la URL de la petición (pestaña "Params"), no solo en el body                                        | Quitarlo de "Params", dejarlo solo en el body JSON                                                                                                                  |
+
+---
+
+## 9. Lo que falta
 
 - **Entornos de rol** (`Local-admin`, `Local-user`): creados, con un usuario `user@quini.local` real (invitado y registrado a través de la propia colección). El cambio de entorno para el helper de OAuth2 automático no funciona por el bug descrito en §4.1 — la comprobación del `403` se hace con el workaround manual documentado ahí, no de forma tan fluida como preveía el plan.
-- **Duplicar el helper de auth con Authorization Code + PKCE** para probar el login con Google desde el propio cliente.
-- **Exportar la colección** a `insomnia/quini-api.insomnia.yaml` y comitearla — hasta que esto no se haga, todo lo configurado en este documento vive solo en el Insomnia local, no en el repositorio.
-- **Instalar `insomnia-inso`** y añadir el script `insomnia:test` para poder ejecutar la colección desde terminal/CI, tal como pide el plan.
+- **`npm run insomnia:test` no funciona todavía, y no es un fallo de configuración nuestro**: el paquete `insomnia-inso` de npm está **descontinuado** ("Use at your own risk" en su propia página de npm), congelado en la versión `3.6.0`. Insomnia 13 exporta en un formato v5 (YAML) que esa versión de `inso` no entiende — falla con `FATAL Expected an Insomnia v4 export file`. El `inso` que Kong mantiene de verdad ahora se distribuye por los _releases_ de GitHub de `Kong/insomnia`, no por este paquete de npm, y ni siquiera esa versión más reciente tiene el soporte de v5 totalmente resuelto (issue abierto `Kong/insomnia#8599`). Se deja documentado como limitación externa conocida; la colección se sigue usando con normalidad desde la propia app de Insomnia. Retomar esto cuando el proyecto conecte de verdad con CI, evaluando entonces si instalar el binario desde GitHub releases en vez de este paquete de npm.
 
 ---
 
-## 9. Glosario
+## 10. Glosario
 
 - **Grant type**: la variante concreta del protocolo OAuth2 que se usa para obtener un token — aquí, "Resource Owner Password Credentials" (usuario/contraseña directos), distinto del "Authorization Code" que se usa para el login con Google.
 - **Inherit from Parent**: opción de la pestaña Auth de una petición o carpeta que le dice "no definas tu propia autenticación, usa la que tenga configurada quien te contiene".

@@ -4,6 +4,7 @@ import "../modules/auth/auth.openapi.js";
 import "../modules/invitations/invitations.openapi.js";
 import { paths } from "./registry.js";
 import { securitySchemes } from "./security-schemes.js";
+import "../modules/temporadas/temporadas.openapi.js";
 
 
 
@@ -19,6 +20,7 @@ const document = createDocument({
     tags: [
         { name: "auth", description: "Autenticación: login, tokens, Google." },
         { name: "invitaciones", description: "Alta cerrada por invitación." },
+        { name: "temporadas", description: "Gestión de temporadas." },
     ],
     paths,
     components: { securitySchemes },

@@ -28,12 +28,12 @@
 
 El plan (§13) propone cuatro niveles, cada uno con un objetivo distinto:
 
-| Nivel           | Qué prueba                                                | Herramienta        | BD            | Objetivo                                   |
-| --------------- | --------------------------------------------------------- | ------------------ | ------------- | ------------------------------------------ |
-| **Unit**        | Lógica pura, sin red ni BD                                | Vitest             | No            | Rápido, muchos casos borde                 |
-| **Integración** | Endpoint completo: HTTP → middleware → service → SQL real | Vitest + Supertest | **Sí (real)** | Donde aparecen los bugs de verdad          |
-| **Contrato**    | La respuesta real cumple el esquema del OpenAPI           | ajv                | Sí            | La documentación no miente                 |
-| **Humo (e2e)**  | La colección de Insomnia pasa contra la app arrancada     | `inso run test`    | Sí            | El camino del cliente real (F9, pendiente) |
+| Nivel           | Qué prueba                                                | Herramienta        | BD            | Objetivo                                              |
+| --------------- | --------------------------------------------------------- | ------------------ | ------------- | ----------------------------------------------------- |
+| **Unit**        | Lógica pura, sin red ni BD                                | Vitest             | No            | Rápido, muchos casos borde                            |
+| **Integración** | Endpoint completo: HTTP → middleware → service → SQL real | Vitest + Supertest | **Sí (real)** | Donde aparecen los bugs de verdad                     |
+| **Contrato**    | La respuesta real cumple el esquema del OpenAPI           | ajv                | Sí            | La documentación no miente                            |
+| **Humo (e2e)**  | La colección de Insomnia pasa contra la app arrancada     | `inso run test`    | Sí            | El camino del cliente real (F9, ver `05-Insomnia.md`) |
 
 Este proyecto usa sobre todo el nivel de **integración**: la inmensa mayoría de los tests montan la `app` de Express en memoria (sin escuchar en un puerto real) y le hacen peticiones HTTP de verdad con Supertest, contra una base de datos Postgres real. Solo dos casos concretos son estrictamente **unitarios** (sin HTTP): `loginWithGoogle` y las funciones puramente locales de `google.ts` — se explica el porqué en la [§9](#9-qué-se-excluye-de-los-tests-y-por-qué).
 
@@ -295,7 +295,7 @@ Los tres comandos cargan `.env.test` explícitamente (`node --env-file=.env.test
 - **`temporadas`/`jornadas`/`equipos` (F10, F10.5, F11) no tienen tests todavía** — esos módulos ni siquiera existen aún en el código; `tests/helpers/factories.ts`, previsto en el plan para esos módulos, se dejó sin crear a propósito hasta que exista algo que fabricar.
 - **`POST /auth/google/id-token` no tiene test de integración vía HTTP**, solo la lógica de negocio compartida (`loginWithGoogle`) probada de forma unitaria — coherente con la decisión de no mockear la verificación de Google, pero sigue siendo una ruta sin ejercitar de punta a punta.
 - **El 500 genérico de `error-handler.ts` (el `catch-all` final) no tiene test**: forzar un error verdaderamente inesperado (ni `AppError`, ni `ZodError`, ni `SyntaxError` de JSON) sin mockear una dependencia no tiene una vía limpia con el enfoque de esta suite.
-- **F9 (Insomnia/smoke test) es el siguiente escalón de la pirámide**, pendiente de empezar: la colección de Insomnia ejecutada contra la app ya arrancada, como comprobación final de que el cliente real (no solo Supertest) puede completar los flujos.
+- **F9 (Insomnia/smoke test) ya está cerrado** — colección importada, helper de OAuth2 y entornos de rol funcionando, exportada y versionada. Detalles y la chuleta de problemas de la UI en `docs/05-Insomnia.md`. Queda pendiente, de baja prioridad, duplicar el helper con Authorization Code + PKCE para probar el login con Google desde el propio cliente.
 
 ---
 
