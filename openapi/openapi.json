@@ -22,6 +22,10 @@
     {
       "name": "temporadas",
       "description": "Gestión de temporadas."
+    },
+    {
+      "name": "equipos",
+      "description": "Gestión de equipos."
     }
   ],
   "paths": {
@@ -1213,6 +1217,364 @@
           },
           "404": {
             "description": "No existe una temporada con ese código."
+          }
+        }
+      }
+    },
+    "/equipos": {
+      "get": {
+        "operationId": "equiposFindAll",
+        "summary": "Lista todos los equipos",
+        "description": "Cualquier usuario autenticado puede consultar el catálogo completo de equipos.",
+        "tags": ["equipos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de equipos.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "nombreLargo": "Real Madrid",
+                    "nombreCorto": "RM",
+                    "createdAt": "2026-08-15T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "nombreLargo": {
+                        "type": "string"
+                      },
+                      "nombreCorto": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": ["id", "nombreLargo", "nombreCorto", "createdAt"],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          }
+        }
+      },
+      "post": {
+        "operationId": "equiposCreate",
+        "summary": "Crea un equipo",
+        "description": "Solo un admin puede añadir equipos al catálogo.",
+        "tags": ["equipos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "nombreLargo": "Real Madrid",
+                "nombreCorto": "RM"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombreLargo": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "nombreCorto": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["nombreLargo", "nombreCorto"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Equipo creado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "nombreLargo": "Real Madrid",
+                  "nombreCorto": "RM",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "nombreLargo": {
+                      "type": "string"
+                    },
+                    "nombreCorto": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": ["id", "nombreLargo", "nombreCorto", "createdAt"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "nombreLargo o nombreCorto vacíos."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "409": {
+            "description": "Ya existe un equipo con ese nombreLargo."
+          }
+        }
+      }
+    },
+    "/equipos/{id}": {
+      "get": {
+        "operationId": "equiposFindById",
+        "summary": "Consulta un equipo por su id",
+        "description": "Devuelve los datos de un equipo concreto a partir de su id.",
+        "tags": ["equipos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Equipo encontrado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "nombreLargo": "Real Madrid",
+                  "nombreCorto": "RM",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "nombreLargo": {
+                      "type": "string"
+                    },
+                    "nombreCorto": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": ["id", "nombreLargo", "nombreCorto", "createdAt"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe un equipo con ese id."
+          }
+        }
+      },
+      "put": {
+        "operationId": "equiposUpdate",
+        "summary": "Actualiza un equipo",
+        "description": "Actualiza el nombreLargo y/o nombreCorto de un equipo existente.",
+        "tags": ["equipos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "nombreLargo": "Real Madrid CF",
+                "nombreCorto": "RMA"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombreLargo": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "nombreCorto": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["nombreLargo", "nombreCorto"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Equipo actualizado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "nombreLargo": "Real Madrid",
+                  "nombreCorto": "RM",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "nombreLargo": {
+                      "type": "string"
+                    },
+                    "nombreCorto": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": ["id", "nombreLargo", "nombreCorto", "createdAt"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "nombreLargo o nombreCorto vacíos."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe un equipo con ese id."
+          },
+          "409": {
+            "description": "Ya existe otro equipo con ese nombreLargo."
+          }
+        }
+      },
+      "delete": {
+        "operationId": "equiposRemove",
+        "summary": "Elimina un equipo",
+        "description": "Solo se puede borrar si no tiene partidos asociados (restricción RESTRICT en BD).",
+        "tags": ["equipos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Equipo eliminado."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe un equipo con ese id."
+          },
+          "409": {
+            "description": "El equipo tiene partidos asociados (RESTRICT)."
           }
         }
       }

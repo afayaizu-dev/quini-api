@@ -18,6 +18,7 @@ export default defineConfig({
                 "src/modules/auth/auth.service.ts": { 100: true },
                 "src/modules/invitations/invitations.service.ts": { 100: true },
                 "src/modules/temporadas/temporadas.service.ts": { 100: true },
+                "src/modules/equipos/equipos.service.ts": { 100: true }
             },
         },
     },
