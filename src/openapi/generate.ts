@@ -6,6 +6,7 @@ import { paths } from "./registry.js";
 import { securitySchemes } from "./security-schemes.js";
 import "../modules/temporadas/temporadas.openapi.js";
 import "../modules/equipos/equipos.openapi.js";
+import "../modules/jornadas/jornadas.openapi.js";
 
 
 
@@ -23,6 +24,7 @@ const document = createDocument({
         { name: "invitaciones", description: "Alta cerrada por invitación." },
         { name: "temporadas", description: "Gestión de temporadas." },
         { name: "equipos", description: "Gestión de equipos." },
+        { name: "jornadas", description: "Jornadas y partidos de una temporada (F11)." },
     ],
     paths,
     components: { securitySchemes },

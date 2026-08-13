@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const CODIGO_TEMPORADA_REGEX = /^\d{4}-\d{2}$/;
-const codigoTemporada = z.string().regex(
+export const codigoTemporada = z.string().regex(
     CODIGO_TEMPORADA_REGEX,
     "El código debe tener el formato AAAA-AA (p. ej. 2026-27)",
 );

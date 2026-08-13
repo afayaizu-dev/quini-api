@@ -2,346 +2,806 @@ type: spec.insomnia.rest/5.0
 schema_version: "5.1"
 name: quini-api 1.0.0
 meta:
-  id: wrk_16ffd88b326043ada2628bde0acb62cf
-  created: 1786566722490
-  modified: 1786566722490
+  id: wrk_37859768fd194de78b5e128e065fd89c
+  created: 1786657243109
+  modified: 1786657243109
   description: ""
 collection:
-  - name: quini-api
+  - name: auth
     meta:
-      id: fld_dd832c0c161f480fbc77c246a724716e
-      created: 1786568925973
-      modified: 1786570972594
-      sortKey: -1786568925973
-      description: ""
+      id: fld_633c8b046a0547b8b2b8d08cccb0b258
+      created: 1786657243113
+      modified: 1786657243113
+      sortKey: -1786657243113
+      description: "Autenticación: login, tokens, Google."
     children:
-      - name: auth
+      - url: "{{ _.base_url }}/auth/token"
+        name: Obtiene tokens (password grant o refresh_token grant)
         meta:
-          id: fld_8782d18ac74c447ebc2f3e797e348d01
-          created: 1786566722496
-          modified: 1786569065510
-          sortKey: -1786568935209
-          description: "Autenticación: login, tokens, Google."
-        children:
-          - url: "{{ _.base_url }}/auth/token"
-            name: Obtiene tokens (password grant o refresh_token grant)
-            meta:
-              id: req_0ef9d7669c2c4d4b985d74f173de22df
-              created: 1786566722501
-              modified: 1786571877172
-              isPrivate: false
-              description: Compatible en forma con el password grant de OAuth2 (RFC 6749).
-                También acepta grant_type=refresh_token para rotar el refresh
-                token, con detección de reuso. Ver docs/02-Autenticacion.md.
-              sortKey: -1786566722501
-            method: POST
-            body:
-              mimeType: application/x-www-form-urlencoded
-              params:
-                - name: grant_type
-                  value: password
-                  description: ""
-                  disabled: false
-                - name: username
-                  value: user@quini.local
-                  description: ""
-                  disabled: false
-                - name: password
-                  value: una-contraseña-de-al-menos-12
-                  description: ""
-                  disabled: false
-            headers:
-              - name: Content-Type
-                value: application/x-www-form-urlencoded
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/auth/logout"
-            name: Revoca todos los refresh tokens del usuario autenticado
-            meta:
-              id: req_23445d3131c147f994c61d9902e3ba47
-              created: 1786566722502
-              modified: 1786566722502
-              isPrivate: false
-              description: Cierra sesión en todos los dispositivos.
-              sortKey: -1786566722502
-            method: POST
-            authentication:
-              type: bearer
-              token: "{{ _.bearerToken }}"
-              prefix: ""
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/auth/revoke"
-            name: Revoca un refresh token concreto
-            meta:
-              id: req_728d11245ece429ca6835dc2f52762e3
-              created: 1786566722502
-              modified: 1786566722502
-              isPrivate: false
-              description: Cierra sesión en un solo dispositivo/sesión. Si el token ya no
-                existe o ya estaba revocado, no falla (operación idempotente).
-              sortKey: -1786566722502
-            method: POST
-            body:
-              mimeType: application/json
-              text: |-
-                {
-                  "refresh_token": "string"
-                }
-            headers:
-              - name: Content-Type
-                value: application/json
-                disabled: false
-            authentication:
-              type: bearer
-              token: "{{ _.bearerToken }}"
-              prefix: ""
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/auth/me"
-            name: Devuelve la identidad del usuario autenticado
-            meta:
-              id: req_01792b0dd38c4d20a8b0a0f2f252229e
-              created: 1786566722503
-              modified: 1786569607733
-              isPrivate: false
-              description: Lee el payload del access token ya verificado por requireAuth — no
-                consulta la base de datos.
-              sortKey: -1786566722503
-            method: GET
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/auth/register"
-            name: Completa el registro a partir de una invitación
-            meta:
-              id: req_687b4026e5144fd4adb6b58009040d7b
-              created: 1786566722503
-              modified: 1786570877778
-              isPrivate: false
-              description: Consume una invitación de un solo uso (por token) y crea el usuario
-                con el rol de la invitación, en una transacción. Ver
-                docs/02-Autenticacion.md.
-              sortKey: -1786566722503
-            method: POST
-            body:
-              mimeType: application/json
-              text: |
-                {
-                  "token": "IUKJh10C3UdUUaK4_wkVBb7wXtnODUhbq5AjHwyl1uM",
-                  "password": "una-contraseña-de-al-menos-12",
-                  "nombre": "Usuario de prueba"
-                }
-            headers:
-              - name: Content-Type
-                value: application/json
-                disabled: false
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/auth/google/id-token"
-            name: Login con Google a partir de un id_token ya obtenido por el frontend
-            meta:
-              id: req_1efab4d0229b47fa83453974d9c7a6ee
-              created: 1786566722504
-              modified: 1786566722504
-              isPrivate: false
-              description: Mismo camino de verificación que /auth/google/callback, sin
-                redirecciones ni PKCE.
-              sortKey: -1786566722504
-            method: POST
-            body:
-              mimeType: application/json
-              text: |-
-                {
-                  "id_token": "string"
-                }
-            headers:
-              - name: Content-Type
-                value: application/json
-                disabled: false
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/auth/google"
-            name: Inicia el login con Google (Authorization Code + PKCE)
-            meta:
-              id: req_c711069ed0ef47f59c8e580bb5e3225f
-              created: 1786566722504
-              modified: 1786566722504
-              isPrivate: false
-              description: Redirige a Google. Ver docs/02-Autenticacion.md.
-              sortKey: -1786566722504
-            method: GET
-            authentication:
-              type: oauth2
-              grantType: authorization_code
-              accessTokenUrl: /api/v1/auth/google/callback
-              authorizationUrl: /api/v1/auth/google
-              clientId: "{{ _.oauth2ClientId }}"
-              clientSecret: "{{ _.oauth2ClientSecret }}"
-              scope: ""
-              redirectUrl: "{{ _.oauth2RedirectUrl }}"
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/auth/google/callback"
-            name: Callback de Google tras el consentimiento
-            meta:
-              id: req_c9c280556b6145cdb80b1fd04bf3f9b2
-              created: 1786566722504
-              modified: 1786566722504
-              isPrivate: false
-              description: Google redirige aquí tras el consentimiento. Verifica state (CSRF)
-                y canjea el code por el id_token.
-              sortKey: -1786566722504
-            method: GET
-            parameters:
-              - name: code
-                value: string
-                disabled: false
-              - name: state
-                value: string
-                disabled: false
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-      - name: invitaciones
+          id: req_95326578c35d4f938ab760001c27f754
+          created: 1786657243115
+          modified: 1786657243115
+          isPrivate: false
+          description: Compatible en forma con el password grant de OAuth2 (RFC 6749).
+            También acepta grant_type=refresh_token para rotar el refresh token,
+            con detección de reuso. Ver docs/02-Autenticacion.md.
+          sortKey: -1786657243115
+        method: POST
+        body:
+          mimeType: application/x-www-form-urlencoded
+        headers:
+          - name: Content-Type
+            value: application/x-www-form-urlencoded
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/register"
+        name: Completa el registro a partir de una invitación
         meta:
-          id: fld_9f0135df2941485bb0e131845b1fea19
-          created: 1786566722500
-          modified: 1786569069412
-          sortKey: -1786568935109
-          description: Alta cerrada por invitación.
-        children:
-          - url: "{{ _.base_url }}/invitaciones"
-            name: Crea una invitación de un solo uso
-            meta:
-              id: req_3d2b4a0a3ac14a4eb48e0fedbe4d8d9a
-              created: 1786566722504
-              modified: 1786571954114
-              isPrivate: false
-              description: Solo un admin puede invitar. El token en claro se devuelve una sola
-                vez en la respuesta; después es irrecuperable.
-              sortKey: -1786566722504
-            method: POST
-            body:
-              mimeType: application/json
-              text: |-
+          id: req_0af9b00672ca43918bd2771ecc2aabc4
+          created: 1786657243116
+          modified: 1786657243116
+          isPrivate: false
+          description: Consume una invitación de un solo uso (por token) y crea el usuario
+            con el rol de la invitación, en una transacción. Ver
+            docs/02-Autenticacion.md.
+          sortKey: -1786657243116
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "token": "string",
+              "password": "string",
+              "nombre": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/me"
+        name: Devuelve la identidad del usuario autenticado
+        meta:
+          id: req_6ed0a60b414540fda6e84fd05c9d7537
+          created: 1786657243116
+          modified: 1786657243116
+          isPrivate: false
+          description: Lee el payload del access token ya verificado por requireAuth — no
+            consulta la base de datos.
+          sortKey: -1786657243116
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/revoke"
+        name: Revoca un refresh token concreto
+        meta:
+          id: req_bf166e301d47476d8f551b6453743fde
+          created: 1786657243116
+          modified: 1786657243116
+          isPrivate: false
+          description: Cierra sesión en un solo dispositivo/sesión. Si el token ya no
+            existe o ya estaba revocado, no falla (operación idempotente).
+          sortKey: -1786657243116
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "refresh_token": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/logout"
+        name: Revoca todos los refresh tokens del usuario autenticado
+        meta:
+          id: req_e04ae1229b3044d0b4a8074304ea5cf8
+          created: 1786657243116
+          modified: 1786657243116
+          isPrivate: false
+          description: Cierra sesión en todos los dispositivos.
+          sortKey: -1786657243116
+        method: POST
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/google/callback"
+        name: Callback de Google tras el consentimiento
+        meta:
+          id: req_17975057c26548b1a9cadf3949bb72d4
+          created: 1786657243117
+          modified: 1786657243117
+          isPrivate: false
+          description: Google redirige aquí tras el consentimiento. Verifica state (CSRF)
+            y canjea el code por el id_token.
+          sortKey: -1786657243117
+        method: GET
+        parameters:
+          - name: code
+            value: string
+            disabled: false
+          - name: state
+            value: string
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/google"
+        name: Inicia el login con Google (Authorization Code + PKCE)
+        meta:
+          id: req_4c055cd72ce4480da520819ef43e1947
+          created: 1786657243117
+          modified: 1786657243117
+          isPrivate: false
+          description: Redirige a Google. Ver docs/02-Autenticacion.md.
+          sortKey: -1786657243117
+        method: GET
+        authentication:
+          type: oauth2
+          grantType: authorization_code
+          accessTokenUrl: /api/v1/auth/google/callback
+          authorizationUrl: /api/v1/auth/google
+          clientId: "{{ _.oauth2ClientId }}"
+          clientSecret: "{{ _.oauth2ClientSecret }}"
+          scope: ""
+          redirectUrl: "{{ _.oauth2RedirectUrl }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/google/id-token"
+        name: Login con Google a partir de un id_token ya obtenido por el frontend
+        meta:
+          id: req_6895b297545a4014ad72b9bfc341f677
+          created: 1786657243117
+          modified: 1786657243117
+          isPrivate: false
+          description: Mismo camino de verificación que /auth/google/callback, sin
+            redirecciones ni PKCE.
+          sortKey: -1786657243117
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "id_token": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: temporadas
+    meta:
+      id: fld_333a142125bd473881df899133846443
+      created: 1786657243114
+      modified: 1786657243114
+      sortKey: -1786657243114
+      description: Gestión de temporadas.
+    children:
+      - url: "{{ _.base_url }}/temporadas"
+        name: Lista todas las temporadas
+        meta:
+          id: req_2656d83e00ed4f92b0ce0f41a3e6efdf
+          created: 1786657243118
+          modified: 1786657243118
+          isPrivate: false
+          description: Cualquier usuario autenticado puede consultar la lista completa.
+          sortKey: -1786657243118
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/temporadas/:codigo"
+        name: Consulta una temporada por su código
+        meta:
+          id: req_5078246ba5f34d2fbddd91a0fda7b770
+          created: 1786657243118
+          modified: 1786657243118
+          isPrivate: false
+          description: Cualquier usuario autenticado puede consultar una temporada concreta.
+          sortKey: -1786657243118
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/temporadas"
+        name: Crea una temporada
+        meta:
+          id: req_73151840f6cf4e1aae67a67c6091c09e
+          created: 1786657243118
+          modified: 1786657243118
+          isPrivate: false
+          description: Solo un admin puede crear temporadas. El código es inmutable tras
+            crearse.
+          sortKey: -1786657243118
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "string",
+              "nombre": "string",
+              "fechaInicio": "string",
+              "fechaFin": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/temporadas/:codigo"
+        name: Elimina una temporada
+        meta:
+          id: req_582ca24034c84270a8bc124eb7060340
+          created: 1786657243119
+          modified: 1786657243119
+          isPrivate: false
+          description: Solo se puede borrar si no tiene jornadas asociadas (restricción
+            RESTRICT en BD).
+          sortKey: -1786657243119
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/temporadas/:codigo"
+        name: Actualiza el nombre y las fechas de una temporada
+        meta:
+          id: req_ab26d963677a450b857696934d6586ae
+          created: 1786657243119
+          modified: 1786657243119
+          isPrivate: false
+          description: El código no se puede cambiar tras la creación (no aparece en este
+            esquema).
+          sortKey: -1786657243119
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "nombre": "string",
+              "fechaInicio": "string",
+              "fechaFin": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/temporadas/:codigo/activar"
+        name: Marca una temporada como la activa
+        meta:
+          id: req_e266642d4519418d82021b88c4836d89
+          created: 1786657243119
+          modified: 1786657243119
+          isPrivate: false
+          description: Desactiva cualquier otra temporada activa y activa esta, en una
+            única transacción (garantizado además por un índice único parcial en
+            BD).
+          sortKey: -1786657243119
+        method: POST
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: invitaciones
+    meta:
+      id: fld_8c5ec3394c7c43d49781a7d0f3fb9dd8
+      created: 1786657243114
+      modified: 1786657243114
+      sortKey: -1786657243114
+      description: Alta cerrada por invitación.
+    children:
+      - url: "{{ _.base_url }}/invitaciones"
+        name: Crea una invitación de un solo uso
+        meta:
+          id: req_6e9ec8d6da7e459cb41586cbc02229bb
+          created: 1786657243117
+          modified: 1786657243117
+          isPrivate: false
+          description: Solo un admin puede invitar. El token en claro se devuelve una sola
+            vez en la respuesta; después es irrecuperable.
+          sortKey: -1786657243117
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "user@example.com",
+              "role": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/invitaciones/:token/validar"
+        name: Comprueba si un token de invitación sigue siendo válido
+        meta:
+          id: req_3185322a5b76406593a3e9794d2e76b1
+          created: 1786657243118
+          modified: 1786657243118
+          isPrivate: false
+          description: Endpoint público (sin autenticación), pensado para que el frontend
+            valide el link antes de mostrar el formulario de registro.
+          sortKey: -1786657243118
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: equipos
+    meta:
+      id: fld_a396b74fd4dc4965a973904a968a6a89
+      created: 1786657243114
+      modified: 1786657243114
+      sortKey: -1786657243114
+      description: Gestión de equipos.
+    children:
+      - url: "{{ _.base_url }}/equipos"
+        name: Lista todos los equipos
+        meta:
+          id: req_1921c074ab7d488585283ef6d9b7b009
+          created: 1786657243119
+          modified: 1786657243119
+          isPrivate: false
+          description: Cualquier usuario autenticado puede consultar el catálogo completo
+            de equipos.
+          sortKey: -1786657243119
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/equipos"
+        name: Crea un equipo
+        meta:
+          id: req_f08715a395a843d79122184586bf26b2
+          created: 1786657243119
+          modified: 1786657243119
+          isPrivate: false
+          description: Solo un admin puede añadir equipos al catálogo.
+          sortKey: -1786657243119
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "nombreLargo": "string",
+              "nombreCorto": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/equipos/:id"
+        name: Consulta un equipo por su id
+        meta:
+          id: req_8c91f4584755472cb6adc9b6660b47af
+          created: 1786657243120
+          modified: 1786657243120
+          isPrivate: false
+          description: Devuelve los datos de un equipo concreto a partir de su id.
+          sortKey: -1786657243120
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/equipos/:id"
+        name: Actualiza un equipo
+        meta:
+          id: req_ad095ad9a0804afdb74b1fd1b39b6674
+          created: 1786657243120
+          modified: 1786657243120
+          isPrivate: false
+          description: Actualiza el nombreLargo y/o nombreCorto de un equipo existente.
+          sortKey: -1786657243120
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "nombreLargo": "string",
+              "nombreCorto": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/equipos/:id"
+        name: Elimina un equipo
+        meta:
+          id: req_d1dd8306b6b848d9afff0e3cfd48e552
+          created: 1786657243120
+          modified: 1786657243120
+          isPrivate: false
+          description: Solo se puede borrar si no tiene partidos asociados (restricción
+            RESTRICT en BD).
+          sortKey: -1786657243120
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: jornadas
+    meta:
+      id: fld_109e9e3eb98e4054b6f381c2a6cb5079
+      created: 1786657243115
+      modified: 1786657243115
+      sortKey: -1786657243115
+      description: Jornadas y partidos de una temporada (F11).
+    children:
+      - url: "{{ _.base_url }}/jornadas"
+        name: Lista las jornadas de una temporada
+        meta:
+          id: req_044fa2adc00540bab68f46dc926abcec
+          created: 1786657243120
+          modified: 1786657243120
+          isPrivate: false
+          description: Sin '?temporada=', usa la temporada activa. Los partidos siempre
+            vienen ordenados 1..15.
+          sortKey: -1786657243120
+        method: GET
+        parameters:
+          - name: temporada
+            value: string
+            disabled: true
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/jornadas/:numeroJornada"
+        name: Consulta una jornada por su número
+        meta:
+          id: req_3023c33055994d6087a656dc3d37f593
+          created: 1786657243121
+          modified: 1786657243121
+          isPrivate: false
+          description: Devuelve la jornada con sus 15 partidos, ordenados 1..15.
+          sortKey: -1786657243121
+        method: GET
+        parameters:
+          - name: temporada
+            value: string
+            disabled: true
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/jornadas/:numeroJornada"
+        name: Elimina una jornada y sus partidos
+        meta:
+          id: req_5673a8cd2fc243c4a1e39b3035815e81
+          created: 1786657243121
+          modified: 1786657243121
+          isPrivate: false
+          description: Los partidos se borran en cascada (ON DELETE CASCADE).
+          sortKey: -1786657243121
+        method: DELETE
+        parameters:
+          - name: temporada
+            value: string
+            disabled: true
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/jornadas/:numeroJornada"
+        name: Reemplaza la fecha y los 15 partidos de una jornada
+        meta:
+          id: req_7be8738ae827438389b00d02c93986d9
+          created: 1786657243121
+          modified: 1786657243121
+          isPrivate: false
+          description: "Reemplazo total: borra los partidos existentes e inserta los
+            nuevos, en una única transacción."
+          sortKey: -1786657243121
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "fecha": "string",
+              "partidos": [
                 {
-                  "email": "user@quini.local",
-                  "role": "user"
+                  "orden": 0,
+                  "equipoLocal": "string",
+                  "equipoVisitante": "string"
                 }
-            headers:
-              - name: Content-Type
-                value: application/json
-                disabled: false
-            authentication:
-              type: bearer
-              token: eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InVzZXJAcXVpbmkubG9jYWwiLCJyb2xlIjoidXNlciIsInN1YiI6IjAxOWZmN2VjLTQ3ZDEtNzVlYS1hYmY5LWExMGNjYWU5MjYzNCIsImlzcyI6ImFwaS1xdWluaSIsImF1ZCI6ImFwaS1xdWluaS1jbGllbnRzIiwiaWF0IjoxNzg2NTcxODc3LCJleHAiOjE3ODY1NzI3Nzd9.spXQzT6fR2ku-GP42NZJE854YfXMSXN1w6vwxwdvSEc
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-          - url: "{{ _.base_url }}/invitaciones/:token/validar"
-            name: Comprueba si un token de invitación sigue siendo válido
-            meta:
-              id: req_433fefc568ba43b8973ccc92ea0117d8
-              created: 1786566722505
-              modified: 1786566722505
-              isPrivate: false
-              description: Endpoint público (sin autenticación), pensado para que el frontend
-                valide el link antes de mostrar el formulario de registro.
-              sortKey: -1786566722505
-            method: GET
-            settings:
-              renderRequestBody: true
-              encodeUrl: true
-              followRedirects: global
-              cookies:
-                send: true
-                store: true
-              rebuildPath: true
-    authentication:
-      type: oauth2
-      grantType: password
-      accessTokenUrl: "{{ _.base_url }}/auth/token"
-      clientId: ""
-      username: "{{ _.username }}"
-      password: "{{ _.password }}"
-      credentialsInBody: true
+              ]
+            }
+        parameters:
+          - name: temporada
+            value: string
+            disabled: true
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/jornadas"
+        name: Crea una jornada con sus 15 partidos
+        meta:
+          id: req_f1f271d594084452adbdd2453709233d
+          created: 1786657243121
+          modified: 1786657243121
+          isPrivate: false
+          description: Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos
+            antes de guardar. Todo ocurre en una única transacción.
+          sortKey: -1786657243121
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "temporada": "string",
+              "numeroJornada": 0,
+              "fecha": "string",
+              "partidos": [
+                {
+                  "orden": 0,
+                  "equipoLocal": "string",
+                  "equipoVisitante": "string"
+                }
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: bearer
+          token: "{{ _.bearerToken }}"
+          prefix: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
-    id: jar_8cec3e92a0fc86a9443aa9ab10a0443cc4f72f8f
-    created: 1786566722699
-    modified: 1786566722699
+    id: jar_fafc0535c99a7e7eae27ee8a7ecb22b7394ebe02
+    created: 1786657243210
+    modified: 1786657243210
 environments:
   name: Base environment
   meta:
-    id: env_45d3d2b9139745f5b4fe90fb07e2614e
-    created: 1786566722495
-    modified: 1786569903486
+    id: env_de28ae8938744fbba488e094732adb90
+    created: 1786657243111
+    modified: 1786657243111
     isPrivate: false
   data:
-    base_url: http://localhost:3000/api/v1
-    access_token: ""
-    refresh_token: ""
+    base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
   subEnvironments:
     - name: OpenAPI env null
       meta:
-        id: env_149ac635321b4e2cbccdbd48160f1611
-        created: 1786566722495
-        modified: 1786566722495
+        id: env_f17823018a3d4a3497666c444441393b
+        created: 1786657243113
+        modified: 1786657243113
         isPrivate: false
-        sortKey: 1786566722495
+        sortKey: 1786657243113
       data:
         scheme:
           - http
@@ -353,32 +813,6 @@ environments:
         oauth2Username: username
         oauth2Password: password
         oauth2RedirectUrl: http://localhost/
-    - name: Local-admin
-      meta:
-        id: env_38e71be7353e45c3a4df1834b24764f0
-        created: 1786571002629
-        modified: 1786571083049
-        isPrivate: false
-        sortKey: 1786571002629
-      data:
-        base_url: http://localhost:3000/api/v1
-        username: admin@quini.local
-        password: "123456789012"
-        access_token: ""
-        refresh_token: ""
-    - name: Local-user
-      meta:
-        id: env_36f14ea7934f4265b9722f5d37c8be61
-        created: 1786571043955
-        modified: 1786571100762
-        isPrivate: false
-        sortKey: 1786571043955
-      data:
-        base_url: http://localhost:3000/api/v1
-        username: user@quini.local
-        password: "una-contraseña-de-al-menos-12"
-        access_token: ""
-        refresh_token: ""
 spec:
   contents:
     openapi: 3.1.0
@@ -393,6 +827,12 @@ spec:
         description: "Autenticación: login, tokens, Google."
       - name: invitaciones
         description: Alta cerrada por invitación.
+      - name: temporadas
+        description: Gestión de temporadas.
+      - name: equipos
+        description: Gestión de equipos.
+      - name: jornadas
+        description: Jornadas y partidos de una temporada (F11).
     paths:
       /auth/token:
         post:
@@ -876,6 +1316,1513 @@ spec:
               description: La invitación ya fue usada, revocada o caducó.
             "429":
               description: Demasiados intentos fallidos (rate limit).
+      /temporadas:
+        get:
+          operationId: temporadasFindAll
+          summary: Lista todas las temporadas
+          description: Cualquier usuario autenticado puede consultar la lista completa.
+          tags:
+            - temporadas
+          responses:
+            "200":
+              description: Lista de temporadas.
+              content:
+                application/json:
+                  example:
+                    - id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                      codigo: 2026-27
+                      nombre: Temporada 2026/27
+                      fechaInicio: 2026-08-15
+                      fechaFin: 2027-05-30
+                      activa: false
+                      createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        codigo:
+                          type: string
+                        nombre:
+                          type: string
+                        fechaInicio:
+                          type: string
+                          format: date
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                        fechaFin:
+                          type: string
+                          format: date
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                        activa:
+                          type: boolean
+                        createdAt:
+                          type: string
+                          format: date-time
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      required:
+                        - id
+                        - codigo
+                        - nombre
+                        - fechaInicio
+                        - fechaFin
+                        - activa
+                        - createdAt
+                      additionalProperties: false
+            "401":
+              description: Sin access token válido.
+        post:
+          operationId: temporadasCreate
+          summary: Crea una temporada
+          description: Solo un admin puede crear temporadas. El código es inmutable tras
+            crearse.
+          tags:
+            - temporadas
+          x-required-role: admin
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  codigo: 2026-27
+                  nombre: Temporada 2026/27
+                  fechaInicio: 2026-08-15
+                  fechaFin: 2027-05-30
+                schema:
+                  type: object
+                  properties:
+                    codigo:
+                      type: string
+                      pattern: ^\d{4}-\d{2}$
+                    nombre:
+                      type: string
+                      minLength: 1
+                    fechaInicio:
+                      type: string
+                      format: date
+                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                    fechaFin:
+                      type: string
+                      format: date
+                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                  required:
+                    - codigo
+                    - nombre
+                    - fechaInicio
+                    - fechaFin
+          responses:
+            "201":
+              description: Temporada creada.
+              content:
+                application/json:
+                  example:
+                    id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                    codigo: 2026-27
+                    nombre: Temporada 2026/27
+                    fechaInicio: 2026-08-15
+                    fechaFin: 2027-05-30
+                    activa: false
+                    createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      codigo:
+                        type: string
+                      nombre:
+                        type: string
+                      fechaInicio:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      fechaFin:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      activa:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - codigo
+                      - nombre
+                      - fechaInicio
+                      - fechaFin
+                      - activa
+                      - createdAt
+                    additionalProperties: false
+            "400":
+              description: Código con formato inválido, o fechaFin no posterior a fechaInicio.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "409":
+              description: Ya existe una temporada con ese código.
+      /temporadas/{codigo}:
+        get:
+          operationId: temporadasFindByCodigo
+          summary: Consulta una temporada por su código
+          description: Cualquier usuario autenticado puede consultar una temporada concreta.
+          tags:
+            - temporadas
+          parameters:
+            - name: codigo
+              in: path
+              required: true
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          responses:
+            "200":
+              description: Temporada encontrada.
+              content:
+                application/json:
+                  example:
+                    id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                    codigo: 2026-27
+                    nombre: Temporada 2026/27
+                    fechaInicio: 2026-08-15
+                    fechaFin: 2027-05-30
+                    activa: false
+                    createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      codigo:
+                        type: string
+                      nombre:
+                        type: string
+                      fechaInicio:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      fechaFin:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      activa:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - codigo
+                      - nombre
+                      - fechaInicio
+                      - fechaFin
+                      - activa
+                      - createdAt
+                    additionalProperties: false
+            "401":
+              description: Sin access token válido.
+            "404":
+              description: No existe una temporada con ese código.
+        put:
+          operationId: temporadasUpdate
+          summary: Actualiza el nombre y las fechas de una temporada
+          description: El código no se puede cambiar tras la creación (no aparece en este
+            esquema).
+          tags:
+            - temporadas
+          x-required-role: admin
+          parameters:
+            - name: codigo
+              in: path
+              required: true
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  nombre: Temporada 2026/27 (revisada)
+                  fechaInicio: 2026-08-15
+                  fechaFin: 2027-06-15
+                schema:
+                  type: object
+                  properties:
+                    nombre:
+                      type: string
+                      minLength: 1
+                    fechaInicio:
+                      type: string
+                      format: date
+                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                    fechaFin:
+                      type: string
+                      format: date
+                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                  required:
+                    - nombre
+                    - fechaInicio
+                    - fechaFin
+          responses:
+            "200":
+              description: Temporada actualizada.
+              content:
+                application/json:
+                  example:
+                    id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                    codigo: 2026-27
+                    nombre: Temporada 2026/27
+                    fechaInicio: 2026-08-15
+                    fechaFin: 2027-05-30
+                    activa: false
+                    createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      codigo:
+                        type: string
+                      nombre:
+                        type: string
+                      fechaInicio:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      fechaFin:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      activa:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - codigo
+                      - nombre
+                      - fechaInicio
+                      - fechaFin
+                      - activa
+                      - createdAt
+                    additionalProperties: false
+            "400":
+              description: fechaFin no posterior a fechaInicio.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: No existe una temporada con ese código.
+        delete:
+          operationId: temporadasRemove
+          summary: Elimina una temporada
+          description: Solo se puede borrar si no tiene jornadas asociadas (restricción
+            RESTRICT en BD).
+          tags:
+            - temporadas
+          x-required-role: admin
+          parameters:
+            - name: codigo
+              in: path
+              required: true
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          responses:
+            "204":
+              description: Temporada eliminada.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: No existe una temporada con ese código.
+            "409":
+              description: La temporada tiene jornadas asociadas (RESTRICT).
+      /temporadas/{codigo}/activar:
+        post:
+          operationId: temporadasActivate
+          summary: Marca una temporada como la activa
+          description: Desactiva cualquier otra temporada activa y activa esta, en una
+            única transacción (garantizado además por un índice único parcial en
+            BD).
+          tags:
+            - temporadas
+          x-required-role: admin
+          parameters:
+            - name: codigo
+              in: path
+              required: true
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          responses:
+            "200":
+              description: Temporada activada.
+              content:
+                application/json:
+                  example:
+                    id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                    codigo: 2026-27
+                    nombre: Temporada 2026/27
+                    fechaInicio: 2026-08-15
+                    fechaFin: 2027-05-30
+                    activa: true
+                    createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      codigo:
+                        type: string
+                      nombre:
+                        type: string
+                      fechaInicio:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      fechaFin:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      activa:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - codigo
+                      - nombre
+                      - fechaInicio
+                      - fechaFin
+                      - activa
+                      - createdAt
+                    additionalProperties: false
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: No existe una temporada con ese código.
+      /equipos:
+        get:
+          operationId: equiposFindAll
+          summary: Lista todos los equipos
+          description: Cualquier usuario autenticado puede consultar el catálogo completo
+            de equipos.
+          tags:
+            - equipos
+          responses:
+            "200":
+              description: Lista de equipos.
+              content:
+                application/json:
+                  example:
+                    - id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                      nombreLargo: Real Madrid
+                      nombreCorto: RM
+                      createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        nombreLargo:
+                          type: string
+                        nombreCorto:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      required:
+                        - id
+                        - nombreLargo
+                        - nombreCorto
+                        - createdAt
+                      additionalProperties: false
+            "401":
+              description: Sin access token válido.
+        post:
+          operationId: equiposCreate
+          summary: Crea un equipo
+          description: Solo un admin puede añadir equipos al catálogo.
+          tags:
+            - equipos
+          x-required-role: admin
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  nombreLargo: Real Madrid
+                  nombreCorto: RM
+                schema:
+                  type: object
+                  properties:
+                    nombreLargo:
+                      type: string
+                      minLength: 1
+                    nombreCorto:
+                      type: string
+                      minLength: 1
+                  required:
+                    - nombreLargo
+                    - nombreCorto
+          responses:
+            "201":
+              description: Equipo creado.
+              content:
+                application/json:
+                  example:
+                    id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                    nombreLargo: Real Madrid
+                    nombreCorto: RM
+                    createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      nombreLargo:
+                        type: string
+                      nombreCorto:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - nombreLargo
+                      - nombreCorto
+                      - createdAt
+                    additionalProperties: false
+            "400":
+              description: nombreLargo o nombreCorto vacíos.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "409":
+              description: Ya existe un equipo con ese nombreLargo.
+      /equipos/{id}:
+        get:
+          operationId: equiposFindById
+          summary: Consulta un equipo por su id
+          description: Devuelve los datos de un equipo concreto a partir de su id.
+          tags:
+            - equipos
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+                format: uuid
+              example: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+          responses:
+            "200":
+              description: Equipo encontrado.
+              content:
+                application/json:
+                  example:
+                    id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                    nombreLargo: Real Madrid
+                    nombreCorto: RM
+                    createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      nombreLargo:
+                        type: string
+                      nombreCorto:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - nombreLargo
+                      - nombreCorto
+                      - createdAt
+                    additionalProperties: false
+            "401":
+              description: Sin access token válido.
+            "404":
+              description: No existe un equipo con ese id.
+        put:
+          operationId: equiposUpdate
+          summary: Actualiza un equipo
+          description: Actualiza el nombreLargo y/o nombreCorto de un equipo existente.
+          tags:
+            - equipos
+          x-required-role: admin
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+                format: uuid
+              example: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  nombreLargo: Real Madrid CF
+                  nombreCorto: RMA
+                schema:
+                  type: object
+                  properties:
+                    nombreLargo:
+                      type: string
+                      minLength: 1
+                    nombreCorto:
+                      type: string
+                      minLength: 1
+                  required:
+                    - nombreLargo
+                    - nombreCorto
+          responses:
+            "200":
+              description: Equipo actualizado.
+              content:
+                application/json:
+                  example:
+                    id: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                    nombreLargo: Real Madrid
+                    nombreCorto: RM
+                    createdAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      nombreLargo:
+                        type: string
+                      nombreCorto:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - nombreLargo
+                      - nombreCorto
+                      - createdAt
+                    additionalProperties: false
+            "400":
+              description: nombreLargo o nombreCorto vacíos.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: No existe un equipo con ese id.
+            "409":
+              description: Ya existe otro equipo con ese nombreLargo.
+        delete:
+          operationId: equiposRemove
+          summary: Elimina un equipo
+          description: Solo se puede borrar si no tiene partidos asociados (restricción
+            RESTRICT en BD).
+          tags:
+            - equipos
+          x-required-role: admin
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+                format: uuid
+              example: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+          responses:
+            "204":
+              description: Equipo eliminado.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: No existe un equipo con ese id.
+            "409":
+              description: El equipo tiene partidos asociados (RESTRICT).
+      /jornadas:
+        get:
+          operationId: jornadasFindAll
+          summary: Lista las jornadas de una temporada
+          description: Sin '?temporada=', usa la temporada activa. Los partidos siempre
+            vienen ordenados 1..15.
+          tags:
+            - jornadas
+          parameters:
+            - name: temporada
+              in: query
+              required: false
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          responses:
+            "200":
+              description: Lista de jornadas.
+              content:
+                application/json:
+                  example:
+                    - id: 019ffc0e-1234-7c46-b05d-46bf7829c803
+                      temporada: 2026-27
+                      numeroJornada: 1
+                      fecha: 2026-08-20
+                      partidos:
+                        - id: 019ffc0e-8251-7c46-b05d-000000001000
+                          orden: 1
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001001
+                          orden: 2
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001002
+                          orden: 3
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001003
+                          orden: 4
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001004
+                          orden: 5
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001005
+                          orden: 6
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001006
+                          orden: 7
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001007
+                          orden: 8
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001008
+                          orden: 9
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001009
+                          orden: 10
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001010
+                          orden: 11
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001011
+                          orden: 12
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001012
+                          orden: 13
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001013
+                          orden: 14
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                        - id: 019ffc0e-8251-7c46-b05d-000000001014
+                          orden: 15
+                          equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                          equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      createdAt: 2026-08-15T10:00:00.000Z
+                      updatedAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        temporada:
+                          type: string
+                        numeroJornada:
+                          type: number
+                        fecha:
+                          type: string
+                          format: date
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                        partidos:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              orden:
+                                type: number
+                              equipoLocalId:
+                                type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              equipoVisitanteId:
+                                type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            required:
+                              - id
+                              - orden
+                              - equipoLocalId
+                              - equipoVisitanteId
+                            additionalProperties: false
+                        createdAt:
+                          type: string
+                          format: date-time
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                        updatedAt:
+                          type: string
+                          format: date-time
+                          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      required:
+                        - id
+                        - temporada
+                        - numeroJornada
+                        - fecha
+                        - partidos
+                        - createdAt
+                        - updatedAt
+                      additionalProperties: false
+            "401":
+              description: Sin access token válido.
+            "404":
+              description: No hay temporada activa y no se especificó '?temporada='.
+        post:
+          operationId: jornadasCreate
+          summary: Crea una jornada con sus 15 partidos
+          description: Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos
+            antes de guardar. Todo ocurre en una única transacción.
+          tags:
+            - jornadas
+          x-required-role: admin
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  numeroJornada: 1
+                  fecha: 2026-08-20
+                  partidos:
+                    - orden: 1
+                      equipoLocal: Real Madrid
+                      equipoVisitante: Barcelona
+                    - orden: 2
+                      equipoLocal: Equipo Local 2
+                      equipoVisitante: Equipo Visitante 2
+                    - orden: 3
+                      equipoLocal: Equipo Local 3
+                      equipoVisitante: Equipo Visitante 3
+                    - orden: 4
+                      equipoLocal: Equipo Local 4
+                      equipoVisitante: Equipo Visitante 4
+                    - orden: 5
+                      equipoLocal: Equipo Local 5
+                      equipoVisitante: Equipo Visitante 5
+                    - orden: 6
+                      equipoLocal: Equipo Local 6
+                      equipoVisitante: Equipo Visitante 6
+                    - orden: 7
+                      equipoLocal: Equipo Local 7
+                      equipoVisitante: Equipo Visitante 7
+                    - orden: 8
+                      equipoLocal: Equipo Local 8
+                      equipoVisitante: Equipo Visitante 8
+                    - orden: 9
+                      equipoLocal: Equipo Local 9
+                      equipoVisitante: Equipo Visitante 9
+                    - orden: 10
+                      equipoLocal: Equipo Local 10
+                      equipoVisitante: Equipo Visitante 10
+                    - orden: 11
+                      equipoLocal: Equipo Local 11
+                      equipoVisitante: Equipo Visitante 11
+                    - orden: 12
+                      equipoLocal: Equipo Local 12
+                      equipoVisitante: Equipo Visitante 12
+                    - orden: 13
+                      equipoLocal: Equipo Local 13
+                      equipoVisitante: Equipo Visitante 13
+                    - orden: 14
+                      equipoLocal: Equipo Local 14
+                      equipoVisitante: Equipo Visitante 14
+                    - orden: 15
+                      equipoLocal: Equipo Local 15
+                      equipoVisitante: Equipo Visitante 15
+                schema:
+                  type: object
+                  properties:
+                    temporada:
+                      type: string
+                      pattern: ^\d{4}-\d{2}$
+                    numeroJornada:
+                      type: integer
+                      exclusiveMinimum: 0
+                      maximum: 9007199254740991
+                    fecha:
+                      type: string
+                      format: date
+                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                    partidos:
+                      minItems: 15
+                      maxItems: 15
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          orden:
+                            type: integer
+                            minimum: 1
+                            maximum: 15
+                          equipoLocal:
+                            type: string
+                            minLength: 1
+                          equipoVisitante:
+                            type: string
+                            minLength: 1
+                        required:
+                          - orden
+                          - equipoLocal
+                          - equipoVisitante
+                  required:
+                    - numeroJornada
+                    - fecha
+                    - partidos
+          responses:
+            "201":
+              description: Jornada creada.
+              headers:
+                Location:
+                  description: /api/v1/jornadas/{numeroJornada}, con '?temporada=' si no es la
+                    activa.
+                  schema:
+                    type: string
+              content:
+                application/json:
+                  example:
+                    id: 019ffc0e-1234-7c46-b05d-46bf7829c803
+                    temporada: 2026-27
+                    numeroJornada: 1
+                    fecha: 2026-08-20
+                    partidos:
+                      - id: 019ffc0e-8251-7c46-b05d-000000001000
+                        orden: 1
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001001
+                        orden: 2
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001002
+                        orden: 3
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001003
+                        orden: 4
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001004
+                        orden: 5
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001005
+                        orden: 6
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001006
+                        orden: 7
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001007
+                        orden: 8
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001008
+                        orden: 9
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001009
+                        orden: 10
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001010
+                        orden: 11
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001011
+                        orden: 12
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001012
+                        orden: 13
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001013
+                        orden: 14
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001014
+                        orden: 15
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                    createdAt: 2026-08-15T10:00:00.000Z
+                    updatedAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      temporada:
+                        type: string
+                      numeroJornada:
+                        type: number
+                      fecha:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      partidos:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            orden:
+                              type: number
+                            equipoLocalId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            equipoVisitanteId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          required:
+                            - id
+                            - orden
+                            - equipoLocalId
+                            - equipoVisitanteId
+                          additionalProperties: false
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - temporada
+                      - numeroJornada
+                      - fecha
+                      - partidos
+                      - createdAt
+                      - updatedAt
+                    additionalProperties: false
+            "400":
+              description: Partidos inválidos (conteo, orden duplicado/con huecos), equipo en
+                blanco, fecha inválida o numeroJornada <= 0.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: Temporada o algún equipo no existen; o no hay temporada activa y no
+                se especificó ninguna.
+            "409":
+              description: Ya existe esa jornada en la temporada.
+      /jornadas/{numeroJornada}:
+        get:
+          operationId: jornadasFindByNumero
+          summary: Consulta una jornada por su número
+          description: Devuelve la jornada con sus 15 partidos, ordenados 1..15.
+          tags:
+            - jornadas
+          parameters:
+            - name: numeroJornada
+              in: path
+              required: true
+              schema:
+                type: integer
+                minimum: 1
+              example: 1
+            - name: temporada
+              in: query
+              required: false
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          responses:
+            "200":
+              description: Jornada encontrada.
+              content:
+                application/json:
+                  example:
+                    id: 019ffc0e-1234-7c46-b05d-46bf7829c803
+                    temporada: 2026-27
+                    numeroJornada: 1
+                    fecha: 2026-08-20
+                    partidos:
+                      - id: 019ffc0e-8251-7c46-b05d-000000001000
+                        orden: 1
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001001
+                        orden: 2
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001002
+                        orden: 3
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001003
+                        orden: 4
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001004
+                        orden: 5
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001005
+                        orden: 6
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001006
+                        orden: 7
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001007
+                        orden: 8
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001008
+                        orden: 9
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001009
+                        orden: 10
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001010
+                        orden: 11
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001011
+                        orden: 12
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001012
+                        orden: 13
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001013
+                        orden: 14
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001014
+                        orden: 15
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                    createdAt: 2026-08-15T10:00:00.000Z
+                    updatedAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      temporada:
+                        type: string
+                      numeroJornada:
+                        type: number
+                      fecha:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      partidos:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            orden:
+                              type: number
+                            equipoLocalId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            equipoVisitanteId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          required:
+                            - id
+                            - orden
+                            - equipoLocalId
+                            - equipoVisitanteId
+                          additionalProperties: false
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - temporada
+                      - numeroJornada
+                      - fecha
+                      - partidos
+                      - createdAt
+                      - updatedAt
+                    additionalProperties: false
+            "400":
+              description: numeroJornada no es un entero positivo.
+            "401":
+              description: Sin access token válido.
+            "404":
+              description: No existe esa jornada en la temporada.
+        put:
+          operationId: jornadasReplace
+          summary: Reemplaza la fecha y los 15 partidos de una jornada
+          description: "Reemplazo total: borra los partidos existentes e inserta los
+            nuevos, en una única transacción."
+          tags:
+            - jornadas
+          x-required-role: admin
+          parameters:
+            - name: numeroJornada
+              in: path
+              required: true
+              schema:
+                type: integer
+                minimum: 1
+              example: 1
+            - name: temporada
+              in: query
+              required: false
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  fecha: 2026-08-20
+                  partidos:
+                    - orden: 1
+                      equipoLocal: Real Madrid
+                      equipoVisitante: Barcelona
+                    - orden: 2
+                      equipoLocal: Equipo Local 2
+                      equipoVisitante: Equipo Visitante 2
+                    - orden: 3
+                      equipoLocal: Equipo Local 3
+                      equipoVisitante: Equipo Visitante 3
+                    - orden: 4
+                      equipoLocal: Equipo Local 4
+                      equipoVisitante: Equipo Visitante 4
+                    - orden: 5
+                      equipoLocal: Equipo Local 5
+                      equipoVisitante: Equipo Visitante 5
+                    - orden: 6
+                      equipoLocal: Equipo Local 6
+                      equipoVisitante: Equipo Visitante 6
+                    - orden: 7
+                      equipoLocal: Equipo Local 7
+                      equipoVisitante: Equipo Visitante 7
+                    - orden: 8
+                      equipoLocal: Equipo Local 8
+                      equipoVisitante: Equipo Visitante 8
+                    - orden: 9
+                      equipoLocal: Equipo Local 9
+                      equipoVisitante: Equipo Visitante 9
+                    - orden: 10
+                      equipoLocal: Equipo Local 10
+                      equipoVisitante: Equipo Visitante 10
+                    - orden: 11
+                      equipoLocal: Equipo Local 11
+                      equipoVisitante: Equipo Visitante 11
+                    - orden: 12
+                      equipoLocal: Equipo Local 12
+                      equipoVisitante: Equipo Visitante 12
+                    - orden: 13
+                      equipoLocal: Equipo Local 13
+                      equipoVisitante: Equipo Visitante 13
+                    - orden: 14
+                      equipoLocal: Equipo Local 14
+                      equipoVisitante: Equipo Visitante 14
+                    - orden: 15
+                      equipoLocal: Equipo Local 15
+                      equipoVisitante: Equipo Visitante 15
+                schema:
+                  type: object
+                  properties:
+                    fecha:
+                      type: string
+                      format: date
+                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                    partidos:
+                      minItems: 15
+                      maxItems: 15
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          orden:
+                            type: integer
+                            minimum: 1
+                            maximum: 15
+                          equipoLocal:
+                            type: string
+                            minLength: 1
+                          equipoVisitante:
+                            type: string
+                            minLength: 1
+                        required:
+                          - orden
+                          - equipoLocal
+                          - equipoVisitante
+                  required:
+                    - fecha
+                    - partidos
+          responses:
+            "200":
+              description: Jornada actualizada.
+              content:
+                application/json:
+                  example:
+                    id: 019ffc0e-1234-7c46-b05d-46bf7829c803
+                    temporada: 2026-27
+                    numeroJornada: 1
+                    fecha: 2026-08-20
+                    partidos:
+                      - id: 019ffc0e-8251-7c46-b05d-000000001000
+                        orden: 1
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001001
+                        orden: 2
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001002
+                        orden: 3
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001003
+                        orden: 4
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001004
+                        orden: 5
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001005
+                        orden: 6
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001006
+                        orden: 7
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001007
+                        orden: 8
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001008
+                        orden: 9
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001009
+                        orden: 10
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001010
+                        orden: 11
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001011
+                        orden: 12
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001012
+                        orden: 13
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001013
+                        orden: 14
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                      - id: 019ffc0e-8251-7c46-b05d-000000001014
+                        orden: 15
+                        equipoLocalId: 019ff7eb-22ae-7b8c-a948-6ca9a14625e6
+                        equipoVisitanteId: 019ff7ec-47d1-75ea-abf9-a10ccae92634
+                    createdAt: 2026-08-15T10:00:00.000Z
+                    updatedAt: 2026-08-15T10:00:00.000Z
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      temporada:
+                        type: string
+                      numeroJornada:
+                        type: number
+                      fecha:
+                        type: string
+                        format: date
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                      partidos:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            orden:
+                              type: number
+                            equipoLocalId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            equipoVisitanteId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          required:
+                            - id
+                            - orden
+                            - equipoLocalId
+                            - equipoVisitanteId
+                          additionalProperties: false
+                      createdAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                    required:
+                      - id
+                      - temporada
+                      - numeroJornada
+                      - fecha
+                      - partidos
+                      - createdAt
+                      - updatedAt
+                    additionalProperties: false
+            "400":
+              description: Partidos inválidos (conteo, orden duplicado/con huecos), equipo en
+                blanco o fecha inválida.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: No existe esa jornada, la temporada, o algún equipo.
+        delete:
+          operationId: jornadasRemove
+          summary: Elimina una jornada y sus partidos
+          description: Los partidos se borran en cascada (ON DELETE CASCADE).
+          tags:
+            - jornadas
+          x-required-role: admin
+          parameters:
+            - name: numeroJornada
+              in: path
+              required: true
+              schema:
+                type: integer
+                minimum: 1
+              example: 1
+            - name: temporada
+              in: query
+              required: false
+              schema:
+                type: string
+                pattern: ^\d{4}-\d{2}$
+              example: 2026-27
+          responses:
+            "204":
+              description: Jornada eliminada.
+            "401":
+              description: Sin access token válido.
+            "403":
+              description: El usuario autenticado no es admin.
+            "404":
+              description: No existe esa jornada en la temporada.
     components:
       securitySchemes:
         bearerAuth:
@@ -898,6 +2845,6 @@ spec:
                 email: Leer el email
                 profile: Leer el nombre
   meta:
-    id: spc_c681d7e8b2824d02bfc73fb32789ac46
-    created: 1786566722492
-    modified: 1786566722492
+    id: spc_6507988eecf94459a091e2b3e9f0d8a4
+    created: 1786657243110
+    modified: 1786657243110

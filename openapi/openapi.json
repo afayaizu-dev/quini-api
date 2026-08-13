@@ -26,6 +26,10 @@
     {
       "name": "equipos",
       "description": "Gestión de equipos."
+    },
+    {
+      "name": "jornadas",
+      "description": "Jornadas y partidos de una temporada (F11)."
     }
   ],
   "paths": {
@@ -1575,6 +1579,1181 @@
           },
           "409": {
             "description": "El equipo tiene partidos asociados (RESTRICT)."
+          }
+        }
+      }
+    },
+    "/jornadas": {
+      "get": {
+        "operationId": "jornadasFindAll",
+        "summary": "Lista las jornadas de una temporada",
+        "description": "Sin '?temporada=', usa la temporada activa. Los partidos siempre vienen ordenados 1..15.",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de jornadas.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ffc0e-1234-7c46-b05d-46bf7829c803",
+                    "temporada": "2026-27",
+                    "numeroJornada": 1,
+                    "fecha": "2026-08-20",
+                    "partidos": [
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001000",
+                        "orden": 1,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001001",
+                        "orden": 2,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001002",
+                        "orden": 3,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001003",
+                        "orden": 4,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001004",
+                        "orden": 5,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001005",
+                        "orden": 6,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001006",
+                        "orden": 7,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001007",
+                        "orden": 8,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001008",
+                        "orden": 9,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001009",
+                        "orden": 10,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001010",
+                        "orden": 11,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001011",
+                        "orden": 12,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001012",
+                        "orden": 13,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001013",
+                        "orden": 14,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      },
+                      {
+                        "id": "019ffc0e-8251-7c46-b05d-000000001014",
+                        "orden": 15,
+                        "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                        "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                      }
+                    ],
+                    "createdAt": "2026-08-15T10:00:00.000Z",
+                    "updatedAt": "2026-08-15T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "temporada": {
+                        "type": "string"
+                      },
+                      "numeroJornada": {
+                        "type": "number"
+                      },
+                      "fecha": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "partidos": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "orden": {
+                              "type": "number"
+                            },
+                            "equipoLocalId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "equipoVisitanteId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            }
+                          },
+                          "required": ["id", "orden", "equipoLocalId", "equipoVisitanteId"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "temporada",
+                      "numeroJornada",
+                      "fecha",
+                      "partidos",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No hay temporada activa y no se especificó '?temporada='."
+          }
+        }
+      },
+      "post": {
+        "operationId": "jornadasCreate",
+        "summary": "Crea una jornada con sus 15 partidos",
+        "description": "Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes de guardar. Todo ocurre en una única transacción.",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "numeroJornada": 1,
+                "fecha": "2026-08-20",
+                "partidos": [
+                  {
+                    "orden": 1,
+                    "equipoLocal": "Real Madrid",
+                    "equipoVisitante": "Barcelona"
+                  },
+                  {
+                    "orden": 2,
+                    "equipoLocal": "Equipo Local 2",
+                    "equipoVisitante": "Equipo Visitante 2"
+                  },
+                  {
+                    "orden": 3,
+                    "equipoLocal": "Equipo Local 3",
+                    "equipoVisitante": "Equipo Visitante 3"
+                  },
+                  {
+                    "orden": 4,
+                    "equipoLocal": "Equipo Local 4",
+                    "equipoVisitante": "Equipo Visitante 4"
+                  },
+                  {
+                    "orden": 5,
+                    "equipoLocal": "Equipo Local 5",
+                    "equipoVisitante": "Equipo Visitante 5"
+                  },
+                  {
+                    "orden": 6,
+                    "equipoLocal": "Equipo Local 6",
+                    "equipoVisitante": "Equipo Visitante 6"
+                  },
+                  {
+                    "orden": 7,
+                    "equipoLocal": "Equipo Local 7",
+                    "equipoVisitante": "Equipo Visitante 7"
+                  },
+                  {
+                    "orden": 8,
+                    "equipoLocal": "Equipo Local 8",
+                    "equipoVisitante": "Equipo Visitante 8"
+                  },
+                  {
+                    "orden": 9,
+                    "equipoLocal": "Equipo Local 9",
+                    "equipoVisitante": "Equipo Visitante 9"
+                  },
+                  {
+                    "orden": 10,
+                    "equipoLocal": "Equipo Local 10",
+                    "equipoVisitante": "Equipo Visitante 10"
+                  },
+                  {
+                    "orden": 11,
+                    "equipoLocal": "Equipo Local 11",
+                    "equipoVisitante": "Equipo Visitante 11"
+                  },
+                  {
+                    "orden": 12,
+                    "equipoLocal": "Equipo Local 12",
+                    "equipoVisitante": "Equipo Visitante 12"
+                  },
+                  {
+                    "orden": 13,
+                    "equipoLocal": "Equipo Local 13",
+                    "equipoVisitante": "Equipo Visitante 13"
+                  },
+                  {
+                    "orden": 14,
+                    "equipoLocal": "Equipo Local 14",
+                    "equipoVisitante": "Equipo Visitante 14"
+                  },
+                  {
+                    "orden": 15,
+                    "equipoLocal": "Equipo Local 15",
+                    "equipoVisitante": "Equipo Visitante 15"
+                  }
+                ]
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "temporada": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}$"
+                  },
+                  "numeroJornada": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "fecha": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "partidos": {
+                    "minItems": 15,
+                    "maxItems": 15,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "orden": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 15
+                        },
+                        "equipoLocal": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "equipoVisitante": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": ["orden", "equipoLocal", "equipoVisitante"]
+                    }
+                  }
+                },
+                "required": ["numeroJornada", "fecha", "partidos"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Jornada creada.",
+            "headers": {
+              "Location": {
+                "description": "/api/v1/jornadas/{numeroJornada}, con '?temporada=' si no es la activa.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-1234-7c46-b05d-46bf7829c803",
+                  "temporada": "2026-27",
+                  "numeroJornada": 1,
+                  "fecha": "2026-08-20",
+                  "partidos": [
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001000",
+                      "orden": 1,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001001",
+                      "orden": 2,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001002",
+                      "orden": 3,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001003",
+                      "orden": 4,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001004",
+                      "orden": 5,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001005",
+                      "orden": 6,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001006",
+                      "orden": 7,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001007",
+                      "orden": 8,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001008",
+                      "orden": 9,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001009",
+                      "orden": 10,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001010",
+                      "orden": 11,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001011",
+                      "orden": 12,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001012",
+                      "orden": 13,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001013",
+                      "orden": 14,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001014",
+                      "orden": 15,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    }
+                  ],
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "numeroJornada": {
+                      "type": "number"
+                    },
+                    "fecha": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "partidos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "orden": {
+                            "type": "number"
+                          },
+                          "equipoLocalId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "equipoVisitanteId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": ["id", "orden", "equipoLocalId", "equipoVisitanteId"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "temporada",
+                    "numeroJornada",
+                    "fecha",
+                    "partidos",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Partidos inválidos (conteo, orden duplicado/con huecos), equipo en blanco, fecha inválida o numeroJornada <= 0."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "Temporada o algún equipo no existen; o no hay temporada activa y no se especificó ninguna."
+          },
+          "409": {
+            "description": "Ya existe esa jornada en la temporada."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}": {
+      "get": {
+        "operationId": "jornadasFindByNumero",
+        "summary": "Consulta una jornada por su número",
+        "description": "Devuelve la jornada con sus 15 partidos, ordenados 1..15.",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jornada encontrada.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-1234-7c46-b05d-46bf7829c803",
+                  "temporada": "2026-27",
+                  "numeroJornada": 1,
+                  "fecha": "2026-08-20",
+                  "partidos": [
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001000",
+                      "orden": 1,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001001",
+                      "orden": 2,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001002",
+                      "orden": 3,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001003",
+                      "orden": 4,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001004",
+                      "orden": 5,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001005",
+                      "orden": 6,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001006",
+                      "orden": 7,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001007",
+                      "orden": 8,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001008",
+                      "orden": 9,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001009",
+                      "orden": 10,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001010",
+                      "orden": 11,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001011",
+                      "orden": 12,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001012",
+                      "orden": 13,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001013",
+                      "orden": 14,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001014",
+                      "orden": 15,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    }
+                  ],
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "numeroJornada": {
+                      "type": "number"
+                    },
+                    "fecha": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "partidos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "orden": {
+                            "type": "number"
+                          },
+                          "equipoLocalId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "equipoVisitanteId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": ["id", "orden", "equipoLocalId", "equipoVisitanteId"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "temporada",
+                    "numeroJornada",
+                    "fecha",
+                    "partidos",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "numeroJornada no es un entero positivo."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          }
+        }
+      },
+      "put": {
+        "operationId": "jornadasReplace",
+        "summary": "Reemplaza la fecha y los 15 partidos de una jornada",
+        "description": "Reemplazo total: borra los partidos existentes e inserta los nuevos, en una única transacción.",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "fecha": "2026-08-20",
+                "partidos": [
+                  {
+                    "orden": 1,
+                    "equipoLocal": "Real Madrid",
+                    "equipoVisitante": "Barcelona"
+                  },
+                  {
+                    "orden": 2,
+                    "equipoLocal": "Equipo Local 2",
+                    "equipoVisitante": "Equipo Visitante 2"
+                  },
+                  {
+                    "orden": 3,
+                    "equipoLocal": "Equipo Local 3",
+                    "equipoVisitante": "Equipo Visitante 3"
+                  },
+                  {
+                    "orden": 4,
+                    "equipoLocal": "Equipo Local 4",
+                    "equipoVisitante": "Equipo Visitante 4"
+                  },
+                  {
+                    "orden": 5,
+                    "equipoLocal": "Equipo Local 5",
+                    "equipoVisitante": "Equipo Visitante 5"
+                  },
+                  {
+                    "orden": 6,
+                    "equipoLocal": "Equipo Local 6",
+                    "equipoVisitante": "Equipo Visitante 6"
+                  },
+                  {
+                    "orden": 7,
+                    "equipoLocal": "Equipo Local 7",
+                    "equipoVisitante": "Equipo Visitante 7"
+                  },
+                  {
+                    "orden": 8,
+                    "equipoLocal": "Equipo Local 8",
+                    "equipoVisitante": "Equipo Visitante 8"
+                  },
+                  {
+                    "orden": 9,
+                    "equipoLocal": "Equipo Local 9",
+                    "equipoVisitante": "Equipo Visitante 9"
+                  },
+                  {
+                    "orden": 10,
+                    "equipoLocal": "Equipo Local 10",
+                    "equipoVisitante": "Equipo Visitante 10"
+                  },
+                  {
+                    "orden": 11,
+                    "equipoLocal": "Equipo Local 11",
+                    "equipoVisitante": "Equipo Visitante 11"
+                  },
+                  {
+                    "orden": 12,
+                    "equipoLocal": "Equipo Local 12",
+                    "equipoVisitante": "Equipo Visitante 12"
+                  },
+                  {
+                    "orden": 13,
+                    "equipoLocal": "Equipo Local 13",
+                    "equipoVisitante": "Equipo Visitante 13"
+                  },
+                  {
+                    "orden": 14,
+                    "equipoLocal": "Equipo Local 14",
+                    "equipoVisitante": "Equipo Visitante 14"
+                  },
+                  {
+                    "orden": 15,
+                    "equipoLocal": "Equipo Local 15",
+                    "equipoVisitante": "Equipo Visitante 15"
+                  }
+                ]
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fecha": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "partidos": {
+                    "minItems": 15,
+                    "maxItems": 15,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "orden": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 15
+                        },
+                        "equipoLocal": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "equipoVisitante": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": ["orden", "equipoLocal", "equipoVisitante"]
+                    }
+                  }
+                },
+                "required": ["fecha", "partidos"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Jornada actualizada.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-1234-7c46-b05d-46bf7829c803",
+                  "temporada": "2026-27",
+                  "numeroJornada": 1,
+                  "fecha": "2026-08-20",
+                  "partidos": [
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001000",
+                      "orden": 1,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001001",
+                      "orden": 2,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001002",
+                      "orden": 3,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001003",
+                      "orden": 4,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001004",
+                      "orden": 5,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001005",
+                      "orden": 6,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001006",
+                      "orden": 7,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001007",
+                      "orden": 8,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001008",
+                      "orden": 9,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001009",
+                      "orden": 10,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001010",
+                      "orden": 11,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001011",
+                      "orden": 12,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001012",
+                      "orden": 13,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001013",
+                      "orden": 14,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001014",
+                      "orden": 15,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    }
+                  ],
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "numeroJornada": {
+                      "type": "number"
+                    },
+                    "fecha": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "partidos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "orden": {
+                            "type": "number"
+                          },
+                          "equipoLocalId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "equipoVisitanteId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": ["id", "orden", "equipoLocalId", "equipoVisitanteId"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "temporada",
+                    "numeroJornada",
+                    "fecha",
+                    "partidos",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Partidos inválidos (conteo, orden duplicado/con huecos), equipo en blanco o fecha inválida."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada, la temporada, o algún equipo."
+          }
+        }
+      },
+      "delete": {
+        "operationId": "jornadasRemove",
+        "summary": "Elimina una jornada y sus partidos",
+        "description": "Los partidos se borran en cascada (ON DELETE CASCADE).",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Jornada eliminada."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
           }
         }
       }
