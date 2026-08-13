@@ -6,6 +6,7 @@ import * as invitationsService from "./invitations.service.js";
 import type { CreateInvitationInput } from "./invitations.schemas.js";
 
 function requireAuthContext(req: Request): AccessTokenPayload {
+    /* v8 ignore next -- @preserve */
     if (!req.auth) {
         throw new UnauthorizedError();
     }

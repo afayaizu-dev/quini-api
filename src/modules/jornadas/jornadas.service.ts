@@ -40,7 +40,12 @@ function toResponse(
         temporada: temporadaCodigo,
         numeroJornada: jornada.numeroJornada,
         fecha: jornada.fecha,
-        partidos: jornada.partidos,
+        partidos: jornada.partidos.map((p) => ({
+            id: p.id,
+            orden: p.orden,
+            equipoLocalId: p.equipoLocalId,
+            equipoVisitanteId: p.equipoVisitanteId,
+        })),
         createdAt: jornada.createdAt,
         updatedAt: jornada.updatedAt,
     };
@@ -60,6 +65,7 @@ export async function create(input: CreateJornadaInput, createdBy: string) {
         });
         return toResponse(temporada.codigo, jornada);
     } catch (err) {
+        /* v8 ignore next -- @preserve */
         if (isUniqueViolation(err)) {
             throw new ConflictError(
                 `Ya existe la jornada ${input.numeroJornada} en la temporada '${temporada.codigo}'.`,

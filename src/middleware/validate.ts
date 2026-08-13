@@ -14,7 +14,14 @@ export function validate(schemas: ValidateSchemas) {
         try {
             if (schemas.body) req.body = schemas.body.parse(req.body);
             if (schemas.params) req.params = schemas.params.parse(req.params) as ParamsDictionary;
-            if (schemas.query) req.query = schemas.query.parse(req.query) as ParsedQs;
+            if (schemas.query) {
+                const parsedQuery = schemas.query.parse(req.query) as ParsedQs;
+                Object.defineProperty(req, "query", {
+                    value: parsedQuery,
+                    writable: true,
+                    configurable: true,
+                });
+            }
             next();
         } catch (err) {
             next(err);

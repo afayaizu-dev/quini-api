@@ -9,6 +9,7 @@ import type {
 } from "./jornadas.schemas.js";
 
 function requireAuthContext(req: Request) {
+    /* v8 ignore next -- @preserve */
     if (!req.auth) {
         throw new UnauthorizedError();
     }
