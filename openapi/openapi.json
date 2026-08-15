@@ -38,6 +38,10 @@
     {
       "name": "resultados",
       "description": "Resultados oficiales de una jornada."
+    },
+    {
+      "name": "apuestas",
+      "description": "Apuestas realizadas por los usuarios."
     }
   ],
   "paths": {
@@ -5132,6 +5136,781 @@
           },
           "409": {
             "description": "La jornada ya está calculada."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}/apuestas": {
+      "post": {
+        "operationId": "apuestasCreate",
+        "summary": "Registra una apuesta (1 o 2) para una jornada",
+        "description": "El usuario apuesta para sí mismo. Un admin puede apostar por otro pasando 'usuarioId' en el body.",
+        "tags": ["apuestas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "numeroApuesta": 1,
+                "partidos": ["1", "X", "2", "1", "1", "X", "2", "1", "X", "2", "1", "1", "X", "2"],
+                "sugerenciaPleno15": "1-M"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "numeroApuesta": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "const": 1
+                      },
+                      {
+                        "type": "number",
+                        "const": 2
+                      }
+                    ]
+                  },
+                  "partidos": {
+                    "minItems": 14,
+                    "maxItems": 14,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["1", "2", "X"]
+                    }
+                  },
+                  "sugerenciaPleno15": {
+                    "type": "string",
+                    "pattern": "^[012M]-[012M]$"
+                  },
+                  "usuarioId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": ["numeroApuesta", "partidos"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Apuesta creada.",
+            "headers": {
+              "Location": {
+                "description": "/api/v1/jornadas/{numeroJornada}/apuestas/{numeroApuesta}",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-aaaa-7c46-b05d-46bf7829c803",
+                  "numeroApuesta": 1,
+                  "partidos": [
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2"
+                  ],
+                  "sugerenciaPleno15": "1-M",
+                  "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "creadaPorElMismo": true,
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "numeroApuesta": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "const": 1
+                        },
+                        {
+                          "type": "number",
+                          "const": 2
+                        }
+                      ]
+                    },
+                    "partidos": {
+                      "minItems": 14,
+                      "maxItems": 14,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["1", "2", "X"]
+                      }
+                    },
+                    "sugerenciaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "usuarioId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "creadaPorElMismo": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "numeroApuesta",
+                    "partidos",
+                    "sugerenciaPleno15",
+                    "usuarioId",
+                    "creadaPorElMismo",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "numeroApuesta, partidos o sugerenciaPleno15 inválidos."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "'usuarioId' informado por un usuario que no es admin."
+          },
+          "404": {
+            "description": "Jornada, temporada o 'usuarioId' inexistentes."
+          },
+          "409": {
+            "description": "Apuestas cerradas, jornada calculada, o ya existe esa apuesta para ese usuario."
+          }
+        }
+      },
+      "get": {
+        "operationId": "apuestasFindByJornada",
+        "summary": "Lista las apuestas de una jornada",
+        "description": "Un admin las ve siempre; el resto de usuarios solo cuando las apuestas están cerradas.",
+        "tags": ["apuestas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de apuestas.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ffc0e-aaaa-7c46-b05d-46bf7829c803",
+                    "numeroApuesta": 1,
+                    "partidos": [
+                      "1",
+                      "X",
+                      "2",
+                      "1",
+                      "1",
+                      "X",
+                      "2",
+                      "1",
+                      "X",
+                      "2",
+                      "1",
+                      "1",
+                      "X",
+                      "2"
+                    ],
+                    "sugerenciaPleno15": "1-M",
+                    "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "creadaPorElMismo": true,
+                    "createdAt": "2026-08-15T10:00:00.000Z",
+                    "updatedAt": "2026-08-15T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "numeroApuesta": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "const": 1
+                          },
+                          {
+                            "type": "number",
+                            "const": 2
+                          }
+                        ]
+                      },
+                      "partidos": {
+                        "minItems": 14,
+                        "maxItems": 14,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": ["1", "2", "X"]
+                        }
+                      },
+                      "sugerenciaPleno15": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^[012M]-[012M]$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "usuarioId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "creadaPorElMismo": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "numeroApuesta",
+                      "partidos",
+                      "sugerenciaPleno15",
+                      "usuarioId",
+                      "creadaPorElMismo",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "Apuestas todavía abiertas y el usuario no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}/apuestas/mias": {
+      "get": {
+        "operationId": "apuestasFindMias",
+        "summary": "Lista las apuestas propias de una jornada",
+        "description": "Devuelve solo las apuestas del usuario autenticado, sin importar si las apuestas están abiertas o cerradas.",
+        "tags": ["apuestas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Apuestas del usuario autenticado.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ffc0e-aaaa-7c46-b05d-46bf7829c803",
+                    "numeroApuesta": 1,
+                    "partidos": [
+                      "1",
+                      "X",
+                      "2",
+                      "1",
+                      "1",
+                      "X",
+                      "2",
+                      "1",
+                      "X",
+                      "2",
+                      "1",
+                      "1",
+                      "X",
+                      "2"
+                    ],
+                    "sugerenciaPleno15": "1-M",
+                    "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "creadaPorElMismo": true,
+                    "createdAt": "2026-08-15T10:00:00.000Z",
+                    "updatedAt": "2026-08-15T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "numeroApuesta": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "const": 1
+                          },
+                          {
+                            "type": "number",
+                            "const": 2
+                          }
+                        ]
+                      },
+                      "partidos": {
+                        "minItems": 14,
+                        "maxItems": 14,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": ["1", "2", "X"]
+                        }
+                      },
+                      "sugerenciaPleno15": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^[012M]-[012M]$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "usuarioId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "creadaPorElMismo": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "numeroApuesta",
+                      "partidos",
+                      "sugerenciaPleno15",
+                      "usuarioId",
+                      "creadaPorElMismo",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}/apuestas/{numeroApuesta}": {
+      "put": {
+        "operationId": "apuestasReplace",
+        "summary": "Reemplaza los 14 signos de una apuesta",
+        "description": "El propio usuario, o un admin sobre la de otro pasando 'usuarioId' en el body.",
+        "tags": ["apuestas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "numeroApuesta",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "partidos": ["1", "X", "2", "1", "1", "X", "2", "1", "X", "2", "1", "1", "X", "2"],
+                "sugerenciaPleno15": "1-M"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "partidos": {
+                    "minItems": 14,
+                    "maxItems": 14,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["1", "2", "X"]
+                    }
+                  },
+                  "sugerenciaPleno15": {
+                    "type": "string",
+                    "pattern": "^[012M]-[012M]$"
+                  },
+                  "usuarioId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": ["partidos"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Apuesta actualizada.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-aaaa-7c46-b05d-46bf7829c803",
+                  "numeroApuesta": 1,
+                  "partidos": [
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2"
+                  ],
+                  "sugerenciaPleno15": "1-M",
+                  "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "creadaPorElMismo": true,
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "numeroApuesta": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "const": 1
+                        },
+                        {
+                          "type": "number",
+                          "const": 2
+                        }
+                      ]
+                    },
+                    "partidos": {
+                      "minItems": 14,
+                      "maxItems": 14,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["1", "2", "X"]
+                      }
+                    },
+                    "sugerenciaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "usuarioId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "creadaPorElMismo": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "numeroApuesta",
+                    "partidos",
+                    "sugerenciaPleno15",
+                    "usuarioId",
+                    "creadaPorElMismo",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Partidos o sugerenciaPleno15 inválidos."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "'usuarioId' de otro miembro, informado por un usuario que no es admin."
+          },
+          "404": {
+            "description": "Jornada, temporada, 'usuarioId' o la apuesta no existen."
+          },
+          "409": {
+            "description": "Las apuestas de esta jornada están cerradas."
+          }
+        }
+      },
+      "delete": {
+        "operationId": "apuestasRemove",
+        "summary": "Elimina una apuesta propia",
+        "description": "Solo se puede borrar la propia apuesta del usuario autenticado, y solo mientras las apuestas estén abiertas.",
+        "tags": ["apuestas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "numeroApuesta",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Apuesta eliminada."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe esa apuesta para el usuario autenticado en esa jornada."
+          },
+          "409": {
+            "description": "Las apuestas de esta jornada están cerradas."
           }
         }
       }

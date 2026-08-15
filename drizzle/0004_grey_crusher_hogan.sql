@@ -1,0 +1,45 @@
+CREATE TABLE "apuestas" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"jornada_id" uuid NOT NULL,
+	"usuario_id" uuid NOT NULL,
+	"numero_apuesta" smallint NOT NULL,
+	"partido_1" text NOT NULL,
+	"partido_2" text NOT NULL,
+	"partido_3" text NOT NULL,
+	"partido_4" text NOT NULL,
+	"partido_5" text NOT NULL,
+	"partido_6" text NOT NULL,
+	"partido_7" text NOT NULL,
+	"partido_8" text NOT NULL,
+	"partido_9" text NOT NULL,
+	"partido_10" text NOT NULL,
+	"partido_11" text NOT NULL,
+	"partido_12" text NOT NULL,
+	"partido_13" text NOT NULL,
+	"partido_14" text NOT NULL,
+	"sugerencia_pleno_15" text,
+	"creada_por" uuid NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "apuestas_numero_check" CHECK ("apuestas"."numero_apuesta" IN (1, 2)),
+	CONSTRAINT "apuestas_partido_1_check" CHECK ("apuestas"."partido_1" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_2_check" CHECK ("apuestas"."partido_2" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_3_check" CHECK ("apuestas"."partido_3" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_4_check" CHECK ("apuestas"."partido_4" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_5_check" CHECK ("apuestas"."partido_5" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_6_check" CHECK ("apuestas"."partido_6" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_7_check" CHECK ("apuestas"."partido_7" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_8_check" CHECK ("apuestas"."partido_8" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_9_check" CHECK ("apuestas"."partido_9" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_10_check" CHECK ("apuestas"."partido_10" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_11_check" CHECK ("apuestas"."partido_11" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_12_check" CHECK ("apuestas"."partido_12" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_13_check" CHECK ("apuestas"."partido_13" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_partido_14_check" CHECK ("apuestas"."partido_14" ~ '^[1X2]$'),
+	CONSTRAINT "apuestas_pleno_check" CHECK ("apuestas"."sugerencia_pleno_15" ~ '^[012M]-[012M]$')
+);
+--> statement-breakpoint
+ALTER TABLE "apuestas" ADD CONSTRAINT "apuestas_jornada_id_jornadas_id_fk" FOREIGN KEY ("jornada_id") REFERENCES "public"."jornadas"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "apuestas" ADD CONSTRAINT "apuestas_usuario_id_users_id_fk" FOREIGN KEY ("usuario_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "apuestas" ADD CONSTRAINT "apuestas_creada_por_users_id_fk" FOREIGN KEY ("creada_por") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "apuestas_jornada_usuario_numero_key" ON "apuestas" USING btree ("jornada_id","usuario_id","numero_apuesta");

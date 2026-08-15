@@ -6,3 +6,4 @@ export * from "./equipos.js";
 export * from "./temporadas.js";
 export * from "./jornadas.js";
 export * from "./resultados.js";
+export * from "./apuestas.js"

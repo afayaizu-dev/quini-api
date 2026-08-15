@@ -10,6 +10,7 @@ import type {
     FechasJornadaInput,
     PlenoJornadaInput,
 } from "./jornadas.schemas.js";
+import * as apuestasRepository from "../apuestas/apuestas.repository.js";
 
 interface JornadaConFechas {
     fechaAperturaApuestas: Date | null;
@@ -131,6 +132,9 @@ export async function replace(numeroJornada: number, temporadaCodigo: string | u
     if (await jornadasRepository.tieneResultados(existente.id)) {
         throw new ConflictError(`No se puede reemplazar la jornada ${numeroJornada}: ya tiene resultados registrados.`);
     }
+    if ((await apuestasRepository.countByJornada(existente.id)) > 0) {
+        throw new ConflictError(`No se puede reemplazar la jornada ${numeroJornada}: ya tiene apuestas registradas.`);
+    }
 
     const partidosResueltos = await resolvePartidos(input.partidos);
     const jornada = await jornadasRepository.replace(existente.id, { fecha: input.fecha, partidos: partidosResueltos });
@@ -142,6 +146,9 @@ export async function remove(numeroJornada: number, temporadaCodigo?: string) {
 
     if (await jornadasRepository.tieneResultados(existente.id)) {
         throw new ConflictError(`No se puede eliminar la jornada ${numeroJornada}: ya tiene resultados registrados.`);
+    }
+    if ((await apuestasRepository.countByJornada(existente.id)) > 0) {
+        throw new ConflictError(`No se puede eliminar la jornada ${numeroJornada}: ya tiene apuestas registradas.`);
     }
 
     await jornadasRepository.remove(existente.id);

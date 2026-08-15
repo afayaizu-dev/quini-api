@@ -9,7 +9,7 @@ import "../modules/equipos/equipos.openapi.js";
 import "../modules/jornadas/jornadas.openapi.js";
 import "../modules/usuarios/usuarios.openapi.js";
 import "../modules/resultados/resultados.openapi.js";
-
+import "../modules/apuestas/apuestas.openapi.js";
 
 
 
@@ -29,6 +29,7 @@ const document = createDocument({
         { name: "jornadas", description: "Jornadas y partidos de una temporada." },
         { name: "usuarios", description: "Perfil de los miembros de la peña." },
         { name: "resultados", description: "Resultados oficiales de una jornada." },
+        { name: "apuestas", description: "Apuestas realizadas por los usuarios." },
     ],
     paths,
     components: { securitySchemes },
