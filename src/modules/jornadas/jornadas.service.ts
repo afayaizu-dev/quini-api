@@ -124,8 +124,13 @@ export async function findByNumero(numeroJornada: number, temporadaCodigo?: stri
     return toResponse(temporada.codigo, existente);
 }
 
+
 export async function replace(numeroJornada: number, temporadaCodigo: string | undefined, input: UpdateJornadaInput) {
     const { temporada, existente } = await resolveExistente(numeroJornada, temporadaCodigo);
+
+    if (await jornadasRepository.tieneResultados(existente.id)) {
+        throw new ConflictError(`No se puede reemplazar la jornada ${numeroJornada}: ya tiene resultados registrados.`);
+    }
 
     const partidosResueltos = await resolvePartidos(input.partidos);
     const jornada = await jornadasRepository.replace(existente.id, { fecha: input.fecha, partidos: partidosResueltos });
@@ -134,6 +139,11 @@ export async function replace(numeroJornada: number, temporadaCodigo: string | u
 
 export async function remove(numeroJornada: number, temporadaCodigo?: string) {
     const { existente } = await resolveExistente(numeroJornada, temporadaCodigo);
+
+    if (await jornadasRepository.tieneResultados(existente.id)) {
+        throw new ConflictError(`No se puede eliminar la jornada ${numeroJornada}: ya tiene resultados registrados.`);
+    }
+
     await jornadasRepository.remove(existente.id);
 }
 

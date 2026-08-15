@@ -29,11 +29,15 @@
     },
     {
       "name": "jornadas",
-      "description": "Jornadas y partidos de una temporada (F11)."
+      "description": "Jornadas y partidos de una temporada."
     },
     {
       "name": "usuarios",
-      "description": "Perfil de los miembros de la peña (F15)."
+      "description": "Perfil de los miembros de la peña."
+    },
+    {
+      "name": "resultados",
+      "description": "Resultados oficiales de una jornada."
     }
   ],
   "paths": {
@@ -4565,6 +4569,569 @@
           },
           "409": {
             "description": "Ya existe otro miembro con ese apodo."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}/resultados": {
+      "get": {
+        "operationId": "resultadosFindByJornada",
+        "summary": "Consulta los resultados oficiales de una jornada",
+        "description": "Devuelve los 14 signos, el pleno al 15 y los premios por categoría, si ya están registrados.",
+        "tags": ["resultados"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultados encontrados.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-9999-7c46-b05d-46bf7829c803",
+                  "resultados": [
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2"
+                  ],
+                  "resultado15": "1-M",
+                  "premios": {
+                    "10": 15.5,
+                    "11": 30,
+                    "12": 60,
+                    "13": 150,
+                    "14": 1200,
+                    "15": 50000
+                  },
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "resultados": {
+                      "minItems": 14,
+                      "maxItems": 14,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["1", "2", "X"]
+                      }
+                    },
+                    "resultado15": {
+                      "type": "string",
+                      "pattern": "^[012M]-[012M]$"
+                    },
+                    "premios": {
+                      "type": "object",
+                      "properties": {
+                        "10": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "11": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "12": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "13": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "14": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "15": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": ["10", "11", "12", "13", "14", "15"],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "resultados",
+                    "resultado15",
+                    "premios",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe esa jornada, o no tiene resultados registrados."
+          }
+        }
+      },
+      "put": {
+        "operationId": "resultadosUpsert",
+        "summary": "Registra o actualiza los resultados de una jornada",
+        "description": "Alta si no existían (201) o reemplazo total si ya existían (200), en una única operación.",
+        "tags": ["resultados"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "resultados": [
+                  "1",
+                  "X",
+                  "2",
+                  "1",
+                  "1",
+                  "X",
+                  "2",
+                  "1",
+                  "X",
+                  "2",
+                  "1",
+                  "1",
+                  "X",
+                  "2"
+                ],
+                "resultado15": "1-M",
+                "premios": {
+                  "10": 15.5,
+                  "11": 30,
+                  "12": 60,
+                  "13": 150,
+                  "14": 1200,
+                  "15": 50000
+                }
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "resultados": {
+                    "minItems": 14,
+                    "maxItems": 14,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["1", "2", "X"]
+                    }
+                  },
+                  "resultado15": {
+                    "type": "string",
+                    "pattern": "^[012M]-[012M]$"
+                  },
+                  "premios": {
+                    "type": "object",
+                    "properties": {
+                      "10": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "11": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "12": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "13": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "14": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "15": {
+                        "type": "number",
+                        "minimum": 0
+                      }
+                    },
+                    "required": ["10", "11", "12", "13", "14", "15"]
+                  }
+                },
+                "required": ["resultados", "resultado15", "premios"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultados actualizados.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-9999-7c46-b05d-46bf7829c803",
+                  "resultados": [
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2"
+                  ],
+                  "resultado15": "1-M",
+                  "premios": {
+                    "10": 15.5,
+                    "11": 30,
+                    "12": 60,
+                    "13": 150,
+                    "14": 1200,
+                    "15": 50000
+                  },
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "resultados": {
+                      "minItems": 14,
+                      "maxItems": 14,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["1", "2", "X"]
+                      }
+                    },
+                    "resultado15": {
+                      "type": "string",
+                      "pattern": "^[012M]-[012M]$"
+                    },
+                    "premios": {
+                      "type": "object",
+                      "properties": {
+                        "10": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "11": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "12": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "13": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "14": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "15": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": ["10", "11", "12", "13", "14", "15"],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "resultados",
+                    "resultado15",
+                    "premios",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Resultados creados.",
+            "headers": {
+              "Location": {
+                "description": "/api/v1/jornadas/{numeroJornada}/resultados, con '?temporada=' si no es la activa.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-9999-7c46-b05d-46bf7829c803",
+                  "resultados": [
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "X",
+                    "2",
+                    "1",
+                    "1",
+                    "X",
+                    "2"
+                  ],
+                  "resultado15": "1-M",
+                  "premios": {
+                    "10": 15.5,
+                    "11": 30,
+                    "12": 60,
+                    "13": 150,
+                    "14": 1200,
+                    "15": 50000
+                  },
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "resultados": {
+                      "minItems": 14,
+                      "maxItems": 14,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["1", "2", "X"]
+                      }
+                    },
+                    "resultado15": {
+                      "type": "string",
+                      "pattern": "^[012M]-[012M]$"
+                    },
+                    "premios": {
+                      "type": "object",
+                      "properties": {
+                        "10": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "11": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "12": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "13": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "14": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "15": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": ["10", "11", "12", "13", "14", "15"],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "resultados",
+                    "resultado15",
+                    "premios",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Signos, pleno al 15 o importes inválidos."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          }
+        }
+      },
+      "delete": {
+        "operationId": "resultadosRemove",
+        "summary": "Elimina los resultados de una jornada",
+        "description": "Solo si la jornada no está ya calculada (fechaCierreJornada = null).",
+        "tags": ["resultados"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Resultados eliminados."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          },
+          "409": {
+            "description": "La jornada ya está calculada."
           }
         }
       }

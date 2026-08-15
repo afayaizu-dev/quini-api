@@ -492,6 +492,7 @@ describe("PUT /api/v1/jornadas/:numeroJornada/fechas", () => {
         expect(response.body.error).toBe("VALIDATION_ERROR");
     });
 
+
     test("las 3 fechas a null -> 200, apuestasAbiertas: false", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
@@ -712,5 +713,46 @@ describe("apuestasAbiertas / assertApuestasAbiertas (unit, sin HTTP)", () => {
         };
 
         expect(jornadasService.apuestasAbiertas(jornada)).toBe(false);
+    });
+});
+
+describe("PUT/DELETE /api/v1/jornadas/:numeroJornada con resultados ya registrados", () => {
+    test("PUT bloqueado -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+        await request(app)
+            .put("/api/v1/jornadas/1/resultados")
+            .set(header)
+            .send({
+                resultados: ["1", "X", "2", "1", "1", "X", "2", "1", "X", "2", "1", "1", "X", "2"],
+                resultado15: "1-M",
+                premios: { "10": 15.5, "11": 30, "12": 60, "13": 150, "14": 1200, "15": 50000 },
+            });
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1")
+            .set(header)
+            .send({ fecha: "2026-08-22", partidos: partidosValidos() });
+        console.log(response.body)
+        expect(response.status).toBe(409);
+    });
+
+    test("DELETE bloqueado -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+        await request(app)
+            .put("/api/v1/jornadas/1/resultados")
+            .set(header)
+            .send({
+                resultados: ["1", "X", "2", "1", "1", "X", "2", "1", "X", "2", "1", "1", "X", "2"],
+                resultado15: "1-M",
+                premios: { "10": 15.5, "11": 30, "12": 60, "13": 150, "14": 1200, "15": 50000 },
+            });
+
+        const response = await request(app).delete("/api/v1/jornadas/1").set(header);
+
+        expect(response.status).toBe(409);
     });
 });

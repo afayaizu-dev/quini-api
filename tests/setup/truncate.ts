@@ -5,8 +5,11 @@ import { sql } from "drizzle-orm";
 beforeEach(async () => {
     await db.execute(sql`
         TRUNCATE TABLE
-            partidos, jornadas, equipos, temporadas,
+            resultados, partidos, jornadas, equipos, temporadas,
             oauth_accounts, refresh_tokens, invitations, users
         RESTART IDENTITY CASCADE
     `);
+
 })
+
+

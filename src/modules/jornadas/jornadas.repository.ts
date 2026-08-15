@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { jornadas, partidos } from "../../db/schema/jornadas.js";
+import { resultados } from "../../db/schema/resultados.js";
 
 interface PartidoRow {
     orden: number;
@@ -155,4 +156,10 @@ export async function cerrarApuestas(jornadaId: string, tx: DbOrTx = db) {
     /* v8 ignore next -- @preserve */
     if (!jornada) throw new Error("No se pudo cerrar las apuestas de la jornada");
     return jornada;
+}
+
+
+export async function tieneResultados(jornadaId: string, tx: DbOrTx = db): Promise<boolean> {
+    const [row] = await tx.select({ id: resultados.id }).from(resultados).where(eq(resultados.jornadaId, jornadaId));
+    return row !== undefined;
 }
