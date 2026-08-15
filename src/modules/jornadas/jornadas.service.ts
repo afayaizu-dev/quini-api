@@ -1,15 +1,33 @@
 import { ConflictError, NotFoundError } from "../../core/errors.js";
+import { isUniqueViolation } from "../../core/error.js";
 import * as jornadasRepository from "./jornadas.repository.js";
 import * as temporadasService from "../temporadas/temporadas.service.js";
 import * as equiposService from "../equipos/equipos.service.js";
-import type { CreateJornadaInput, UpdateJornadaInput, PartidoInput } from "./jornadas.schemas.js";
+import type {
+    CreateJornadaInput,
+    UpdateJornadaInput,
+    PartidoInput,
+    FechasJornadaInput,
+    PlenoJornadaInput,
+} from "./jornadas.schemas.js";
 
-function isUniqueViolation(err: unknown): boolean {
-    /* v8 ignore next -- @preserve */
-    const cause = err instanceof Error ? err.cause : undefined;
-    /* v8 ignore next -- @preserve */
-    if (typeof cause !== "object" || cause === null || !("code" in cause)) return false;
-    return cause.code === "23505";
+interface JornadaConFechas {
+    fechaAperturaApuestas: Date | null;
+    fechaCierreApuestas: Date | null;
+    fechaCierreJornada: Date | null;
+}
+
+export function apuestasAbiertas(jornada: JornadaConFechas): boolean {
+    if (jornada.fechaAperturaApuestas === null || jornada.fechaCierreApuestas === null) return false;
+    if (jornada.fechaCierreJornada !== null) return false;
+    const ahora = new Date();
+    return jornada.fechaAperturaApuestas <= ahora && ahora < jornada.fechaCierreApuestas;
+}
+
+export function assertApuestasAbiertas(jornada: JornadaConFechas): void {
+    if (!apuestasAbiertas(jornada)) {
+        throw new ConflictError("Las apuestas de esta jornada están cerradas.");
+    }
 }
 
 async function resolvePartidos(partidosInput: PartidoInput[]) {
@@ -26,10 +44,15 @@ async function resolvePartidos(partidosInput: PartidoInput[]) {
 
 function toResponse(
     temporadaCodigo: string,
+
     jornada: {
         id: string;
         numeroJornada: number;
         fecha: string;
+        fechaAperturaApuestas: Date | null;
+        fechaCierreApuestas: Date | null;
+        fechaCierreJornada: Date | null;
+        apuestaPleno15: string | null;
         createdAt: Date;
         updatedAt: Date;
         partidos: { id: string; orden: number; equipoLocalId: string; equipoVisitanteId: string }[];
@@ -40,6 +63,11 @@ function toResponse(
         temporada: temporadaCodigo,
         numeroJornada: jornada.numeroJornada,
         fecha: jornada.fecha,
+        fechaAperturaApuestas: jornada.fechaAperturaApuestas,
+        fechaCierreApuestas: jornada.fechaCierreApuestas,
+        fechaCierreJornada: jornada.fechaCierreJornada,
+        apuestaPleno15: jornada.apuestaPleno15,
+        apuestasAbiertas: apuestasAbiertas(jornada),
         partidos: jornada.partidos.map((p) => ({
             id: p.id,
             orden: p.orden,
@@ -49,6 +77,15 @@ function toResponse(
         createdAt: jornada.createdAt,
         updatedAt: jornada.updatedAt,
     };
+}
+
+async function resolveExistente(numeroJornada: number, temporadaCodigo: string | undefined) {
+    const temporada = await temporadasService.resolveTemporada(temporadaCodigo);
+    const existente = await jornadasRepository.findByNumero(temporada.id, numeroJornada);
+    if (!existente) {
+        throw new NotFoundError(`No existe la jornada ${numeroJornada} en la temporada '${temporada.codigo}'.`);
+    }
+    return { temporada, existente };
 }
 
 export async function create(input: CreateJornadaInput, createdBy: string) {
@@ -83,20 +120,12 @@ export async function findAll(temporadaCodigo?: string) {
 }
 
 export async function findByNumero(numeroJornada: number, temporadaCodigo?: string) {
-    const temporada = await temporadasService.resolveTemporada(temporadaCodigo);
-    const jornada = await jornadasRepository.findByNumero(temporada.id, numeroJornada);
-    if (!jornada) {
-        throw new NotFoundError(`No existe la jornada ${numeroJornada} en la temporada '${temporada.codigo}'.`);
-    }
-    return toResponse(temporada.codigo, jornada);
+    const { temporada, existente } = await resolveExistente(numeroJornada, temporadaCodigo);
+    return toResponse(temporada.codigo, existente);
 }
 
 export async function replace(numeroJornada: number, temporadaCodigo: string | undefined, input: UpdateJornadaInput) {
-    const temporada = await temporadasService.resolveTemporada(temporadaCodigo);
-    const existente = await jornadasRepository.findByNumero(temporada.id, numeroJornada);
-    if (!existente) {
-        throw new NotFoundError(`No existe la jornada ${numeroJornada} en la temporada '${temporada.codigo}'.`);
-    }
+    const { temporada, existente } = await resolveExistente(numeroJornada, temporadaCodigo);
 
     const partidosResueltos = await resolvePartidos(input.partidos);
     const jornada = await jornadasRepository.replace(existente.id, { fecha: input.fecha, partidos: partidosResueltos });
@@ -104,10 +133,32 @@ export async function replace(numeroJornada: number, temporadaCodigo: string | u
 }
 
 export async function remove(numeroJornada: number, temporadaCodigo?: string) {
-    const temporada = await temporadasService.resolveTemporada(temporadaCodigo);
-    const existente = await jornadasRepository.findByNumero(temporada.id, numeroJornada);
-    if (!existente) {
-        throw new NotFoundError(`No existe la jornada ${numeroJornada} en la temporada '${temporada.codigo}'.`);
-    }
+    const { existente } = await resolveExistente(numeroJornada, temporadaCodigo);
     await jornadasRepository.remove(existente.id);
+}
+
+export async function updateFechas(
+    numeroJornada: number,
+    temporadaCodigo: string | undefined,
+    input: FechasJornadaInput,
+) {
+    const { temporada, existente } = await resolveExistente(numeroJornada, temporadaCodigo);
+    const jornada = await jornadasRepository.updateFechas(existente.id, input);
+    return toResponse(temporada.codigo, { ...jornada, partidos: existente.partidos });
+}
+
+export async function cerrarApuestas(numeroJornada: number, temporadaCodigo?: string) {
+    const { temporada, existente } = await resolveExistente(numeroJornada, temporadaCodigo);
+    const jornada = await jornadasRepository.cerrarApuestas(existente.id);
+    return toResponse(temporada.codigo, { ...jornada, partidos: existente.partidos });
+}
+
+export async function updatePleno(
+    numeroJornada: number,
+    temporadaCodigo: string | undefined,
+    input: PlenoJornadaInput,
+) {
+    const { temporada, existente } = await resolveExistente(numeroJornada, temporadaCodigo);
+    const jornada = await jornadasRepository.updatePleno(existente.id, input.apuestaPleno15);
+    return toResponse(temporada.codigo, { ...jornada, partidos: existente.partidos });
 }

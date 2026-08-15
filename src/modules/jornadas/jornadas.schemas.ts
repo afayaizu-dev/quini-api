@@ -3,6 +3,8 @@ import { codigoTemporada } from "../temporadas/temporadas.schemas.js";
 
 const ORDEN_ESPERADO = Array.from({ length: 15 }, (_, i) => i + 1);
 
+export const plenoAl15 = z.string().regex(/^[012M]-[012M]$/);
+
 export const PartidoSchema = z.object({
     orden: z.number().int().min(1).max(15),
     equipoLocal: z.string().trim().min(1),
@@ -16,8 +18,6 @@ function ordenesCompletosYSinDuplicados(partidos: PartidoInput[]): boolean {
     if (ordenes.size !== partidos.length) return false;
     return ORDEN_ESPERADO.every((n) => ordenes.has(n));
 }
-
-
 
 export const CreateJornadaSchema = z
     .object({
@@ -57,6 +57,32 @@ export const JornadaQuerySchema = z.object({
 
 export type JornadaQuery = z.infer<typeof JornadaQuerySchema>;
 
+export const FechasJornadaSchema = z
+    .object({
+        fechaAperturaApuestas: z.iso.datetime().nullable(),
+        fechaCierreApuestas: z.iso.datetime().nullable(),
+        fechaCierreJornada: z.iso.datetime().nullable(),
+    })
+    .refine(
+        (data) =>
+            data.fechaAperturaApuestas === null ||
+            data.fechaCierreApuestas === null ||
+            new Date(data.fechaCierreApuestas) > new Date(data.fechaAperturaApuestas),
+        {
+            message: "fechaCierreApuestas debe ser posterior a fechaAperturaApuestas.",
+            path: ["fechaCierreApuestas"],
+        },
+    );
+
+export type FechasJornadaInput = z.infer<typeof FechasJornadaSchema>;
+
+export const PlenoJornadaSchema = z.object({
+    apuestaPleno15: plenoAl15,
+});
+
+export type PlenoJornadaInput = z.infer<typeof PlenoJornadaSchema>;
+
+
 export const PartidoResponseSchema = z.object({
     id: z.uuid(),
     orden: z.number(),
@@ -69,6 +95,11 @@ export const JornadaResponseSchema = z.object({
     temporada: z.string(),
     numeroJornada: z.number(),
     fecha: z.iso.date(),
+    fechaAperturaApuestas: z.iso.datetime().nullable(),
+    fechaCierreApuestas: z.iso.datetime().nullable(),
+    fechaCierreJornada: z.iso.datetime().nullable(),
+    apuestaPleno15: plenoAl15.nullable(),
+    apuestasAbiertas: z.boolean(),
     partidos: z.array(PartidoResponseSchema),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),

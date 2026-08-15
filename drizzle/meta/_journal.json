@@ -8,6 +8,20 @@
       "when": 1786260096354,
       "tag": "0000_cute_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786804631184,
+      "tag": "0001_wakeful_dragon_lord",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786810280068,
+      "tag": "0002_chilly_kulan_gath",
+      "breakpoints": true
     }
   ]
 }

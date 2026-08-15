@@ -1,13 +1,25 @@
+
 import { Router } from "express";
 import { requireAuth } from "../../middleware/require-auth.js";
 import { requireRole } from "../../middleware/require-role.js";
 import { validate } from "../../middleware/validate.js";
-import { create, findAll, findByNumero, replace, remove } from "./jornadas.controller.js";
+import {
+    create,
+    findAll,
+    findByNumero,
+    replace,
+    remove,
+    updateFechas,
+    cerrarApuestas,
+    updatePleno,
+} from "./jornadas.controller.js";
 import {
     CreateJornadaSchema,
     UpdateJornadaSchema,
     JornadaNumeroParamSchema,
     JornadaQuerySchema,
+    FechasJornadaSchema,
+    PlenoJornadaSchema,
 } from "./jornadas.schemas.js";
 
 export const jornadasRouter = Router();
@@ -48,4 +60,29 @@ jornadasRouter.delete(
     requireRole("admin"),
     validate({ params: JornadaNumeroParamSchema, query: JornadaQuerySchema }),
     remove,
+);
+
+
+jornadasRouter.put(
+    "/:numeroJornada/fechas",
+    requireAuth,
+    requireRole("admin"),
+    validate({ params: JornadaNumeroParamSchema, query: JornadaQuerySchema, body: FechasJornadaSchema }),
+    updateFechas,
+);
+
+jornadasRouter.post(
+    "/:numeroJornada/cerrar-apuestas",
+    requireAuth,
+    requireRole("admin"),
+    validate({ params: JornadaNumeroParamSchema, query: JornadaQuerySchema }),
+    cerrarApuestas,
+);
+
+jornadasRouter.put(
+    "/:numeroJornada/pleno",
+    requireAuth,
+    requireRole("admin"),
+    validate({ params: JornadaNumeroParamSchema, query: JornadaQuerySchema, body: PlenoJornadaSchema }),
+    updatePleno,
 );

@@ -1,9 +1,12 @@
 import { z } from "zod";
 import { registerPath } from "../../openapi/registry.js";
+
 import {
     CreateJornadaSchema,
     UpdateJornadaSchema,
     JornadaResponseSchema,
+    FechasJornadaSchema,
+    PlenoJornadaSchema,
 } from "./jornadas.schemas.js";
 
 const numeroJornadaParam = {
@@ -34,11 +37,17 @@ const createJornadaEjemplo = {
     partidos: partidosEjemplo,
 };
 
+
 const jornadaEjemplo = {
     id: "019ffc0e-1234-7c46-b05d-46bf7829c803",
     temporada: "2026-27",
     numeroJornada: 1,
     fecha: "2026-08-20",
+    fechaAperturaApuestas: null,
+    fechaCierreApuestas: null,
+    fechaCierreJornada: null,
+    apuestaPleno15: null,
+    apuestasAbiertas: false,
     partidos: partidosEjemplo.map((p, i) => ({
         id: `019ffc0e-8251-7c46-b05d-${(1000 + i).toString().padStart(12, "0")}`,
         orden: p.orden,
@@ -48,6 +57,7 @@ const jornadaEjemplo = {
     createdAt: "2026-08-15T10:00:00.000Z",
     updatedAt: "2026-08-15T10:00:00.000Z",
 };
+
 
 registerPath("/jornadas", {
     get: {
@@ -160,6 +170,91 @@ registerPath("/jornadas/{numeroJornada}", {
         parameters: [numeroJornadaParam, temporadaQueryParam],
         responses: {
             "204": { description: "Jornada eliminada." },
+            "401": { description: "Sin access token válido." },
+            "403": { description: "El usuario autenticado no es admin." },
+            "404": { description: "No existe esa jornada en la temporada." },
+        },
+    },
+});
+
+
+registerPath("/jornadas/{numeroJornada}/fechas", {
+    put: {
+        operationId: "jornadasUpdateFechas",
+        summary: "Fija las fechas de apertura/cierre de apuestas y de cierre de la jornada",
+        description: "Cualquiera de las 3 puede ir a null. Es también la vía para reabrir una jornada ya calculada (poniendo fechaCierreJornada a null).",
+        tags: ["jornadas"],
+        security: [{ bearerAuth: [] }],
+        "x-required-role": "admin",
+        parameters: [numeroJornadaParam, temporadaQueryParam],
+        requestBody: {
+            required: true,
+            content: {
+                "application/json": {
+                    schema: FechasJornadaSchema,
+                    example: {
+                        fechaAperturaApuestas: "2026-09-01T10:00:00Z",
+                        fechaCierreApuestas: "2026-09-05T20:00:00Z",
+                        fechaCierreJornada: null,
+                    },
+                },
+            },
+        },
+        responses: {
+            "200": {
+                description: "Jornada con las fechas actualizadas.",
+                content: { "application/json": { schema: JornadaResponseSchema, example: jornadaEjemplo } },
+            },
+            "400": { description: "fechaCierreApuestas no es posterior a fechaAperturaApuestas." },
+            "401": { description: "Sin access token válido." },
+            "403": { description: "El usuario autenticado no es admin." },
+            "404": { description: "No existe esa jornada en la temporada." },
+        },
+    },
+});
+
+registerPath("/jornadas/{numeroJornada}/cerrar-apuestas", {
+    post: {
+        operationId: "jornadasCerrarApuestas",
+        summary: "Cierra las apuestas de la jornada ahora mismo",
+        description: "Atajo equivalente a poner fechaCierreApuestas = now() con PUT /fechas.",
+        tags: ["jornadas"],
+        security: [{ bearerAuth: [] }],
+        "x-required-role": "admin",
+        parameters: [numeroJornadaParam, temporadaQueryParam],
+        responses: {
+            "200": {
+                description: "Jornada con las apuestas cerradas.",
+                content: { "application/json": { schema: JornadaResponseSchema, example: jornadaEjemplo } },
+            },
+            "401": { description: "Sin access token válido." },
+            "403": { description: "El usuario autenticado no es admin." },
+            "404": { description: "No existe esa jornada en la temporada." },
+        },
+    },
+});
+
+registerPath("/jornadas/{numeroJornada}/pleno", {
+    put: {
+        operationId: "jornadasUpdatePleno",
+        summary: "Fija la apuesta oficial de la peña al pleno al 15",
+        description: "Una única apuesta oficial por jornada, con la forma 'n-n' (n en 0,1,2,M).",
+        tags: ["jornadas"],
+        security: [{ bearerAuth: [] }],
+        "x-required-role": "admin",
+        parameters: [numeroJornadaParam, temporadaQueryParam],
+        requestBody: {
+            required: true,
+            content: {
+                "application/json": { schema: PlenoJornadaSchema, example: { apuestaPleno15: "1-M" } },
+            },
+        },
+        responses: {
+            "200": {
+                description: "Jornada con el pleno oficial actualizado.",
+                content: { "application/json": { schema: JornadaResponseSchema, example: jornadaEjemplo } },
+            },
+            "400": { description: "apuestaPleno15 no tiene la forma 'n-n' válida." },
             "401": { description: "Sin access token válido." },
             "403": { description: "El usuario autenticado no es admin." },
             "404": { description: "No existe esa jornada en la temporada." },

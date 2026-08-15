@@ -30,6 +30,10 @@
     {
       "name": "jornadas",
       "description": "Jornadas y partidos de una temporada (F11)."
+    },
+    {
+      "name": "usuarios",
+      "description": "Perfil de los miembros de la peña (F15)."
     }
   ],
   "paths": {
@@ -1617,6 +1621,11 @@
                     "temporada": "2026-27",
                     "numeroJornada": 1,
                     "fecha": "2026-08-20",
+                    "fechaAperturaApuestas": null,
+                    "fechaCierreApuestas": null,
+                    "fechaCierreJornada": null,
+                    "apuestaPleno15": null,
+                    "apuestasAbiertas": false,
                     "partidos": [
                       {
                         "id": "019ffc0e-8251-7c46-b05d-000000001000",
@@ -1734,6 +1743,56 @@
                         "format": "date",
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                       },
+                      "fechaAperturaApuestas": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "fechaCierreApuestas": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "fechaCierreJornada": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "apuestaPleno15": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^[012M]-[012M]$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "apuestasAbiertas": {
+                        "type": "boolean"
+                      },
                       "partidos": {
                         "type": "array",
                         "items": {
@@ -1778,6 +1837,11 @@
                       "temporada",
                       "numeroJornada",
                       "fecha",
+                      "fechaAperturaApuestas",
+                      "fechaCierreApuestas",
+                      "fechaCierreJornada",
+                      "apuestaPleno15",
+                      "apuestasAbiertas",
                       "partidos",
                       "createdAt",
                       "updatedAt"
@@ -1957,6 +2021,11 @@
                   "temporada": "2026-27",
                   "numeroJornada": 1,
                   "fecha": "2026-08-20",
+                  "fechaAperturaApuestas": null,
+                  "fechaCierreApuestas": null,
+                  "fechaCierreJornada": null,
+                  "apuestaPleno15": null,
+                  "apuestasAbiertas": false,
                   "partidos": [
                     {
                       "id": "019ffc0e-8251-7c46-b05d-000000001000",
@@ -2071,6 +2140,56 @@
                       "format": "date",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                     },
+                    "fechaAperturaApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreJornada": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestasAbiertas": {
+                      "type": "boolean"
+                    },
                     "partidos": {
                       "type": "array",
                       "items": {
@@ -2115,6 +2234,11 @@
                     "temporada",
                     "numeroJornada",
                     "fecha",
+                    "fechaAperturaApuestas",
+                    "fechaCierreApuestas",
+                    "fechaCierreJornada",
+                    "apuestaPleno15",
+                    "apuestasAbiertas",
                     "partidos",
                     "createdAt",
                     "updatedAt"
@@ -2185,6 +2309,11 @@
                   "temporada": "2026-27",
                   "numeroJornada": 1,
                   "fecha": "2026-08-20",
+                  "fechaAperturaApuestas": null,
+                  "fechaCierreApuestas": null,
+                  "fechaCierreJornada": null,
+                  "apuestaPleno15": null,
+                  "apuestasAbiertas": false,
                   "partidos": [
                     {
                       "id": "019ffc0e-8251-7c46-b05d-000000001000",
@@ -2299,6 +2428,56 @@
                       "format": "date",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                     },
+                    "fechaAperturaApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreJornada": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestasAbiertas": {
+                      "type": "boolean"
+                    },
                     "partidos": {
                       "type": "array",
                       "items": {
@@ -2343,6 +2522,11 @@
                     "temporada",
                     "numeroJornada",
                     "fecha",
+                    "fechaAperturaApuestas",
+                    "fechaCierreApuestas",
+                    "fechaCierreJornada",
+                    "apuestaPleno15",
+                    "apuestasAbiertas",
                     "partidos",
                     "createdAt",
                     "updatedAt"
@@ -2528,6 +2712,11 @@
                   "temporada": "2026-27",
                   "numeroJornada": 1,
                   "fecha": "2026-08-20",
+                  "fechaAperturaApuestas": null,
+                  "fechaCierreApuestas": null,
+                  "fechaCierreJornada": null,
+                  "apuestaPleno15": null,
+                  "apuestasAbiertas": false,
                   "partidos": [
                     {
                       "id": "019ffc0e-8251-7c46-b05d-000000001000",
@@ -2642,6 +2831,56 @@
                       "format": "date",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                     },
+                    "fechaAperturaApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreJornada": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestasAbiertas": {
+                      "type": "boolean"
+                    },
                     "partidos": {
                       "type": "array",
                       "items": {
@@ -2686,6 +2925,11 @@
                     "temporada",
                     "numeroJornada",
                     "fecha",
+                    "fechaAperturaApuestas",
+                    "fechaCierreApuestas",
+                    "fechaCierreJornada",
+                    "apuestaPleno15",
+                    "apuestasAbiertas",
                     "partidos",
                     "createdAt",
                     "updatedAt"
@@ -2754,6 +2998,1573 @@
           },
           "404": {
             "description": "No existe esa jornada en la temporada."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}/fechas": {
+      "put": {
+        "operationId": "jornadasUpdateFechas",
+        "summary": "Fija las fechas de apertura/cierre de apuestas y de cierre de la jornada",
+        "description": "Cualquiera de las 3 puede ir a null. Es también la vía para reabrir una jornada ya calculada (poniendo fechaCierreJornada a null).",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "fechaAperturaApuestas": "2026-09-01T10:00:00Z",
+                "fechaCierreApuestas": "2026-09-05T20:00:00Z",
+                "fechaCierreJornada": null
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fechaAperturaApuestas": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "fechaCierreApuestas": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "fechaCierreJornada": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["fechaAperturaApuestas", "fechaCierreApuestas", "fechaCierreJornada"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Jornada con las fechas actualizadas.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-1234-7c46-b05d-46bf7829c803",
+                  "temporada": "2026-27",
+                  "numeroJornada": 1,
+                  "fecha": "2026-08-20",
+                  "fechaAperturaApuestas": null,
+                  "fechaCierreApuestas": null,
+                  "fechaCierreJornada": null,
+                  "apuestaPleno15": null,
+                  "apuestasAbiertas": false,
+                  "partidos": [
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001000",
+                      "orden": 1,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001001",
+                      "orden": 2,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001002",
+                      "orden": 3,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001003",
+                      "orden": 4,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001004",
+                      "orden": 5,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001005",
+                      "orden": 6,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001006",
+                      "orden": 7,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001007",
+                      "orden": 8,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001008",
+                      "orden": 9,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001009",
+                      "orden": 10,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001010",
+                      "orden": 11,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001011",
+                      "orden": 12,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001012",
+                      "orden": 13,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001013",
+                      "orden": 14,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001014",
+                      "orden": 15,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    }
+                  ],
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "numeroJornada": {
+                      "type": "number"
+                    },
+                    "fecha": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "fechaAperturaApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreJornada": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestasAbiertas": {
+                      "type": "boolean"
+                    },
+                    "partidos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "orden": {
+                            "type": "number"
+                          },
+                          "equipoLocalId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "equipoVisitanteId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": ["id", "orden", "equipoLocalId", "equipoVisitanteId"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "temporada",
+                    "numeroJornada",
+                    "fecha",
+                    "fechaAperturaApuestas",
+                    "fechaCierreApuestas",
+                    "fechaCierreJornada",
+                    "apuestaPleno15",
+                    "apuestasAbiertas",
+                    "partidos",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "fechaCierreApuestas no es posterior a fechaAperturaApuestas."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}/cerrar-apuestas": {
+      "post": {
+        "operationId": "jornadasCerrarApuestas",
+        "summary": "Cierra las apuestas de la jornada ahora mismo",
+        "description": "Atajo equivalente a poner fechaCierreApuestas = now() con PUT /fechas.",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jornada con las apuestas cerradas.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-1234-7c46-b05d-46bf7829c803",
+                  "temporada": "2026-27",
+                  "numeroJornada": 1,
+                  "fecha": "2026-08-20",
+                  "fechaAperturaApuestas": null,
+                  "fechaCierreApuestas": null,
+                  "fechaCierreJornada": null,
+                  "apuestaPleno15": null,
+                  "apuestasAbiertas": false,
+                  "partidos": [
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001000",
+                      "orden": 1,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001001",
+                      "orden": 2,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001002",
+                      "orden": 3,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001003",
+                      "orden": 4,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001004",
+                      "orden": 5,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001005",
+                      "orden": 6,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001006",
+                      "orden": 7,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001007",
+                      "orden": 8,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001008",
+                      "orden": 9,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001009",
+                      "orden": 10,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001010",
+                      "orden": 11,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001011",
+                      "orden": 12,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001012",
+                      "orden": 13,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001013",
+                      "orden": 14,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001014",
+                      "orden": 15,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    }
+                  ],
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "numeroJornada": {
+                      "type": "number"
+                    },
+                    "fecha": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "fechaAperturaApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreJornada": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestasAbiertas": {
+                      "type": "boolean"
+                    },
+                    "partidos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "orden": {
+                            "type": "number"
+                          },
+                          "equipoLocalId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "equipoVisitanteId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": ["id", "orden", "equipoLocalId", "equipoVisitanteId"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "temporada",
+                    "numeroJornada",
+                    "fecha",
+                    "fechaAperturaApuestas",
+                    "fechaCierreApuestas",
+                    "fechaCierreJornada",
+                    "apuestaPleno15",
+                    "apuestasAbiertas",
+                    "partidos",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          }
+        }
+      }
+    },
+    "/jornadas/{numeroJornada}/pleno": {
+      "put": {
+        "operationId": "jornadasUpdatePleno",
+        "summary": "Fija la apuesta oficial de la peña al pleno al 15",
+        "description": "Una única apuesta oficial por jornada, con la forma 'n-n' (n en 0,1,2,M).",
+        "tags": ["jornadas"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "numeroJornada",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "apuestaPleno15": "1-M"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "apuestaPleno15": {
+                    "type": "string",
+                    "pattern": "^[012M]-[012M]$"
+                  }
+                },
+                "required": ["apuestaPleno15"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Jornada con el pleno oficial actualizado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-1234-7c46-b05d-46bf7829c803",
+                  "temporada": "2026-27",
+                  "numeroJornada": 1,
+                  "fecha": "2026-08-20",
+                  "fechaAperturaApuestas": null,
+                  "fechaCierreApuestas": null,
+                  "fechaCierreJornada": null,
+                  "apuestaPleno15": null,
+                  "apuestasAbiertas": false,
+                  "partidos": [
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001000",
+                      "orden": 1,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001001",
+                      "orden": 2,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001002",
+                      "orden": 3,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001003",
+                      "orden": 4,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001004",
+                      "orden": 5,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001005",
+                      "orden": 6,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001006",
+                      "orden": 7,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001007",
+                      "orden": 8,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001008",
+                      "orden": 9,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001009",
+                      "orden": 10,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001010",
+                      "orden": 11,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001011",
+                      "orden": 12,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001012",
+                      "orden": 13,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001013",
+                      "orden": 14,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    },
+                    {
+                      "id": "019ffc0e-8251-7c46-b05d-000000001014",
+                      "orden": 15,
+                      "equipoLocalId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "equipoVisitanteId": "019ff7ec-47d1-75ea-abf9-a10ccae92634"
+                    }
+                  ],
+                  "createdAt": "2026-08-15T10:00:00.000Z",
+                  "updatedAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "numeroJornada": {
+                      "type": "number"
+                    },
+                    "fecha": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "fechaAperturaApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fechaCierreJornada": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestaPleno15": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[012M]-[012M]$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apuestasAbiertas": {
+                      "type": "boolean"
+                    },
+                    "partidos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "orden": {
+                            "type": "number"
+                          },
+                          "equipoLocalId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "equipoVisitanteId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": ["id", "orden", "equipoLocalId", "equipoVisitanteId"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "temporada",
+                    "numeroJornada",
+                    "fecha",
+                    "fechaAperturaApuestas",
+                    "fechaCierreApuestas",
+                    "fechaCierreJornada",
+                    "apuestaPleno15",
+                    "apuestasAbiertas",
+                    "partidos",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "apuestaPleno15 no tiene la forma 'n-n' válida."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa jornada en la temporada."
+          }
+        }
+      }
+    },
+    "/usuarios/me": {
+      "get": {
+        "operationId": "usuariosGetMe",
+        "summary": "Consulta el perfil propio",
+        "description": "Devuelve el perfil completo del usuario autenticado. Distinto de /auth/me, que solo comprueba el token.",
+        "tags": ["usuarios"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil del usuario autenticado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "email": "jota@quini.local",
+                  "nombre": "José",
+                  "apellidos": "Fernández López",
+                  "apodo": "Jota",
+                  "telefono": "600123456",
+                  "role": "user",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "apellidos": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apodo": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "telefono": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": ["user", "admin"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "nombre",
+                    "apellidos",
+                    "apodo",
+                    "telefono",
+                    "role",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          }
+        }
+      },
+      "put": {
+        "operationId": "usuariosUpdateMe",
+        "summary": "Actualiza el perfil propio",
+        "description": "Actualiza nombre, apellidos, apodo y/o teléfono del usuario autenticado. Nunca email ni role: mandarlos da 400.",
+        "tags": ["usuarios"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "apellidos": "Fernández López",
+                "apodo": "Jota",
+                "telefono": "600123456"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "apellidos": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "apodo": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "telefono": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "email": "jota@quini.local",
+                  "nombre": "José",
+                  "apellidos": "Fernández López",
+                  "apodo": "Jota",
+                  "telefono": "600123456",
+                  "role": "user",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "apellidos": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apodo": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "telefono": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": ["user", "admin"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "nombre",
+                    "apellidos",
+                    "apodo",
+                    "telefono",
+                    "role",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos, o se ha mandado role/email (rechazados por .strict())."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "409": {
+            "description": "Ya existe otro miembro con ese apodo."
+          }
+        }
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "operationId": "usuariosFindAll",
+        "summary": "Lista todos los miembros",
+        "description": "Solo un admin puede ver el listado completo de miembros (incluye a los propios admins).",
+        "tags": ["usuarios"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "responses": {
+          "200": {
+            "description": "Lista de miembros.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "email": "jota@quini.local",
+                    "nombre": "José",
+                    "apellidos": "Fernández López",
+                    "apodo": "Jota",
+                    "telefono": "600123456",
+                    "role": "user",
+                    "createdAt": "2026-08-15T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                      },
+                      "nombre": {
+                        "type": "string"
+                      },
+                      "apellidos": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "apodo": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "telefono": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": ["user", "admin"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "email",
+                      "nombre",
+                      "apellidos",
+                      "apodo",
+                      "telefono",
+                      "role",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          }
+        }
+      }
+    },
+    "/usuarios/{id}": {
+      "get": {
+        "operationId": "usuariosFindById",
+        "summary": "Consulta el perfil de un miembro",
+        "description": "Solo un admin puede consultar el perfil de otro miembro.",
+        "tags": ["usuarios"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil del miembro.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "email": "jota@quini.local",
+                  "nombre": "José",
+                  "apellidos": "Fernández López",
+                  "apodo": "Jota",
+                  "telefono": "600123456",
+                  "role": "user",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "apellidos": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apodo": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "telefono": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": ["user", "admin"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "nombre",
+                    "apellidos",
+                    "apodo",
+                    "telefono",
+                    "role",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe un usuario con ese id."
+          }
+        }
+      },
+      "put": {
+        "operationId": "usuariosUpdate",
+        "summary": "Actualiza el perfil de un miembro",
+        "description": "Solo un admin puede actualizar el perfil de otro miembro. Mismo contrato que PUT /usuarios/me.",
+        "tags": ["usuarios"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "apellidos": "Fernández López",
+                "apodo": "Jota",
+                "telefono": "600123456"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "apellidos": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "apodo": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "telefono": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "email": "jota@quini.local",
+                  "nombre": "José",
+                  "apellidos": "Fernández López",
+                  "apodo": "Jota",
+                  "telefono": "600123456",
+                  "role": "user",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "apellidos": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "apodo": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "telefono": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": ["user", "admin"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "nombre",
+                    "apellidos",
+                    "apodo",
+                    "telefono",
+                    "role",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos, o se ha mandado role/email (rechazados por .strict())."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe un usuario con ese id."
+          },
+          "409": {
+            "description": "Ya existe otro miembro con ese apodo."
           }
         }
       }

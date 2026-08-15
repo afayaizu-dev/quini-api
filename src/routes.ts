@@ -4,6 +4,7 @@ import { invitationsRouter } from "./modules/invitations/invitations.routes.js";
 import { temporadasRouter } from "./modules/temporadas/temporadas.routes.js";
 import { equiposRouter } from "./modules/equipos/equipos.routes.js";
 import { jornadasRouter } from "./modules/jornadas/jornadas.routes.js";
+import { usuariosRouter } from "./modules/usuarios/usuarios.routes.js";
 
 export const router = Router();
 
@@ -12,3 +13,4 @@ router.use("/invitaciones", invitationsRouter);
 router.use("/temporadas", temporadasRouter);
 router.use("/equipos", equiposRouter);
 router.use("/jornadas", jornadasRouter);
+router.use("/usuarios", usuariosRouter);

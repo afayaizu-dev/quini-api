@@ -4,6 +4,7 @@ import { parseTtlToMs } from "../../core/ttl.js";
 import { ConflictError, GoneError, NotFoundError } from "../../core/errors.js";
 import { createInvitation, findInvitationByHash, markInvitationAccepted, findUsableInvitationByEmail } from "./invitations.repository.js";
 import { type DbOrTx } from "../../db/index.js";
+import { isUniqueViolation } from "../../core/error.js";
 
 export function newInvitationToken(): string {
     return randomBytes(32).toString("base64url");
@@ -20,11 +21,6 @@ interface InvitationTicket {
     token: string;
 }
 
-function isUniqueViolation(err: unknown): boolean {
-    /* v8 ignore next -- @preserve */
-    const cause = err instanceof Error ? err.cause : undefined;
-    return typeof cause === "object" && cause !== null && "code" in cause && cause.code === "23505";
-}
 
 export async function create(
     email: string,

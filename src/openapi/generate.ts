@@ -7,6 +7,7 @@ import { securitySchemes } from "./security-schemes.js";
 import "../modules/temporadas/temporadas.openapi.js";
 import "../modules/equipos/equipos.openapi.js";
 import "../modules/jornadas/jornadas.openapi.js";
+import "../modules/usuarios/usuarios.openapi.js";
 
 
 
@@ -25,6 +26,7 @@ const document = createDocument({
         { name: "temporadas", description: "Gestión de temporadas." },
         { name: "equipos", description: "Gestión de equipos." },
         { name: "jornadas", description: "Jornadas y partidos de una temporada (F11)." },
+        { name: "usuarios", description: "Perfil de los miembros de la peña (F15)." },
     ],
     paths,
     components: { securitySchemes },

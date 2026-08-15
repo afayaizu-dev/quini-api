@@ -2,22 +2,9 @@ import { ConflictError, NotFoundError } from "../../core/errors.js";
 import { db, type DbOrTx } from "../../db/index.js";
 import * as equiposRepository from "./equipos.repository.js";
 import type { CreateEquipoInput, UpdateEquipoInput } from "./equipos.schemas.js";
+import { isUniqueViolation, isForeignKeyViolation } from "../../core/error.js";
 
-function isUniqueViolation(err: unknown): boolean {
-    /* v8 ignore next -- @preserve */
-    const cause = err instanceof Error ? err.cause : undefined;
-    /* v8 ignore next -- @preserve */
-    if (typeof cause !== "object" || cause === null || !("code" in cause)) return false;
-    return cause.code === "23505";
-}
 
-function isForeignKeyViolation(err: unknown): boolean {
-    /* v8 ignore next -- @preserve */
-    const cause = err instanceof Error ? err.cause : undefined;
-    /* v8 ignore next -- @preserve */
-    if (typeof cause !== "object" || cause === null || !("code" in cause)) return false;
-    return cause.code === "23503" || cause.code === "23001";
-}
 
 export async function resolveEquipo(nombreLargo: string, tx: DbOrTx = db) {
     const equipo = await equiposRepository.findByNombreLargo(nombreLargo, tx);

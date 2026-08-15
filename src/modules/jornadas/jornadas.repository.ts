@@ -82,6 +82,47 @@ export async function findByNumero(temporadaId: string, numeroJornada: number, t
     return { ...jornada, partidos: filasPartidos };
 }
 
+
+function toDateOrNull(value: string | null): Date | null {
+    return value === null ? null : new Date(value);
+}
+
+export async function updateFechas(
+    jornadaId: string,
+    input: {
+        fechaAperturaApuestas: string | null;
+        fechaCierreApuestas: string | null;
+        fechaCierreJornada: string | null;
+    },
+    tx: DbOrTx = db,
+) {
+    const [jornada] = await tx
+        .update(jornadas)
+        .set({
+            fechaAperturaApuestas: toDateOrNull(input.fechaAperturaApuestas),
+            fechaCierreApuestas: toDateOrNull(input.fechaCierreApuestas),
+            fechaCierreJornada: toDateOrNull(input.fechaCierreJornada),
+            updatedAt: new Date(),
+        })
+        .where(eq(jornadas.id, jornadaId))
+        .returning();
+    /* v8 ignore next -- @preserve */
+    if (!jornada) throw new Error("No se pudo actualizar las fechas de la jornada");
+    return jornada;
+}
+
+export async function updatePleno(jornadaId: string, apuestaPleno15: string, tx: DbOrTx = db) {
+    const [jornada] = await tx
+        .update(jornadas)
+        .set({ apuestaPleno15, updatedAt: new Date() })
+        .where(eq(jornadas.id, jornadaId))
+        .returning();
+    /* v8 ignore next -- @preserve */
+    if (!jornada) throw new Error("No se pudo actualizar el pleno de la jornada");
+    return jornada;
+}
+
+
 export async function replace(jornadaId: string, input: { fecha: string; partidos: PartidoRow[] }) {
     return db.transaction(async (tx) => {
         await tx.update(jornadas).set({ fecha: input.fecha, updatedAt: new Date() }).where(eq(jornadas.id, jornadaId));
@@ -102,4 +143,16 @@ export async function replace(jornadaId: string, input: { fecha: string; partido
 
 export async function remove(jornadaId: string, tx: DbOrTx = db) {
     await tx.delete(jornadas).where(eq(jornadas.id, jornadaId));
+}
+
+
+export async function cerrarApuestas(jornadaId: string, tx: DbOrTx = db) {
+    const [jornada] = await tx
+        .update(jornadas)
+        .set({ fechaCierreApuestas: new Date(), updatedAt: new Date() })
+        .where(eq(jornadas.id, jornadaId))
+        .returning();
+    /* v8 ignore next -- @preserve */
+    if (!jornada) throw new Error("No se pudo cerrar las apuestas de la jornada");
+    return jornada;
 }

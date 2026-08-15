@@ -2,8 +2,16 @@ import { describe, expect, test } from "vitest";
 import request from "supertest";
 import { app, createAdmin, createUser, authHeader, expiredToken } from "../helpers/auth.js";
 import { expectMatchesOpenApiSchema } from "../helpers/openapi.js";
+import * as jornadasService from "../../src/modules/jornadas/jornadas.service.js";
 
 const NOMBRES_EQUIPOS = ["Real Madrid", "Barcelona", "Atletico Madrid", "Sevilla", "Valencia", "Villarreal"];
+
+async function crearJornadaLista(header: Record<string, string>) {
+    await crearEquipos(header);
+    await crearTemporada(header, "2026-27");
+    const creada = await request(app).post("/api/v1/jornadas").set(header).send(jornadaBody());
+    return creada.body as { numeroJornada: number };
+}
 
 async function crearEquipos(header: Record<string, string>) {
     for (const nombre of NOMBRES_EQUIPOS) {
@@ -439,4 +447,270 @@ test("temporada sin jornadas -> 200 con array vacío", async () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual([]);
+});
+
+describe("PUT /api/v1/jornadas/:numeroJornada/fechas", () => {
+    test("fechas válidas (admin) -> 200 y apuestasAbiertas coherente", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({
+                fechaAperturaApuestas: "2020-01-01T00:00:00Z",
+                fechaCierreApuestas: "2099-01-01T00:00:00Z",
+                fechaCierreJornada: null,
+            });
+
+        expect(response.status).toBe(200);
+        expect(response.body.apuestasAbiertas).toBe(true);
+        expectMatchesOpenApiSchema({
+            path: "/jornadas/{numeroJornada}/fechas",
+            method: "put",
+            status: 200,
+            body: response.body,
+        });
+    });
+
+    test("cierre anterior a la apertura -> 400", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({
+                fechaAperturaApuestas: "2099-01-01T00:00:00Z",
+                fechaCierreApuestas: "2020-01-01T00:00:00Z",
+                fechaCierreJornada: null,
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe("VALIDATION_ERROR");
+    });
+
+    test("las 3 fechas a null -> 200, apuestasAbiertas: false", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({ fechaAperturaApuestas: null, fechaCierreApuestas: null, fechaCierreJornada: null });
+
+        expect(response.status).toBe(200);
+        expect(response.body.apuestasAbiertas).toBe(false);
+    });
+
+    test("como user -> 403", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const user = await createUser();
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(await authHeader(user))
+            .send({ fechaAperturaApuestas: null, fechaCierreApuestas: null, fechaCierreJornada: null });
+
+        expect(response.status).toBe(403);
+    });
+
+    test("jornada inexistente -> 404", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporada(header, "2026-27");
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/99/fechas")
+            .set(header)
+            .send({ fechaAperturaApuestas: null, fechaCierreApuestas: null, fechaCierreJornada: null });
+
+        expect(response.status).toBe(404);
+    });
+});
+
+describe("POST /api/v1/jornadas/:numeroJornada/cerrar-apuestas", () => {
+    test("admin -> 200, apuestasAbiertas: false", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+        await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({
+                fechaAperturaApuestas: "2020-01-01T00:00:00Z",
+                fechaCierreApuestas: "2099-01-01T00:00:00Z",
+                fechaCierreJornada: null,
+            });
+
+        const response = await request(app).post("/api/v1/jornadas/1/cerrar-apuestas").set(header);
+
+        expect(response.status).toBe(200);
+        expect(response.body.apuestasAbiertas).toBe(false);
+        expectMatchesOpenApiSchema({
+            path: "/jornadas/{numeroJornada}/cerrar-apuestas",
+            method: "post",
+            status: 200,
+            body: response.body,
+        });
+    });
+
+    test("como user -> 403", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const user = await createUser();
+        const response = await request(app).post("/api/v1/jornadas/1/cerrar-apuestas").set(await authHeader(user));
+
+        expect(response.status).toBe(403);
+    });
+});
+
+describe("PUT /api/v1/jornadas/:numeroJornada/pleno", () => {
+    test("'1-2' -> 200", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/pleno")
+            .set(header)
+            .send({ apuestaPleno15: "1-2" });
+
+        expect(response.status).toBe(200);
+        expect(response.body.apuestaPleno15).toBe("1-2");
+        expectMatchesOpenApiSchema({
+            path: "/jornadas/{numeroJornada}/pleno",
+            method: "put",
+            status: 200,
+            body: response.body,
+        });
+    });
+
+    test("'M-M' -> 200", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/pleno")
+            .set(header)
+            .send({ apuestaPleno15: "M-M" });
+
+        expect(response.status).toBe(200);
+    });
+
+    test("'3-0' -> 400", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/pleno")
+            .set(header)
+            .send({ apuestaPleno15: "3-0" });
+
+        expect(response.status).toBe(400);
+    });
+
+    test("'1 - 2' (con espacios) -> 400", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/pleno")
+            .set(header)
+            .send({ apuestaPleno15: "1 - 2" });
+
+        expect(response.status).toBe(400);
+    });
+});
+
+describe("GET /api/v1/jornadas/:numeroJornada (apuestasAbiertas)", () => {
+    test("sin fechas configuradas -> apuestasAbiertas: false", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const response = await request(app).get("/api/v1/jornadas/1").set(header);
+
+        expect(response.status).toBe(200);
+        expect(response.body.apuestasAbiertas).toBe(false);
+    });
+
+    test("con la ventana abierta -> apuestasAbiertas: true", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+        await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({
+                fechaAperturaApuestas: "2020-01-01T00:00:00Z",
+                fechaCierreApuestas: "2099-01-01T00:00:00Z",
+                fechaCierreJornada: null,
+            });
+
+        const response = await request(app).get("/api/v1/jornadas/1").set(header);
+
+        expect(response.body.apuestasAbiertas).toBe(true);
+    });
+
+    test("con fechaCierreJornada puesta -> apuestasAbiertas: false", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+        await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({
+                fechaAperturaApuestas: "2020-01-01T00:00:00Z",
+                fechaCierreApuestas: "2099-01-01T00:00:00Z",
+                fechaCierreJornada: "2020-06-01T00:00:00Z",
+            });
+
+        const response = await request(app).get("/api/v1/jornadas/1").set(header);
+
+        expect(response.body.apuestasAbiertas).toBe(false);
+    });
+});
+
+
+describe("apuestasAbiertas / assertApuestasAbiertas (unit, sin HTTP)", () => {
+    test("sin fechas -> false, y assert lanza ConflictError", () => {
+        const jornada = { fechaAperturaApuestas: null, fechaCierreApuestas: null, fechaCierreJornada: null };
+
+        expect(jornadasService.apuestasAbiertas(jornada)).toBe(false);
+        expect(() => jornadasService.assertApuestasAbiertas(jornada)).toThrow(
+            "Las apuestas de esta jornada están cerradas.",
+        );
+    });
+
+    test("con la ventana abierta -> true, y assert no lanza", () => {
+        const jornada = {
+            fechaAperturaApuestas: new Date("2020-01-01T00:00:00Z"),
+            fechaCierreApuestas: new Date("2099-01-01T00:00:00Z"),
+            fechaCierreJornada: null,
+        };
+
+        expect(jornadasService.apuestasAbiertas(jornada)).toBe(true);
+        expect(() => jornadasService.assertApuestasAbiertas(jornada)).not.toThrow();
+    });
+
+    test("con fechaCierreJornada puesta -> false aunque la ventana temporal esté abierta", () => {
+        const jornada = {
+            fechaAperturaApuestas: new Date("2020-01-01T00:00:00Z"),
+            fechaCierreApuestas: new Date("2099-01-01T00:00:00Z"),
+            fechaCierreJornada: new Date("2020-06-01T00:00:00Z"),
+        };
+
+        expect(jornadasService.apuestasAbiertas(jornada)).toBe(false);
+    });
 });

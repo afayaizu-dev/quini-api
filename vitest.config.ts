@@ -20,6 +20,7 @@ export default defineConfig({
                 "src/modules/temporadas/temporadas.service.ts": { 100: true },
                 "src/modules/equipos/equipos.service.ts": { 100: true },
                 "src/modules/jornadas/jornadas.service.ts": { 100: true },
+                "src/modules/usuarios/usuarios.service.ts": { 100: true },
             },
         },
     },

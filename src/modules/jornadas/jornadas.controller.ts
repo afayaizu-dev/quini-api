@@ -6,6 +6,8 @@ import type {
     UpdateJornadaInput,
     JornadaNumeroParam,
     JornadaQuery,
+    FechasJornadaInput,
+    PlenoJornadaInput,
 } from "./jornadas.schemas.js";
 
 function requireAuthContext(req: Request) {
@@ -54,4 +56,27 @@ export async function remove(req: Request, res: Response): Promise<void> {
     const { temporada } = req.query as unknown as JornadaQuery;
     await jornadasService.remove(numeroJornada, temporada);
     res.status(204).end();
+}
+
+export async function updateFechas(req: Request, res: Response): Promise<void> {
+    const { numeroJornada } = req.params as unknown as JornadaNumeroParam;
+    const { temporada } = req.query as unknown as JornadaQuery;
+    const body = req.body as FechasJornadaInput;
+    const jornada = await jornadasService.updateFechas(numeroJornada, temporada, body);
+    res.status(200).json(jornada);
+}
+
+export async function cerrarApuestas(req: Request, res: Response): Promise<void> {
+    const { numeroJornada } = req.params as unknown as JornadaNumeroParam;
+    const { temporada } = req.query as unknown as JornadaQuery;
+    const jornada = await jornadasService.cerrarApuestas(numeroJornada, temporada);
+    res.status(200).json(jornada);
+}
+
+export async function updatePleno(req: Request, res: Response): Promise<void> {
+    const { numeroJornada } = req.params as unknown as JornadaNumeroParam;
+    const { temporada } = req.query as unknown as JornadaQuery;
+    const body = req.body as PlenoJornadaInput;
+    const jornada = await jornadasService.updatePleno(numeroJornada, temporada, body);
+    res.status(200).json(jornada);
 }
