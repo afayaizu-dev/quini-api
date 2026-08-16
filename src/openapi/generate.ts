@@ -11,6 +11,7 @@ import "../modules/usuarios/usuarios.openapi.js";
 import "../modules/resultados/resultados.openapi.js";
 import "../modules/apuestas/apuestas.openapi.js";
 import "../modules/calculos/calculos.openapi.js";
+import "../modules/pagos/pagos.openapi.js";
 
 
 
@@ -32,6 +33,7 @@ const document = createDocument({
         { name: "resultados", description: "Resultados oficiales de una jornada." },
         { name: "apuestas", description: "Apuestas realizadas por los usuarios." },
         { name: "calculos", description: "Cálculo de aciertos, premios y bote de una jornada." },
+        { name: "pagos", description: "Gestión de pagos de los usuarios." },
     ],
     paths,
     components: { securitySchemes },

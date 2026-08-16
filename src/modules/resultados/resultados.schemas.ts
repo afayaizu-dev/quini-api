@@ -10,6 +10,10 @@ export const importeEuros = z
     .nonnegative()
     .refine((v) => Number(v.toFixed(2)) === v, "Máximo 2 decimales.");
 
+export const importeConSigno = z
+    .number()
+    .refine((v) => Number(v.toFixed(2)) === v, "Máximo 2 decimales.");
+
 const PremiosSchema = z.object({
     "10": importeEuros,
     "11": importeEuros,

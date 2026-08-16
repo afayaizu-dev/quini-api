@@ -3,9 +3,10 @@ import { db } from "../../src/db/index.js";
 import { sql } from "drizzle-orm";
 
 beforeEach(async () => {
+
     await db.execute(sql`
         TRUNCATE TABLE
-            resultados_miembro, apuestas, resultados, partidos, jornadas, equipos, temporadas,
+            pagos, resultados_miembro, apuestas, resultados, partidos, jornadas, equipos, temporadas,
             oauth_accounts, refresh_tokens, invitations, users
         RESTART IDENTITY CASCADE
     `);

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { importeConSigno } from "../resultados/resultados.schemas.js";
+;
 
 export const UpdatePerfilSchema = z
     .object({
@@ -25,7 +27,9 @@ export const UsuarioResponseSchema = z.object({
     apodo: z.string().nullable(),
     telefono: z.string().nullable(),
     role: z.enum(["user", "admin"]),
+    credito: importeConSigno,
     createdAt: z.iso.datetime(),
 });
+
 
 export type UsuarioResponse = z.infer<typeof UsuarioResponseSchema>;

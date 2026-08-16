@@ -46,6 +46,10 @@
     {
       "name": "calculos",
       "description": "Cálculo de aciertos, premios y bote de una jornada."
+    },
+    {
+      "name": "pagos",
+      "description": "Gestión de pagos de los usuarios."
     }
   ],
   "paths": {
@@ -3967,6 +3971,7 @@
                   "apodo": "Jota",
                   "telefono": "600123456",
                   "role": "user",
+                  "credito": 12.5,
                   "createdAt": "2026-08-15T10:00:00.000Z"
                 },
                 "schema": {
@@ -4019,6 +4024,9 @@
                       "type": "string",
                       "enum": ["user", "admin"]
                     },
+                    "credito": {
+                      "type": "number"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4033,6 +4041,7 @@
                     "apodo",
                     "telefono",
                     "role",
+                    "credito",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4102,6 +4111,7 @@
                   "apodo": "Jota",
                   "telefono": "600123456",
                   "role": "user",
+                  "credito": 12.5,
                   "createdAt": "2026-08-15T10:00:00.000Z"
                 },
                 "schema": {
@@ -4154,6 +4164,9 @@
                       "type": "string",
                       "enum": ["user", "admin"]
                     },
+                    "credito": {
+                      "type": "number"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4168,6 +4181,7 @@
                     "apodo",
                     "telefono",
                     "role",
+                    "credito",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4213,6 +4227,7 @@
                     "apodo": "Jota",
                     "telefono": "600123456",
                     "role": "user",
+                    "credito": 12.5,
                     "createdAt": "2026-08-15T10:00:00.000Z"
                   }
                 ],
@@ -4268,6 +4283,9 @@
                         "type": "string",
                         "enum": ["user", "admin"]
                       },
+                      "credito": {
+                        "type": "number"
+                      },
                       "createdAt": {
                         "type": "string",
                         "format": "date-time",
@@ -4282,6 +4300,7 @@
                       "apodo",
                       "telefono",
                       "role",
+                      "credito",
                       "createdAt"
                     ],
                     "additionalProperties": false
@@ -4336,6 +4355,7 @@
                   "apodo": "Jota",
                   "telefono": "600123456",
                   "role": "user",
+                  "credito": 12.5,
                   "createdAt": "2026-08-15T10:00:00.000Z"
                 },
                 "schema": {
@@ -4388,6 +4408,9 @@
                       "type": "string",
                       "enum": ["user", "admin"]
                     },
+                    "credito": {
+                      "type": "number"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4402,6 +4425,7 @@
                     "apodo",
                     "telefono",
                     "role",
+                    "credito",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -4490,6 +4514,7 @@
                   "apodo": "Jota",
                   "telefono": "600123456",
                   "role": "user",
+                  "credito": 12.5,
                   "createdAt": "2026-08-15T10:00:00.000Z"
                 },
                 "schema": {
@@ -4542,6 +4567,9 @@
                       "type": "string",
                       "enum": ["user", "admin"]
                     },
+                    "credito": {
+                      "type": "number"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -4556,6 +4584,7 @@
                     "apodo",
                     "telefono",
                     "role",
+                    "credito",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -6313,6 +6342,367 @@
           },
           "404": {
             "description": "Jornada, temporada, o cálculo aún no ejecutado para esa jornada."
+          }
+        }
+      }
+    },
+    "/pagos": {
+      "post": {
+        "operationId": "pagosCreate",
+        "summary": "Registra un pago de un miembro",
+        "description": "Sube el crédito del miembro. No hay PUT: un pago mal apuntado se borra y se vuelve a crear.",
+        "tags": ["pagos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                "importe": 50,
+                "fechaPago": "2026-09-01"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "usuarioId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "importe": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "fechaPago": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": ["usuarioId", "importe", "fechaPago"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pago registrado.",
+            "headers": {
+              "Location": {
+                "description": "/api/v1/pagos/{id}",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                  "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "importe": 50,
+                  "fechaPago": "2026-09-01",
+                  "registradoPor": "019ff7eb-9999-7b8c-a948-6ca9a14625e6",
+                  "createdAt": "2026-08-15T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "usuarioId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "importe": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "fechaPago": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "registradoPor": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "usuarioId",
+                    "importe",
+                    "fechaPago",
+                    "registradoPor",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "importe <= 0, con más de 2 decimales, o fechaPago con formato inválido."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe el usuarioId indicado."
+          }
+        }
+      },
+      "get": {
+        "operationId": "pagosFindAll",
+        "summary": "Lista los pagos, con filtros opcionales",
+        "description": "Filtra por usuario y/o por rango de fechaPago (desde/hasta, ambos inclusive).",
+        "tags": ["pagos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "usuario",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "desde",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-08-01"
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-08-31"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pagos.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                    "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "importe": 50,
+                    "fechaPago": "2026-09-01",
+                    "registradoPor": "019ff7eb-9999-7b8c-a948-6ca9a14625e6",
+                    "createdAt": "2026-08-15T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "usuarioId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "importe": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "fechaPago": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "registradoPor": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "usuarioId",
+                      "importe",
+                      "fechaPago",
+                      "registradoPor",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          }
+        }
+      }
+    },
+    "/pagos/mios": {
+      "get": {
+        "operationId": "pagosFindMios",
+        "summary": "Lista los pagos propios",
+        "description": "Devuelve únicamente los pagos del usuario autenticado.",
+        "tags": ["pagos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pagos del usuario autenticado.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                    "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "importe": 50,
+                    "fechaPago": "2026-09-01",
+                    "registradoPor": "019ff7eb-9999-7b8c-a948-6ca9a14625e6",
+                    "createdAt": "2026-08-15T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "usuarioId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "importe": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "fechaPago": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "registradoPor": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "usuarioId",
+                      "importe",
+                      "fechaPago",
+                      "registradoPor",
+                      "createdAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          }
+        }
+      }
+    },
+    "/pagos/{id}": {
+      "delete": {
+        "operationId": "pagosRemove",
+        "summary": "Elimina un pago",
+        "description": "Un pago mal apuntado se borra y se vuelve a crear; no existe PUT.",
+        "tags": ["pagos"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Pago eliminado."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe ese pago."
           }
         }
       }

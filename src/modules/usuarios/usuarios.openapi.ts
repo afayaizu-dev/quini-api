@@ -18,6 +18,7 @@ const usuarioEjemplo = {
     apodo: "Jota",
     telefono: "600123456",
     role: "user",
+    credito: 12.5,
     createdAt: "2026-08-15T10:00:00.000Z",
 };
 
