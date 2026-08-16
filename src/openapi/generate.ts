@@ -10,6 +10,7 @@ import "../modules/jornadas/jornadas.openapi.js";
 import "../modules/usuarios/usuarios.openapi.js";
 import "../modules/resultados/resultados.openapi.js";
 import "../modules/apuestas/apuestas.openapi.js";
+import "../modules/calculos/calculos.openapi.js";
 
 
 
@@ -30,6 +31,7 @@ const document = createDocument({
         { name: "usuarios", description: "Perfil de los miembros de la peña." },
         { name: "resultados", description: "Resultados oficiales de una jornada." },
         { name: "apuestas", description: "Apuestas realizadas por los usuarios." },
+        { name: "calculos", description: "Cálculo de aciertos, premios y bote de una jornada." },
     ],
     paths,
     components: { securitySchemes },

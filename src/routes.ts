@@ -7,6 +7,8 @@ import { jornadasRouter } from "./modules/jornadas/jornadas.routes.js";
 import { usuariosRouter } from "./modules/usuarios/usuarios.routes.js";
 import { resultadosRouter } from "./modules/resultados/resultados.routes.js";
 import { apuestasRouter } from "./modules/apuestas/apuestas.routes.js";
+import { calculosRouter } from "./modules/calculos/calculos.routes.js";
+
 
 export const router = Router();
 
@@ -18,3 +20,4 @@ router.use("/jornadas", jornadasRouter);
 router.use("/usuarios", usuariosRouter);
 router.use("/jornadas", resultadosRouter);
 router.use("/jornadas", apuestasRouter);
+router.use("/calculos", calculosRouter);

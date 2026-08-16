@@ -83,7 +83,7 @@ export async function create(
             creadaPor: auth.userId,
             ...toColumnas(input),
         });
-        return toResponse(fila, auth.userId);
+        return toResponse(fila);
     } catch (err) {
         if (isUniqueViolation(err)) {
             throw new ConflictError(`Ya existe la apuesta ${input.numeroApuesta} de este usuario para la jornada ${numeroJornada}.`);
@@ -99,13 +99,13 @@ export async function findByJornada(numeroJornada: number, temporadaCodigo: stri
         throw new ForbiddenError();
     }
     const filas = await apuestasRepository.findByJornada(jornada.id);
-    return filas.map((fila) => toResponse(fila, auth.userId));
+    return filas.map((fila) => toResponse(fila));
 }
 
 export async function findMias(numeroJornada: number, temporadaCodigo: string | undefined, auth: AuthContext) {
     const jornada = await jornadasService.findByNumero(numeroJornada, temporadaCodigo);
     const filas = await apuestasRepository.findByJornadaYUsuario(jornada.id, auth.userId);
-    return filas.map((fila) => toResponse(fila, auth.userId));
+    return filas.map((fila) => toResponse(fila));
 }
 
 export async function replace(
@@ -125,7 +125,7 @@ export async function replace(
     }
 
     const fila = await apuestasRepository.replace(existente.id, toColumnas(input));
-    return toResponse(fila, auth.userId);
+    return toResponse(fila);
 }
 
 export async function remove(

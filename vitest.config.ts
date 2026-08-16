@@ -22,6 +22,8 @@ export default defineConfig({
                 "src/modules/jornadas/jornadas.service.ts": { 100: true },
                 "src/modules/usuarios/usuarios.service.ts": { 100: true },
                 "src/modules/resultados/resultados.service.ts": { 100: true },
+                "src/modules/calculos/calculos.service.ts": { 100: true },
+                "src/modules/calculos/calculos.algoritmo.ts": { 100: true },
             },
         },
     },

@@ -163,3 +163,14 @@ export async function tieneResultados(jornadaId: string, tx: DbOrTx = db): Promi
     const [row] = await tx.select({ id: resultados.id }).from(resultados).where(eq(resultados.jornadaId, jornadaId));
     return row !== undefined;
 }
+
+export async function cerrarJornada(jornadaId: string, tx: DbOrTx = db) {
+    const [jornada] = await tx
+        .update(jornadas)
+        .set({ fechaCierreJornada: new Date(), updatedAt: new Date() })
+        .where(eq(jornadas.id, jornadaId))
+        .returning();
+    /* v8 ignore next -- @preserve */
+    if (!jornada) throw new Error("No se pudo cerrar la jornada");
+    return jornada;
+}
