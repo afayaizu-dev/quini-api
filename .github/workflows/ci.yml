@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Preparar .env para generar OpenAPI
+        run: cp .env.test .env
+
+      - name: Regenerar OpenAPI
+        run: npm run openapi:generate
+
+      - name: Formatear OpenAPI (igual que el pre-commit)
+        run: npx prettier --write openapi/openapi.json
+
+      - name: Lint de OpenAPI
+        run: npm run openapi:lint
+
+      - name: Comprobar que openapi.json está actualizado
+        run: git diff --exit-code openapi/openapi.json
