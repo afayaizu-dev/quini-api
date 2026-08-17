@@ -8,6 +8,9 @@ const server = app.listen(env.PORT, () => {
     console.log(`API escuchando en http://localhost:${env.PORT}`);
 });
 
+server.headersTimeout = 65_000;
+server.requestTimeout = 30_000;
+
 function shutdown(signal: string): void {
     console.log(`${signal} recibido, cerrando servidor...`);
     server.close(async () => {
@@ -19,3 +22,8 @@ function shutdown(signal: string): void {
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+
+process.on("unhandledRejection", (reason) => {
+    console.error("unhandledRejection:", reason);
+    process.exit(1);
+});

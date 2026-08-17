@@ -11,13 +11,18 @@ import cookieParser from "cookie-parser";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
+import { globalRateLimit } from "./middleware/rate-limit.js";
 
 
 export function createApp(): Application {
     const app = express();
 
+    app.set("trust proxy", 1);
+    app.disable("x-powered-by");
+
     app.use(helmet());
     app.use(cors({ origin: env.CORS_ORIGINS, credentials: true }));
+    app.use(globalRateLimit);
     app.use(requestId);
     app.use(httpLogger);
     app.use(express.json({ limit: "100kb" }));

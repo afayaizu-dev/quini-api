@@ -20,3 +20,4 @@ function createRateLimit(limit: number) {
 
 export const authRateLimit = createRateLimit(10);
 export const invitationRateLimit = createRateLimit(10);
+export const globalRateLimit = createRateLimit(300);
