@@ -204,6 +204,21 @@ describe("calcularJornada — casos borde", () => {
         expect(u.u3?.premioApuesta1).toBe(0.33);
     });
 
+    test("categoría 15 reparte igual sin importar el orden de llegada de las apuestas", () => {
+        const apuestas: ApuestaCalculo[] = [
+            { id: "b2", usuarioId: "u1", numeroApuesta: 1, partidos: partidosConAciertos(14) },
+            { id: "b0", usuarioId: "u2", numeroApuesta: 1, partidos: partidosConAciertos(14) },
+            { id: "b1", usuarioId: "u3", numeroApuesta: 1, partidos: partidosConAciertos(14) },
+        ];
+        const premios = { ...PREMIOS_CERO, "15": 1.0 };
+        const liquidaciones = calcularJornada(apuestas, { resultados: RESULTADO, premios }, ESCALONES);
+        const u = porUsuario(liquidaciones);
+        expect(u.u2?.premioApuesta1).toBe(0.34);
+        expect(u.u3?.premioApuesta1).toBe(0.33);
+        expect(u.u1?.premioApuesta1).toBe(0.33);
+    });
+
+
     test("categoría 15 con las 2 apuestas de un mismo miembro a 14 -> cobra 2 partes", () => {
         const datos = [{ usuarioId: "u1", ap1: 14, ap2: 14 }];
         const premios = { ...PREMIOS_CERO, "15": 2.0 };

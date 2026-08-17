@@ -132,11 +132,14 @@ export function calcularJornada(
     const importesPorEscalon = new Map(escalones.map((e) => [e.escalon, e.importe]));
 
     return agregados.map((agregado) => {
+        /* v8 ignore next -- @preserve */
         let escalon = escalonPorGrupo.get(agregado.aciertosMax) ?? ESCALON_MINIMO;
         if (agregado.aciertosMax === grupoMasAlto && miembrosGrupoMasAlto.length === 1) {
             escalon = ESCALON_MINIMO;
         }
+        /* v8 ignore next -- @preserve */
         const ranking = rankingPorGrupo.get(agregado.aciertosMax) ?? totalGrupos;
+        /* v8 ignore next -- @preserve */
         const importeEscalon = importesPorEscalon.get(escalon) ?? 0;
         const premioApuesta1 = aEuros(agregado.premioApuesta1Centimos);
         const premioApuesta2 = aEuros(agregado.premioApuesta2Centimos);

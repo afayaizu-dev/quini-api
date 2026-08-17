@@ -1,6 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { apuestas } from "../../db/schema/apuestas.js";
+import { jornadas } from "../../db/schema/jornadas.js";
 
 export interface ApuestaColumnas {
     partido1: string;
@@ -100,4 +101,21 @@ export async function countByJornada(jornadaId: string, tx: DbOrTx = db): Promis
         .where(eq(apuestas.jornadaId, jornadaId));
     /* v8 ignore next -- @preserve */
     return row?.total ?? 0;
+}
+
+export async function contarPorAutoria(
+    usuarioId: string,
+    temporadaId: string,
+    tx: DbOrTx = db,
+): Promise<{ total: number; propias: number }> {
+    const [row] = await tx
+        .select({
+            total: sql<number>`count(*)::int`,
+            propias: sql<number>`count(*) filter (where ${apuestas.creadaPor} = ${apuestas.usuarioId})::int`,
+        })
+        .from(apuestas)
+        .innerJoin(jornadas, eq(jornadas.id, apuestas.jornadaId))
+        .where(and(eq(apuestas.usuarioId, usuarioId), eq(jornadas.temporadaId, temporadaId)));
+    /* v8 ignore next -- @preserve */
+    return row ?? { total: 0, propias: 0 };
 }

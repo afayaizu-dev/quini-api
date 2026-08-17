@@ -64,3 +64,12 @@ export async function getCredito(usuarioId: string, tx: DbOrTx = db): Promise<nu
     /* v8 ignore next -- @preserve */
     return fila ? Number(fila.credito) : 0;
 }
+
+export async function sumImportes(usuarioId: string, tx: DbOrTx = db): Promise<number> {
+    const [row] = await tx
+        .select({ total: sql<string>`COALESCE(SUM(${pagos.importe}), 0)` })
+        .from(pagos)
+        .where(eq(pagos.usuarioId, usuarioId));
+    /* v8 ignore next -- @preserve */
+    return row ? Number(row.total) : 0;
+}

@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError } from "../../core/errors.js";
+import { ConflictError, ForbiddenError, NotFoundError } from "../../core/errors.js";
 import * as usuariosRepository from "./usuarios.repository.js";
 import * as pagosService from "../pagos/pagos.service.js";
 import type { UpdatePerfilInput } from "./usuarios.schemas.js";
@@ -16,6 +16,18 @@ async function toResponse(usuario: {
 }) {
     const credito = await pagosService.getCredito(usuario.id);
     return { ...usuario, credito };
+}
+
+
+export async function resolveUsuarioObjetivo(
+    auth: { userId: string; role: string },
+    usuarioIdInput: string | undefined,
+): Promise<string> {
+    if (usuarioIdInput === undefined) return auth.userId;
+    /* v8 ignore next -- @preserve */
+    if (auth.role !== "admin") throw new ForbiddenError();
+    await findById(usuarioIdInput);
+    return usuarioIdInput;
 }
 
 export async function getMe(userId: string) {

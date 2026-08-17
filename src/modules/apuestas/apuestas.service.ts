@@ -57,13 +57,6 @@ function toResponse(fila: ApuestaFila) {
     };
 }
 
-async function resolveUsuarioObjetivo(auth: AuthContext, usuarioIdInput: string | undefined): Promise<string> {
-    if (usuarioIdInput === undefined) return auth.userId;
-    /* v8 ignore next -- @preserve */
-    if (auth.role !== "admin") throw new ForbiddenError();
-    await usuariosService.findById(usuarioIdInput);
-    return usuarioIdInput;
-}
 
 export async function create(
     numeroJornada: number,
@@ -73,7 +66,7 @@ export async function create(
 ) {
     const jornada = await jornadasService.findByNumero(numeroJornada, temporadaCodigo);
     jornadasService.assertApuestasAbiertas(jornada);
-    const usuarioId = await resolveUsuarioObjetivo(auth, input.usuarioId);
+    const usuarioId = await usuariosService.resolveUsuarioObjetivo(auth, input.usuarioId);
 
     try {
         const fila = await apuestasRepository.create({
@@ -117,7 +110,7 @@ export async function replace(
 ) {
     const jornada = await jornadasService.findByNumero(numeroJornada, temporadaCodigo);
     jornadasService.assertApuestasAbiertas(jornada);
-    const usuarioId = await resolveUsuarioObjetivo(auth, input.usuarioId);
+    const usuarioId = await usuariosService.resolveUsuarioObjetivo(auth, input.usuarioId);
 
     const existente = await apuestasRepository.findOne(jornada.id, usuarioId, numeroApuesta);
     if (!existente) {

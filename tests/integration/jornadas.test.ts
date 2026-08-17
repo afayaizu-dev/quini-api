@@ -734,7 +734,7 @@ describe("PUT/DELETE /api/v1/jornadas/:numeroJornada con resultados ya registrad
             .put("/api/v1/jornadas/1")
             .set(header)
             .send({ fecha: "2026-08-22", partidos: partidosValidos() });
-        console.log(response.body)
+
         expect(response.status).toBe(409);
     });
 

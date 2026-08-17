@@ -24,6 +24,8 @@ export default defineConfig({
                 "src/modules/resultados/resultados.service.ts": { 100: true },
                 "src/modules/calculos/calculos.service.ts": { 100: true },
                 "src/modules/calculos/calculos.algoritmo.ts": { 100: true },
+                "src/modules/pagos/pagos.service.ts": { 100: true },
+                "src/modules/dashboard/dashboard.service.ts": { 100: true },
             },
         },
     },

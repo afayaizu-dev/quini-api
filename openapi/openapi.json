@@ -50,6 +50,10 @@
     {
       "name": "pagos",
       "description": "Gestión de pagos de los usuarios."
+    },
+    {
+      "name": "dashboard",
+      "description": "Agregados de miembros, jornadas y temporadas."
     }
   ],
   "paths": {
@@ -6703,6 +6707,516 @@
           },
           "404": {
             "description": "No existe ese pago."
+          }
+        }
+      }
+    },
+    "/dashboard/miembro": {
+      "get": {
+        "operationId": "dashboardMiembro",
+        "summary": "Agregados de un miembro",
+        "description": "Sin '?usuario=', devuelve los datos del usuario autenticado. Un admin puede consultar los de cualquier miembro.",
+        "tags": ["dashboard"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          },
+          {
+            "name": "usuario",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agregados del miembro en la temporada.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "temporada": "2026-27",
+                  "pagosTotales": 22,
+                  "ingresosTotales": 50,
+                  "credito": 28,
+                  "mediaAciertos": 7.5,
+                  "maxAciertos": 10,
+                  "minAciertos": 4,
+                  "maxPremio": 10.49,
+                  "premiosTotales": 10.49,
+                  "porcentajeApuestasPropias": 85.5
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "usuarioId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "pagosTotales": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "ingresosTotales": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "credito": {
+                      "type": "number"
+                    },
+                    "mediaAciertos": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 14
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "maxAciertos": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 14
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "minAciertos": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 14
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "maxPremio": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "premiosTotales": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "porcentajeApuestasPropias": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    }
+                  },
+                  "required": [
+                    "usuarioId",
+                    "temporada",
+                    "pagosTotales",
+                    "ingresosTotales",
+                    "credito",
+                    "mediaAciertos",
+                    "maxAciertos",
+                    "minAciertos",
+                    "maxPremio",
+                    "premiosTotales",
+                    "porcentajeApuestasPropias"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "'usuario' de otro miembro, pedido por un usuario que no es admin."
+          },
+          "404": {
+            "description": "Temporada o usuario inexistentes; o no hay temporada activa y no se especificó ninguna."
+          }
+        }
+      }
+    },
+    "/dashboard/jornada": {
+      "get": {
+        "operationId": "dashboardJornada",
+        "summary": "Agregados y clasificación de una jornada",
+        "description": "Solo disponible una vez la jornada tiene un cálculo ejecutado (POST /calculos).",
+        "tags": ["dashboard"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jornada",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agregados de la jornada, con la clasificación ordenada por ranking.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "jornada": 1,
+                  "temporada": "2026-27",
+                  "pagosJornada": 22,
+                  "boteJornada": 17.49,
+                  "premiosTotales": 10.49,
+                  "mediaAciertosDosApuestas": 7.2,
+                  "mediaAciertosMaximos": 8.4,
+                  "clasificacion": [
+                    {
+                      "usuarioId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                      "aciertosApuesta1": 8,
+                      "aciertosApuesta2": 10,
+                      "aciertosMax": 10,
+                      "premioApuesta1": 0,
+                      "premioApuesta2": 10.49,
+                      "ranking": 1,
+                      "escalon": 1,
+                      "importeEscalon": 1.5,
+                      "costeApuestas": 1.5,
+                      "bote": 10.49
+                    }
+                  ]
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jornada": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "pagosJornada": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "boteJornada": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "premiosTotales": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "mediaAciertosDosApuestas": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 14
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "mediaAciertosMaximos": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 14
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "clasificacion": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "usuarioId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "aciertosApuesta1": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 14
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "aciertosApuesta2": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 14
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "aciertosMax": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 14
+                          },
+                          "premioApuesta1": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "premioApuesta2": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "ranking": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          },
+                          "escalon": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 10
+                          },
+                          "importeEscalon": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "costeApuestas": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "bote": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "usuarioId",
+                          "aciertosApuesta1",
+                          "aciertosApuesta2",
+                          "aciertosMax",
+                          "premioApuesta1",
+                          "premioApuesta2",
+                          "ranking",
+                          "escalon",
+                          "importeEscalon",
+                          "costeApuestas",
+                          "bote"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "jornada",
+                    "temporada",
+                    "pagosJornada",
+                    "boteJornada",
+                    "premiosTotales",
+                    "mediaAciertosDosApuestas",
+                    "mediaAciertosMaximos",
+                    "clasificacion"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "'jornada' no es un entero positivo."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "Jornada o temporada inexistentes, o la jornada aún no tiene cálculo ejecutado."
+          }
+        }
+      }
+    },
+    "/dashboard/temporada": {
+      "get": {
+        "operationId": "dashboardTemporada",
+        "summary": "Agregados de una temporada completa",
+        "description": "Máximos y mínimos de aciertos con quiénes los lograron (pueden ser varios), y los totales de premios, pagos y bote.",
+        "tags": ["dashboard"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agregados de la temporada.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "temporada": "2026-27",
+                  "maxAciertos": 10,
+                  "usuariosMaxAciertos": ["019ff7eb-22ae-7b8c-a948-6ca9a14625e6"],
+                  "minAciertos": 4,
+                  "usuariosMinAciertos": ["019ff7eb-9999-7b8c-a948-6ca9a14625e6"],
+                  "premiosTotales": 10.49,
+                  "pagosTotales": 22,
+                  "boteTotal": 17.49,
+                  "jornadasCalculadas": 1
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "temporada": {
+                      "type": "string"
+                    },
+                    "maxAciertos": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 14
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "usuariosMaxAciertos": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    },
+                    "minAciertos": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 14
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "usuariosMinAciertos": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    },
+                    "premiosTotales": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "pagosTotales": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "boteTotal": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "jornadasCalculadas": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "temporada",
+                    "maxAciertos",
+                    "usuariosMaxAciertos",
+                    "minAciertos",
+                    "usuariosMinAciertos",
+                    "premiosTotales",
+                    "pagosTotales",
+                    "boteTotal",
+                    "jornadasCalculadas"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe esa temporada, o no hay temporada activa y no se especificó ninguna."
           }
         }
       }
