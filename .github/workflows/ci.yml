@@ -16,6 +16,9 @@ jobs:
           node-version: "22"
           cache: npm
 
+      - name: Alinear versión de npm
+        run: npm install -g npm@12.0.2
+
       - name: Instalar dependencias
         run: npm ci
 
