@@ -1,0 +1,14 @@
+
+node_modules
+dist
+coverage
+.git
+.github
+*.log
+log.txt
+temp.txt
+.env
+.env.test
+.DS_Store
+docs
+.codegraph
