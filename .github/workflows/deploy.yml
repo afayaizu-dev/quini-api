@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build y push de la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/afayaizu-dev/quini-api:${{ github.sha }}
+            ghcr.io/afayaizu-dev/quini-api:latest
+
+      - name: Desplegar en el VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: XX.XXX.XX.XXX
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/quini-api
+            export TAG=${{ github.sha }}
+            docker compose --env-file .env.prod -f docker-compose.prod.yml pull api
+            docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm api node dist/scripts/migrate.js
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d api
+            docker image prune -f
+
+      - name: Comprobar despliegue
+        run: |
+          sleep 5
+          curl -fsS https://api.quiniweb.com/health

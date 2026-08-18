@@ -18,10 +18,7 @@ RUN npm install -g npm@12.0.2
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
-
-COPY --from=build /app/dist ./dist
-COPY drizzle ./drizzle
-
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 COPY --from=build /app/dist ./dist
 COPY drizzle ./drizzle
 COPY openapi ./openapi

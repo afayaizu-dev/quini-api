@@ -1,0 +1,10 @@
+api.quiniweb.com {
+    encode zstd gzip
+    log {
+        output file /data/access.log
+    }
+
+    reverse_proxy api:3000 {
+        health_uri /health
+    }
+}
