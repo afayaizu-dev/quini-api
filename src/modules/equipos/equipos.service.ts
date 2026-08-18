@@ -60,7 +60,7 @@ export async function remove(id: string) {
     } catch (err) {
         /* v8 ignore next -- @preserve */
         if (isForeignKeyViolation(err)) {
-            throw new ConflictError("No se puede borrar un asociados.");
+            throw new ConflictError("No se puede borrar: tiene equipos asociados.");
         }
         /* v8 ignore next -- @preserve */
         throw err;

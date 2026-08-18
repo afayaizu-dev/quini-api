@@ -26,8 +26,6 @@ const EnvSchema = z.object({
     GOOGLE_REDIRECT_URI: z.url().optional(),
     METRICS_ENABLED: booleanString.default(true),
     METRICS_PATH: z.string().default("/metrics"),
-    OTEL_ENABLED: booleanString.default(false),
-    ENABLE_DEV_TOKENS: booleanString.default(false),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
