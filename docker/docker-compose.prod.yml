@@ -36,6 +36,8 @@ services:
     mem_limit: 512m
     memswap_limit: 512m
     env_file: .env.prod
+    volumes:
+      - ./seed:/app/seed:ro
     depends_on:
       postgres:
         condition: service_healthy
