@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, numeric, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { citext } from "./_helpers.js";
+
 
 export const users = pgTable(
     "users",
@@ -12,6 +13,7 @@ export const users = pgTable(
         apellidos: text("apellidos"),
         apodo: citext("apodo"),
         telefono: text("telefono"),
+        saldoInicial: numeric("saldo_inicial", { precision: 12, scale: 2, mode: "number" }).notNull().default(0),
         role: text("role").notNull().default("user"),
         emailVerified: boolean("email_verified").notNull().default(false),
         createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

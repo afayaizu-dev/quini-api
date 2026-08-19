@@ -58,6 +58,7 @@ export async function getCredito(usuarioId: string, tx: DbOrTx = db): Promise<nu
         SELECT
             COALESCE((SELECT SUM(importe) FROM pagos WHERE usuario_id = ${usuarioId}), 0)
             - COALESCE((SELECT SUM(importe_escalon) FROM resultados_miembro WHERE usuario_id = ${usuarioId}), 0)
+            + COALESCE((SELECT saldo_inicial FROM users WHERE id = ${usuarioId}), 0)
             AS credito
     `);
     const fila = resultado.rows[0] as { credito: string } | undefined;
