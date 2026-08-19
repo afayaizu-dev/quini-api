@@ -1,0 +1,11 @@
+﻿email;role;nombre;apellidos;apodo
+example1@example.com;user;Ana;Pérez;A
+example2@example.com;user;Bruno;Ibáñez;B
+example3@example.com;user;Diego;Salas;D
+example4@example.com;user;Hugo;Ramos;H
+example5@example.com;user;Julia;Soto;J
+example6@example.com;user;Marta;Vega;M
+example7@example.com;user;Kevin;Ortiz;K
+example8@example.com;user;Olga;Ferrer;O
+example9@example.com;user;Tomás;Rey;T
+admin@example.com;admin;Admin;Demo;X

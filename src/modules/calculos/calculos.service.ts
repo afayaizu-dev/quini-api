@@ -10,7 +10,7 @@ import { calcularJornada } from "./calculos.algoritmo.js";
 import type { ApuestaCalculo, ResultadoCalculo, LiquidacionMiembro } from "./calculos.algoritmo.js";
 import type { EjecutarCalculoInput } from "./calculos.schemas.js";
 
-function toResultadoCalculo(row: {
+export function toResultadoCalculo(row: {
     resultado1: string; resultado2: string; resultado3: string; resultado4: string; resultado5: string;
     resultado6: string; resultado7: string; resultado8: string; resultado9: string; resultado10: string;
     resultado11: string; resultado12: string; resultado13: string; resultado14: string;
@@ -29,7 +29,7 @@ function toResultadoCalculo(row: {
     };
 }
 
-function toApuestaCalculo(row: {
+export function toApuestaCalculo(row: {
     id: string; usuarioId: string; numeroApuesta: number;
     partido1: string; partido2: string; partido3: string; partido4: string; partido5: string;
     partido6: string; partido7: string; partido8: string; partido9: string; partido10: string;
