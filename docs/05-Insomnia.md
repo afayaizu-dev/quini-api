@@ -10,7 +10,8 @@
 
 1. [Objetivo de F9](#1-objetivo-de-f9)
 2. [Tipo de almacenamiento del proyecto](#2-tipo-de-almacenamiento-del-proyecto)
-3. [Importar la spec de OpenAPI](#3-importar-la-spec-de-openapi)
+3. [Generar la colección](#3-generar-la-colección)
+   - 3.1. [El import manual (procedimiento original de F9)](#31-el-import-manual-procedimiento-original-de-f9)
 4. [La trampa de los dos niveles de entornos](#4-la-trampa-de-los-dos-niveles-de-entornos)
 5. [El helper de OAuth2 (Resource Owner Password Credentials)](#5-el-helper-de-oauth2-resource-owner-password-credentials)
 6. [Herencia de autenticación entre carpetas](#6-herencia-de-autenticación-entre-carpetas)
@@ -25,7 +26,7 @@
 
 Tener una colección de Insomnia **funcional y versionada** (exportada a `insomnia/quini-api.insomnia.yaml`, comiteada y pusheada) que:
 
-- Se genera automáticamente a partir de `openapi/openapi.json` (F7) — no se escriben peticiones a mano.
+- Se genera automáticamente a partir de `openapi/openapi.json` (F7) — no se escriben peticiones a mano. **Desde la revisión de 2026-08-21, con `npm run insomnia:generate` en vez de con el import de la app (ver §3).**
 - Obtiene y renueva el access token sola, vía un helper de OAuth2, sin que haya que copiar `Authorization: Bearer ...` en cada petición.
 - Permite cambiar de rol (`admin`/`user`) con un simple cambio de entorno, para comprobar los `403` sin editar ninguna petición.
 - Se puede ejecutar también desde terminal (y más adelante CI) con `inso`.
@@ -44,7 +45,42 @@ Al crear un proyecto nuevo, Insomnia pregunta entre **Local Vault**, **Cloud Syn
 
 ---
 
-## 3. Importar la spec de OpenAPI
+## 3. Generar la colección
+
+> **Cambio respecto a F9**: la colección ya no se importa a mano. La genera `npm run insomnia:generate` a partir de `openapi/openapi.json`. Lo que sigue en esta sección describe el generador; el import manual queda documentado en §3.1 porque las trampas que descubrió siguen explicando por qué el generador hace lo que hace.
+
+```bash
+npm run insomnia:generate
+```
+
+Lee `openapi/openapi.json`, escribe `insomnia/quini-api.insomnia.yaml` y le pasa Prettier (igual que hace CI con el propio contrato). Después, en la app: `Create → Import → File` → seleccionar ese `.yaml`.
+
+**Qué resuelve respecto al import de la app**:
+
+| Problema del import manual                                                              | Qué hace el generador                                                                                                                  |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Deja las 51 peticiones con `{{ bearerToken }}`, variable que nunca se define (§6)       | Las emite con `{{ _.accessToken }}`, que sí existe en los entornos generados                                                           |
+| Crea una carpeta por `tag` sin contenedor común, y hay que mover carpetas a mano (§3.1) | Emite las 11 carpetas ya ordenadas según el orden de `tags` de la spec                                                                 |
+| Cada export genera ids y timestamps nuevos: el diff en git es ruido                     | Los ids se derivan de `sha1(método + ruta)` y el timestamp es fijo — dos ejecuciones con el mismo contrato dan un fichero **idéntico** |
+| Se queda atrás en silencio en cuanto cambia el contrato                                 | Se regenera con un comando; el fichero es un derivado del contrato, no una copia manual                                                |
+| No rellena el cuerpo de `POST /auth/token`                                              | Usa los `examples` del contrato: el grant de contraseña llega con `grant_type`, `username` y `password` puestos                        |
+
+**Los entornos que emite** (todos en _Collection Environments_, que es el nivel que las peticiones sí resuelven — ver §4):
+
+| Entorno            | `base_url`                        | `accessToken`                    |
+| ------------------ | --------------------------------- | -------------------------------- |
+| `Base environment` | `http://localhost:3000/api/v1`    | vacío                            |
+| `Local · admin`    | `http://localhost:3000/api/v1`    | pegar aquí el token del admin    |
+| `Local · user`     | `http://localhost:3000/api/v1`    | pegar aquí el token de un `user` |
+| `Producción`       | `https://api.quiniweb.com/api/v1` | vacío                            |
+
+**Por qué un `accessToken` a mano y no el helper de OAuth2**: por el bug de §4.1. El helper cachea el token por carpeta y no lo renueva al cambiar de entorno, que era justo lo que hacía falta para comprobar los `403` de rol. Con dos entornos que solo difieren en el `accessToken`, cambiar de rol es cambiar de entorno y ya está — sin helper, sin caché y sin el workaround manual de §4.1. El token se obtiene una vez con `POST /auth/token` (petición pública, `Auth: No Auth`) y se pega en el entorno.
+
+**Las 51 peticiones por dominio**: auth 8 · invitaciones 2 · temporadas 6 · equipos 5 · jornadas 8 · usuarios 5 · resultados 3 · apuestas 5 · cálculos 2 · pagos 4 · dashboard 3. De ellas, 46 llevan token y 23 están marcadas `[Solo admin]` en su descripción, tomado del `x-required-role` del contrato.
+
+---
+
+## 3.1. El import manual (procedimiento original de F9)
 
 `Create → Import → File` → seleccionar `openapi/openapi.json`. Dos detalles que no son evidentes a la primera:
 

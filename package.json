@@ -30,7 +30,8 @@
     "test:watch": "node --env-file=.env.test node_modules/vitest/vitest.mjs",
     "test:cov": "node --env-file=.env.test node_modules/vitest/vitest.mjs run --coverage",
     "insomnia:test": "inso run test --src insomnia/quini-api.insomnia.yaml --env Local",
-    "carga": "node --env-file=.env --import tsx scripts/carga/index.ts"
+    "carga": "node --env-file=.env --import tsx scripts/carga/index.ts",
+    "insomnia:generate": "node --import tsx scripts/insomnia.ts && node node_modules/prettier/bin/prettier.cjs --write insomnia/quini-api.insomnia.yaml"
   },
   "keywords": [],
   "type": "module",
@@ -41,8 +42,8 @@
   },
   "devDependencies": {
     "@stoplight/spectral-cli": "^6.16.3",
-    "@types/cors": "^2.8.19",
     "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.2",
     "@types/pg": "^8.21.0",
@@ -64,7 +65,8 @@
     "tsx": "^4.23.11",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.66.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "yaml": "^2.9.0"
   },
   "lint-staged": {
     "*.{ts,js}": "eslint --fix",
@@ -72,9 +74,9 @@
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "^0.45.2",
-    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
     "google-auth-library": "^11.0.2",
