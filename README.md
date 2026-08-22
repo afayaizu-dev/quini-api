@@ -14,21 +14,58 @@ Los tres son **públicos**: no hacen falta credenciales para recorrer las 51 ope
 
 ---
 
+## Datos de entrega
+
+| Campo                             | Valor                                                                                                                |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Nombre completo del alumno        | Javier Fernández                                                                                                     |
+| Email de inscripción en el máster | jfernandez@intermarkit.es                                                                                            |
+| URL del repositorio de GitHub     | https://github.com/afayaizu-dev/quini-api                                                                            |
+| URL de despliegue o publicación   | https://api.quiniweb.com/docs                                                                                        |
+| URL de las slides                 | [Slides-TFM v1](https://drive.google.com/file/d/1IoAXdRXBhYzc1w-1i6kg1QEb5yyS1yYr/view?usp=sharing#page=1&view=FitH) |
+| URL del vídeo                     | `[completar]`                                                                                                        |
+| Usuario de prueba                 | `[completar]` — ver [sección f](#f-usuario-y-contraseña-de-prueba)                                                   |
+| Contraseña de prueba              | `[completar]` — ver [sección f](#f-usuario-y-contraseña-de-prueba)                                                   |
+
+> [!IMPORTANT]
+> El repositorio es **privado** ahora mismo. Antes de enviar la URL en el
+> formulario, añade al evaluador como colaborador (_Settings → Collaborators_)
+> o hazlo público — si no, la URL del formulario dará un 404 a quien la abra.
+
+---
+
 ## Índice
 
-- [a. Descripción general](#a-descripción-general)
-- [b. Stack tecnológico](#b-stack-tecnológico)
-- [c. Instalación y ejecución](#c-instalación-y-ejecución)
-- [d. Estructura del proyecto](#d-estructura-del-proyecto)
-- [e. Funcionalidades principales](#e-funcionalidades-principales)
-- [f. Usuario y contraseña de prueba](#f-usuario-y-contraseña-de-prueba)
-- [Documentación ampliada](#documentación-ampliada)
+- [quini-api](#quini-api)
+  - [Datos de entrega](#datos-de-entrega)
+  - [Índice](#índice)
+  - [a. Descripción general](#a-descripción-general)
+    - [En cifras](#en-cifras)
+  - [b. Stack tecnológico](#b-stack-tecnológico)
+  - [c. Instalación y ejecución](#c-instalación-y-ejecución)
+    - [Requisitos](#requisitos)
+    - [Puesta en marcha](#puesta-en-marcha)
+    - [Ejecutar las pruebas](#ejecutar-las-pruebas)
+    - [Comandos disponibles](#comandos-disponibles)
+  - [d. Estructura del proyecto](#d-estructura-del-proyecto)
+    - [Los 11 módulos, siempre con las mismas 4 capas](#los-11-módulos-siempre-con-las-mismas-4-capas)
+    - [El camino de una petición](#el-camino-de-una-petición)
+  - [e. Funcionalidades principales](#e-funcionalidades-principales)
+    - [Dominio](#dominio)
+    - [Seguridad](#seguridad)
+    - [El contrato como fuente única](#el-contrato-como-fuente-única)
+    - [Calidad](#calidad)
+    - [Despliegue](#despliegue)
+  - [f. Usuario y contraseña de prueba](#f-usuario-y-contraseña-de-prueba)
+    - [Recorrido sugerido](#recorrido-sugerido)
+    - [Dos avisos operativos](#dos-avisos-operativos)
+  - [Documentación ampliada](#documentación-ampliada)
 
 ---
 
 ## a. Descripción general
 
-La peña la forman **10 miembros**. Cada semana cada uno juega **2 apuestas** de quiniela, que cuestan 1,50 € (2 × 0,75 €). Una vez disputada la jornada se cuentan los aciertos y se ordena a los diez: a cada posición le corresponde un **escalón de pago** de entre 1,50 € y 2,50 €. De lo que paga cada miembro, 1,50 € cubre los boletos y **el resto engorda el bote**, que financia un par de comidas al año.
+La peña la forman **10 miembros**. Cada semana cada uno juega **2 apuestas** de quiniela, que cuestan 1,50 € (2 × 0,75 €). Una vez disputada la jornada se cuentan los aciertos y se ordena a los diez: a cada posición le corresponde un **escalón de pago** de entre 1,50 € y 2,50 €. De lo que paga cada miembro, 1,50 € cubre los boletos y **el resto engorda el bote**, que financia un par de eventos al año.
 
 El objetivo no es acertar la quiniela: es mantener la costumbre y que se pague sola.
 
@@ -39,7 +76,7 @@ flowchart LR
     C --> D["El escalón<br/>de 1,50 € a 2,50 €"]
     D --> E["El bote<br/>escalón + premios − 1,50"]
     E -.->|cada semana| A
-    E --> F["Dos comidas al año"]
+    E --> F["Dos eventos al año"]
 ```
 
 Esta API es **la primera pieza de un sistema más amplio**. El alcance de este TFM se limita deliberadamente al backend: la persistencia, la lógica de negocio y el contrato HTTP. Quedan fuera —por diseño, no por omisión— un frontend web, su empaquetado como aplicación móvil y la capa de observabilidad. Las tres están contempladas y la API ya reserva los puntos de extensión que necesitan.
@@ -153,7 +190,7 @@ quini-api/
 ├── seed/                      # los datos históricos en CSV
 ├── openapi/openapi.json       # el contrato publicado (generado, verificado en CI)
 ├── insomnia/                  # colección generada desde el contrato
-└── docs/                      # 19 guías + 26 ADR + 30 diagramas
+└── docs/                      # 15 guías técnicas + 26 ADR
 ```
 
 ### Los 11 módulos, siempre con las mismas 4 capas
@@ -292,20 +329,24 @@ La cuenta tiene rol **`user`** deliberadamente: da acceso de lectura a 19 de las
 
 ## Documentación ampliada
 
-Todo el detalle está en [`docs/`](docs/): 19 guías técnicas, 26 decisiones de arquitectura y 30 diagramas fuente editables.
+Todo el detalle está en [`docs/`](docs/): 15 guías técnicas y 26 decisiones de arquitectura.
 
-| Documento                                                                                                 | Contenido                                           |
-| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| [`docs/TFM-Documento-Proyecto.md`](docs/TFM-Documento-Proyecto.md)                                        | La memoria completa del proyecto                    |
-| [`docs/adr/`](docs/adr/)                                                                                  | Las 26 decisiones, con sus alternativas descartadas |
-| [`docs/02-Autenticacion.md`](docs/02-Autenticacion.md)                                                    | Tokens, roles, invitaciones y Google, paso a paso   |
-| [`docs/03-OpenAPI.md`](docs/03-OpenAPI.md)                                                                | Cómo se genera y se verifica el contrato            |
-| [`docs/04-Testing.md`](docs/04-Testing.md)                                                                | Estrategia de pruebas y banco de trabajo            |
-| [`docs/06-ServiciosNegocio.md`](docs/06-ServiciosNegocio.md)                                              | Anatomía de un módulo                               |
-| [`docs/07-Servicios_adicionales.md`](docs/07-Servicios_adicionales.md)                                    | El algoritmo de cálculo, con ejemplos numéricos     |
-| [`docs/09-Docker.md`](docs/09-Docker.md) · [`docs/10-...VPS.md`](docs/10-Configuracion-Despliegue-VPS.md) | Contenedores, servidor y operación                  |
-| [`docs/11-Carga-de-datos.md`](docs/11-Carga-de-datos.md)                                                  | La carga histórica desde CSV                        |
-| [`docs/artefactos.md`](docs/artefactos.md)                                                                | Índice de los diagramas y páginas interactivas      |
+| Documento                                                                              | Contenido                                                                          |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [`docs/00-Plan-inicial.md`](docs/00-Plan-inicial.md)                                   | El plan original: arquitectura, modelo de datos, seguridad, testing y despliegue   |
+| [`docs/00-Plan-inicial-nuevos-servicios.md`](docs/00-Plan-inicial-nuevos-servicios.md) | Plan de los servicios de negocio: apuestas, resultados, cálculos y pagos           |
+| [`docs/adr/`](docs/adr/)                                                               | Las 26 decisiones de arquitectura, con sus alternativas descartadas                |
+| [`docs/02-Autenticacion.md`](docs/02-Autenticacion.md)                                 | Tokens, roles, invitaciones y Google, paso a paso                                  |
+| [`docs/03-OpenAPI.md`](docs/03-OpenAPI.md)                                             | Cómo se genera y se verifica el contrato                                           |
+| [`docs/04-Testing.md`](docs/04-Testing.md)                                             | Estrategia de pruebas y banco de trabajo                                           |
+| [`docs/05-Insomnia.md`](docs/05-Insomnia.md)                                           | Cómo se genera y se usa la colección de Insomnia                                   |
+| [`docs/06-ServiciosNegocio.md`](docs/06-ServiciosNegocio.md)                           | Anatomía de un módulo                                                              |
+| [`docs/07-Servicios_adicionales.md`](docs/07-Servicios_adicionales.md)                 | El algoritmo de cálculo, con ejemplos numéricos                                    |
+| [`docs/08-Servicio-Pagos-Paso-a-Paso.md`](docs/08-Servicio-Pagos-Paso-a-Paso.md)       | El servicio de pagos, paso a paso                                                  |
+| [`docs/09-Docker.md`](docs/09-Docker.md)                                               | Contenedores de desarrollo y de producción                                         |
+| [`docs/10-Configuracion-Despliegue-VPS.md`](docs/10-Configuracion-Despliegue-VPS.md)   | Servidor, hardening y operación                                                    |
+| [`docs/11-Carga-de-datos.md`](docs/11-Carga-de-datos.md)                               | La carga histórica desde CSV                                                       |
+| [`docs/12-Guion-presentacion-TFM.md`](docs/12-Guion-presentacion-TFM.md)               | Guion de apoyo para diapositivas, no una transcripción de una presentación en vivo |
 
 ---
 
