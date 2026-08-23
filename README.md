@@ -14,30 +14,9 @@ Los tres son **públicos**: no hacen falta credenciales para recorrer las 51 ope
 
 ---
 
-## Datos de entrega
-
-| Campo                             | Valor                                                                                                                |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Nombre completo del alumno        | Javier Fernández                                                                                                     |
-| Email de inscripción en el máster | jfernandez@intermarkit.es                                                                                            |
-| URL del repositorio de GitHub     | https://github.com/afayaizu-dev/quini-api                                                                            |
-| URL de despliegue o publicación   | https://api.quiniweb.com/docs                                                                                        |
-| URL de las slides                 | [Slides-TFM v1](https://drive.google.com/file/d/1IoAXdRXBhYzc1w-1i6kg1QEb5yyS1yYr/view?usp=sharing#page=1&view=FitH) |
-| URL del vídeo                     | `[completar]`                                                                                                        |
-| Usuario de prueba                 | `[completar]` — ver [sección f](#f-usuario-y-contraseña-de-prueba)                                                   |
-| Contraseña de prueba              | `[completar]` — ver [sección f](#f-usuario-y-contraseña-de-prueba)                                                   |
-
-> [!IMPORTANT]
-> El repositorio es **privado** ahora mismo. Antes de enviar la URL en el
-> formulario, añade al evaluador como colaborador (_Settings → Collaborators_)
-> o hazlo público — si no, la URL del formulario dará un 404 a quien la abra.
-
----
-
 ## Índice
 
 - [quini-api](#quini-api)
-  - [Datos de entrega](#datos-de-entrega)
   - [Índice](#índice)
   - [a. Descripción general](#a-descripción-general)
     - [En cifras](#en-cifras)
@@ -58,6 +37,7 @@ Los tres son **públicos**: no hacen falta credenciales para recorrer las 51 ope
     - [Despliegue](#despliegue)
   - [f. Usuario y contraseña de prueba](#f-usuario-y-contraseña-de-prueba)
     - [Recorrido sugerido](#recorrido-sugerido)
+    - [Guion de demo](#guion-de-demo)
     - [Dos avisos operativos](#dos-avisos-operativos)
   - [Documentación ampliada](#documentación-ampliada)
 
@@ -319,6 +299,32 @@ La cuenta tiene rol **`user`** deliberadamente: da acceso de lectura a 19 de las
 7. `GET /dashboard/temporada` — el agregado de la temporada completa.
 8. `GET /usuarios` — **403 esperado**, la autorización por rol en acción.
 9. Cualquier operación sin pulsar Authorize — **401 esperado**.
+
+### Guion de demo
+
+Versión ampliada de los pasos 1, 2, 4, 5, 6 y 8 del recorrido anterior, con tiempos orientativos. Pensado para ejecutarlo tal cual, sin más preparación que tener a mano la cuenta de prueba. Duración total: ~2:35 min.
+
+1. **`/docs` sin autenticar** — 25 s
+   Abrir https://api.quiniweb.com/docs y recorrer los grupos con scroll.
+   Es el contrato de la API, y es público: no hace falta ninguna credencial para llegar hasta aquí. 51 operaciones repartidas en 11 grupos. Y no está escrito a mano: se genera desde el código (ver [El contrato como fuente única](#el-contrato-como-fuente-única)).
+
+2. **Conseguir el token y autenticar** — 30 s
+   Desplegar `POST /auth/token` → **Try it out** → sustituir `username` y `password` por las credenciales de la cuenta de prueba, dejando `"grant_type": "password"` → **Execute** → copiar `access_token` de la respuesta. Abrir el candado **Authorize** (arriba a la derecha de toda la página) → pegar el token en el campo `Value` de `bearerAuth` → **Authorize** → **Close**. A partir de aquí, cada petición va autenticada con ese token.
+
+   > El contrato expone dos esquemas de seguridad, `bearerAuth` y `oauth2Password`, pero todos los endpoints protegidos exigen `bearerAuth`. Autenticarse solo por `oauth2Password` no basta: Swagger UI no traslada ese token a `bearerAuth` en automático, y la siguiente petición devolvería `401`. Por eso el token se pega a mano en `Authorize`.
+   > Se puede hacer con el usuario/password proprocionados en el formulario de entrega del proyecto
+
+3. **`GET /jornadas/1`** — 25 s
+   Try it out → `numeroJornada = 1` → Execute. Una jornada real, con sus 15 partidos: equipos de la Liga de esta temporada, 14 al 1X2 más el pleno al 15.
+
+4. **`GET /jornadas/1/apuestas`** — 25 s
+   Try it out → `1` → Execute. Las 20 apuestas de esa jornada: 10 miembros, 2 boletos cada uno, cada una con sus 14 signos y su pleno. Los nombres están anonimizados: son personas reales.
+
+5. **`GET /calculos?jornada=1`** — 35 s · el momento clave
+   Try it out → `jornada = 1` (es obligatorio: autenticado y sin él, devuelve `400`) → Execute. Por cada miembro: cuántos ha acertado en cada apuesta, qué escalón de pago le corresponde según su posición, qué premio le toca si ha entrado en categoría, y cuánto suma al bote. Es exactamente lo que se hacía a mano en la hoja de cálculo, jornada tras jornada, durante 30 años. Es también la parte con más pruebas dedicadas: 15 casos solo para el reparto de la categoría 15, porque tiene que dar el mismo resultado sin importar en qué orden llegaron las apuestas.
+
+6. **`GET /usuarios` → 403** — 15 s
+   Try it out → Execute. La cuenta de prueba es de rol `user`, y esta operación es solo para administradores. No es un fallo: es la autorización por rol funcionando (ver [Seguridad](#seguridad)).
 
 ### Dos avisos operativos
 
