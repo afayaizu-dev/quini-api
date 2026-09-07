@@ -16,7 +16,7 @@ usuariosRouter.put(
     updateMe,
 );
 
-usuariosRouter.get("/", requireAuth, requireRole("admin"), findAll);
+usuariosRouter.get("/", requireAuth, findAll);
 
 usuariosRouter.get(
     "/:id",

@@ -97,10 +97,18 @@ describe("PUT /api/v1/usuarios/me", () => {
 });
 
 describe("GET /api/v1/usuarios", () => {
-    test("como user -> 403", async () => {
+    test("sin token -> 401", async () => {
+        const response = await request(app).get("/api/v1/usuarios");
+        expect(response.status).toBe(401);
+    });
+
+    test("como user -> 200", async () => {
         const user = await createUser();
         const response = await request(app).get("/api/v1/usuarios").set(await authHeader(user));
-        expect(response.status).toBe(403);
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expectMatchesOpenApiSchema({ path: "/usuarios", method: "get", status: 200, body: response.body });
     });
 
     test("como admin -> 200", async () => {

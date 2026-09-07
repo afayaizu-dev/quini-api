@@ -68,17 +68,15 @@ registerPath("/usuarios", {
     get: {
         operationId: "usuariosFindAll",
         summary: "Lista todos los miembros",
-        description: "Solo un admin puede ver el listado completo de miembros (incluye a los propios admins).",
+        description: "Cualquier usuario autenticado puede ver el listado completo de miembros (incluye a los propios admins).",
         tags: ["usuarios"],
         security: [{ bearerAuth: [] }],
-        "x-required-role": "admin",
         responses: {
             "200": {
                 description: "Lista de miembros.",
                 content: { "application/json": { schema: z.array(UsuarioResponseSchema), example: [usuarioEjemplo] } },
             },
             "401": { description: "Sin access token válido." },
-            "403": { description: "El usuario autenticado no es admin." },
         },
     },
 });
