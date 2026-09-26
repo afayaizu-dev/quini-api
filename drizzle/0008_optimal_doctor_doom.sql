@@ -1,0 +1,1 @@
+ALTER TABLE "apuestas" ADD COLUMN "creada_por_el_mismo" boolean;

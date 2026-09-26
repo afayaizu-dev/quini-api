@@ -49,7 +49,7 @@ registerPath("/jornadas/{numeroJornada}/apuestas", {
     post: {
         operationId: "apuestasCreate",
         summary: "Registra una apuesta (1 o 2) para una jornada",
-        description: "El usuario apuesta para sí mismo. Un admin puede apostar por otro pasando 'usuarioId' en el body.",
+        description: "El usuario apuesta para sí mismo. Un admin puede apostar por otro pasando 'usuarioId' en el body, y también fijar 'creadaPorElMismo' o crear apuestas fuera de la ventana (jornada aún no calculada).",
         tags: ["apuestas"],
         security: [{ bearerAuth: [] }],
         parameters: [numeroJornadaParam, temporadaQueryParam],
@@ -70,9 +70,9 @@ registerPath("/jornadas/{numeroJornada}/apuestas", {
             },
             "400": { description: "numeroApuesta, partidos o sugerenciaPleno15 inválidos." },
             "401": { description: "Sin access token válido." },
-            "403": { description: "'usuarioId' informado por un usuario que no es admin." },
+            "403": { description: "'usuarioId' o 'creadaPorElMismo' informados por un usuario que no es admin." },
             "404": { description: "Jornada, temporada o 'usuarioId' inexistentes." },
-            "409": { description: "Apuestas cerradas, jornada calculada, o ya existe esa apuesta para ese usuario." },
+            "409": { description: "Jornada calculada; apuestas cerradas para un usuario que no es admin (un admin sí puede crear fuera de ventana); o ya existe esa apuesta para ese usuario." },
         },
     },
     get: {
@@ -117,7 +117,7 @@ registerPath("/jornadas/{numeroJornada}/apuestas/{numeroApuesta}", {
     put: {
         operationId: "apuestasReplace",
         summary: "Reemplaza los 14 signos de una apuesta",
-        description: "El propio usuario, o un admin sobre la de otro pasando 'usuarioId' en el body.",
+        description: "El propio usuario, o un admin sobre la de otro pasando 'usuarioId' en el body. Un admin también puede fijar 'creadaPorElMismo' o reemplazar fuera de la ventana (jornada aún no calculada).",
         tags: ["apuestas"],
         security: [{ bearerAuth: [] }],
         parameters: [numeroJornadaParam, numeroApuestaParam, temporadaQueryParam],
@@ -137,9 +137,9 @@ registerPath("/jornadas/{numeroJornada}/apuestas/{numeroApuesta}", {
             },
             "400": { description: "Partidos o sugerenciaPleno15 inválidos." },
             "401": { description: "Sin access token válido." },
-            "403": { description: "'usuarioId' de otro miembro, informado por un usuario que no es admin." },
+            "403": { description: "'usuarioId' de otro miembro, o 'creadaPorElMismo', informados por un usuario que no es admin." },
             "404": { description: "Jornada, temporada, 'usuarioId' o la apuesta no existen." },
-            "409": { description: "Las apuestas de esta jornada están cerradas." },
+            "409": { description: "Jornada calculada, o apuestas cerradas para un usuario que no es admin (un admin sí puede reemplazar fuera de ventana)." },
         },
     },
     delete: {

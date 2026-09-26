@@ -35,6 +35,10 @@ export async function create(input: CreateJornadaRepoInput) {
         /* v8 ignore next -- @preserve */
         if (!jornada) throw new Error("No se pudo crear la jornada");
 
+        if (input.partidos.length === 0) {
+            return { ...jornada, partidos: [] };
+        }
+
         const filasPartidos = await tx
             .insert(partidos)
             .values(input.partidos.map((p) => ({ ...p, jornadaId: jornada.id })))

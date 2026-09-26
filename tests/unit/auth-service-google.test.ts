@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { loginWithGoogle } from "../../src/modules/auth/auth.service.js";
+import { exchangeGoogleCode, loginWithGoogle } from "../../src/modules/auth/auth.service.js";
 import { createUser, createOAuthAccount } from "../../src/modules/auth/auth.repository.js";
 import { createInvitation } from "../../src/modules/invitations/invitations.repository.js";
 import { hashInvitationToken, newInvitationToken } from "../../src/modules/invitations/invitations.service.js";
 import { createAdmin } from "../helpers/auth.js";
-import { RegistrationNotAllowedError } from "../../src/core/errors.js";
+import { RegistrationNotAllowedError, UnauthorizedError } from "../../src/core/errors.js";
+import { createHandoffCode } from "../../src/modules/auth/google-handoff.js";
 
 describe("loginWithGoogle (unit, sin HTTP)", () => {
     test("cuenta de Google ya vinculada -> emite tokens para el usuario existente", async () => {
@@ -72,5 +73,23 @@ describe("loginWithGoogle (unit, sin HTTP)", () => {
                 {},
             ),
         ).rejects.toThrow(RegistrationNotAllowedError);
+    });
+});
+
+describe("exchangeGoogleCode (unit, sin HTTP)", () => {
+    test("código de handoff válido -> resuelve a los mismos tokens", async () => {
+        const tokens = {
+            access_token: "access-token",
+            token_type: "Bearer" as const,
+            expires_in: 900,
+            refresh_token: "refresh-token",
+        };
+        const code = createHandoffCode(tokens);
+
+        await expect(exchangeGoogleCode(code)).resolves.toEqual(tokens);
+    });
+
+    test("código de handoff inválido -> UnauthorizedError", async () => {
+        await expect(exchangeGoogleCode("codigo-invalido")).rejects.toThrow(UnauthorizedError);
     });
 });

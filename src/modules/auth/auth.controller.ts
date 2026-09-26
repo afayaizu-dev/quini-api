@@ -1,12 +1,12 @@
 
 import type { Request, Response } from "express";
-import { UnauthorizedError } from "../../core/errors.js";
+import { RegistrationNotAllowedError, UnauthorizedError } from "../../core/errors.js";
 import * as authService from "./auth.service.js";
 import type { RevokeRequest, RegisterRequest, TokenRequest } from "./auth.schemas.js";
 import type { AccessTokenPayload } from "./tokens.js";
 import { env } from "../../config/env.js";
-import { ValidationError } from "../../core/errors.js";
 import * as googleAuth from "./google.js";
+import { createHandoffCode } from "./google-handoff.js";
 import type { GoogleIdTokenRequest } from "./auth.schemas.js";
 
 
@@ -32,10 +32,14 @@ function requireAuthContext(req: Request): AccessTokenPayload {
 export async function token(req: Request, res: Response): Promise<void> {
     const body = req.body as TokenRequest;
 
-    const tokens =
-        body.grant_type === "password"
-            ? await authService.loginWithPassword(body.username, body.password, clientMeta(req))
-            : await authService.refresh(body.refresh_token, clientMeta(req));
+    let tokens;
+    if (body.grant_type === "password") {
+        tokens = await authService.loginWithPassword(body.username, body.password, clientMeta(req));
+    } else if (body.grant_type === "refresh_token") {
+        tokens = await authService.refresh(body.refresh_token, clientMeta(req));
+    } else {
+        tokens = await authService.exchangeGoogleCode(body.code);
+    }
 
     res.setHeader("Cache-Control", "no-store");
     res.status(200).json(tokens);
@@ -88,20 +92,30 @@ export async function googleCallback(req: Request, res: Response): Promise<void>
     res.clearCookie(GOOGLE_STATE_COOKIE);
 
     if (!code || !state || !stored) {
-        throw new ValidationError("Falta code o state.");
+        res.redirect(`${env.PUBLIC_APP_URL}/login?google_error=invalid_request`);
+        return;
     }
 
     const { state: storedState, codeVerifier } = JSON.parse(stored) as { state: string; codeVerifier: string };
 
     if (state !== storedState) {
-        throw new ValidationError("El parámetro state no coincide.");
+        res.redirect(`${env.PUBLIC_APP_URL}/login?google_error=invalid_request`);
+        return;
     }
 
-    const profile = await googleAuth.exchangeCodeForProfile(code, codeVerifier);
-    const tokens = await authService.loginWithGoogle(profile, clientMeta(req));
+    try {
+        const profile = await googleAuth.exchangeCodeForProfile(code, codeVerifier);
+        const tokens = await authService.loginWithGoogle(profile, clientMeta(req));
 
-    res.setHeader("Cache-Control", "no-store");
-    res.status(200).json(tokens);
+        const handoffCode = createHandoffCode(tokens);
+        res.redirect(`${env.PUBLIC_APP_URL}/login?google_code=${handoffCode}`);
+    } catch (error) {
+        if (error instanceof RegistrationNotAllowedError) {
+            res.redirect(`${env.PUBLIC_APP_URL}/login?google_error=registration_not_allowed`);
+            return;
+        }
+        res.redirect(`${env.PUBLIC_APP_URL}/login?google_error=google_auth_failed`);
+    }
 }
 
 export async function googleIdToken(req: Request, res: Response): Promise<void> {

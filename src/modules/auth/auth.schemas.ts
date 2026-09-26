@@ -10,6 +10,10 @@ export const TokenRequestSchema = z.discriminatedUnion("grant_type", [
         grant_type: z.literal("refresh_token"),
         refresh_token: z.string().min(1),
     }),
+    z.object({
+        grant_type: z.literal("google_code"),
+        code: z.string().min(1),
+    }),
 ]);
 
 export type TokenRequest = z.infer<typeof TokenRequestSchema>;

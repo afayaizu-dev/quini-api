@@ -25,13 +25,17 @@ export function apuestasAbiertas(jornada: JornadaConFechas): boolean {
     return jornada.fechaAperturaApuestas <= ahora && ahora < jornada.fechaCierreApuestas;
 }
 
-export function assertApuestasAbiertas(jornada: JornadaConFechas): void {
+export function assertApuestasAbiertas(jornada: JornadaConFechas, auth?: { role: string }): void {
+    if (jornada.fechaCierreJornada !== null) {
+        throw new ConflictError("Las apuestas de esta jornada están cerradas.");
+    }
+    if (auth?.role === "admin") return;
     if (!apuestasAbiertas(jornada)) {
         throw new ConflictError("Las apuestas de esta jornada están cerradas.");
     }
 }
 
-async function resolvePartidos(partidosInput: PartidoInput[]) {
+async function resolvePartidos(partidosInput: PartidoInput[] = []) {
     return Promise.all(
         partidosInput.map(async (p) => {
             const [local, visitante] = await Promise.all([

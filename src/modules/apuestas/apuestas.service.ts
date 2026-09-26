@@ -51,7 +51,7 @@ function toResponse(fila: ApuestaFila) {
         ],
         sugerenciaPleno15: fila.sugerenciaPleno15,
         usuarioId: fila.usuarioId,
-        creadaPorElMismo: fila.creadaPor === fila.usuarioId,
+        creadaPorElMismo: fila.creadaPorElMismo ?? (fila.creadaPor === fila.usuarioId),
         createdAt: fila.createdAt,
         updatedAt: fila.updatedAt,
     };
@@ -65,8 +65,11 @@ export async function create(
     auth: AuthContext,
 ) {
     const jornada = await jornadasService.findByNumero(numeroJornada, temporadaCodigo);
-    jornadasService.assertApuestasAbiertas(jornada);
+    jornadasService.assertApuestasAbiertas(jornada, auth);
     const usuarioId = await usuariosService.resolveUsuarioObjetivo(auth, input.usuarioId);
+    if (input.creadaPorElMismo !== undefined && auth.role !== "admin") {
+        throw new ForbiddenError();
+    }
 
     try {
         const fila = await apuestasRepository.create({
@@ -75,6 +78,7 @@ export async function create(
             numeroApuesta: input.numeroApuesta,
             creadaPor: auth.userId,
             ...toColumnas(input),
+            ...(input.creadaPorElMismo !== undefined && { creadaPorElMismo: input.creadaPorElMismo }),
         });
         return toResponse(fila);
     } catch (err) {
@@ -109,15 +113,18 @@ export async function replace(
     auth: AuthContext,
 ) {
     const jornada = await jornadasService.findByNumero(numeroJornada, temporadaCodigo);
-    jornadasService.assertApuestasAbiertas(jornada);
+    jornadasService.assertApuestasAbiertas(jornada, auth);
     const usuarioId = await usuariosService.resolveUsuarioObjetivo(auth, input.usuarioId);
+    if (input.creadaPorElMismo !== undefined && auth.role !== "admin") {
+        throw new ForbiddenError();
+    }
 
     const existente = await apuestasRepository.findOne(jornada.id, usuarioId, numeroApuesta);
     if (!existente) {
         throw new NotFoundError(`No existe la apuesta ${numeroApuesta} de este usuario para la jornada ${numeroJornada}.`);
     }
 
-    const fila = await apuestasRepository.replace(existente.id, toColumnas(input));
+    const fila = await apuestasRepository.replace(existente.id, toColumnas(input), input.creadaPorElMismo);
     return toResponse(fila);
 }
 

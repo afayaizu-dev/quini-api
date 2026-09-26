@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { jornadas } from "./jornadas.js";
 import { users } from "./users.js";
 
@@ -34,6 +34,7 @@ export const apuestas = pgTable(
     creadaPor: uuid("creada_por")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
+    creadaPorElMismo: boolean("creada_por_el_mismo"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

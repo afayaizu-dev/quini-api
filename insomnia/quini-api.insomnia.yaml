@@ -505,15 +505,17 @@ collection:
           prefix: ""
         settings: *a1
       - url: "{{ _.base_url }}/jornadas"
-        name: Crea una jornada con sus 15 partidos
+        name: Crea una jornada, opcionalmente con sus 15 partidos
         meta:
           id: req_f4c087c5d008d0f4d3633e52bed1b46d
           created: 1786657243109
           modified: 1786657243109
           isPrivate: false
           description:
-            "[Solo admin] Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes
-            de guardar. Todo ocurre en una única transacción."
+            "[Solo admin] 'partidos' es opcional: si se omite, la jornada se crea sin partidos y
+            pueden añadirse más tarde con PUT /:numeroJornada. Si se envía, debe traer los 15
+            completos. Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes de
+            guardar. Todo ocurre en una única transacción."
           sortKey: 22000
         method: POST
         body:
@@ -898,8 +900,8 @@ collection:
           modified: 1786657243109
           isPrivate: false
           description:
-            "[Solo admin] Solo un admin puede ver el listado completo de miembros (incluye a los
-            propios admins)."
+            Cualquier usuario autenticado puede ver el listado completo de miembros (incluye a los
+            propios admins).
           sortKey: 31000
         method: GET
         authentication:
@@ -2897,10 +2899,12 @@ spec:
               description: No hay temporada activa y no se especificó '?temporada='.
         post:
           operationId: jornadasCreate
-          summary: Crea una jornada con sus 15 partidos
+          summary: Crea una jornada, opcionalmente con sus 15 partidos
           description:
-            Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes de guardar.
-            Todo ocurre en una única transacción.
+            "'partidos' es opcional: si se omite, la jornada se crea sin partidos y pueden añadirse
+            más tarde con PUT /:numeroJornada. Si se envía, debe traer los 15 completos. Resuelve
+            equipoLocal/equipoVisitante contra el catálogo de equipos antes de guardar. Todo ocurre
+            en una única transacción."
           tags:
             - jornadas
           security:
@@ -2997,7 +3001,6 @@ spec:
                   required:
                     - numeroJornada
                     - fecha
-                    - partidos
           responses:
             "201":
               description: Jornada creada.
@@ -4516,12 +4519,13 @@ spec:
         get:
           operationId: usuariosFindAll
           summary: Lista todos los miembros
-          description: Solo un admin puede ver el listado completo de miembros (incluye a los propios admins).
+          description:
+            Cualquier usuario autenticado puede ver el listado completo de miembros (incluye a los
+            propios admins).
           tags:
             - usuarios
           security:
             - bearerAuth: []
-          x-required-role: admin
           responses:
             "200":
               description: Lista de miembros.
@@ -4588,8 +4592,6 @@ spec:
                       additionalProperties: false
             "401":
               description: Sin access token válido.
-            "403":
-              description: El usuario autenticado no es admin.
       /usuarios/{id}:
         get:
           operationId: usuariosFindById

@@ -32,6 +32,10 @@ registerPath("/auth/token", {
                             summary: "Renovar con refresh_token",
                             value: { grant_type: "refresh_token", refresh_token: "kUyRts-..." },
                         },
+                        google_code: {
+                            summary: "Canjear código de login con Google",
+                            value: { grant_type: "google_code", code: "Lo7AsDGYplMii2-i3Xml36UyAULZ5FHiOcD03CDF5N0" },
+                        },
                     },
                 },
             },
@@ -180,18 +184,10 @@ registerPath("/auth/google/callback", {
             { name: "state", in: "query", required: true, schema: { type: "string" } },
         ],
         responses: {
-            "200": {
-                description: "Tokens emitidos (usuario vinculado, existente, o nuevo por invitación).",
-                content: {
-                    "application/json": {
-                        schema: TokenResponseSchema,
-                        example: { access_token: "eyJhbGciOiJIUzI1NiJ9...", token_type: "Bearer", expires_in: 900, refresh_token: "kUyRts-..." },
-                    },
-                },
+            "302": {
+                description:
+                    "Redirección a `PUBLIC_APP_URL`/login con un parámetro de query. En éxito, `google_code` (código de un solo uso, caduca en 60s; el cliente debe canjearlo con POST /auth/token usando grant_type=google_code para obtener el par de tokens). En error, `google_error` con uno de: invalid_request | registration_not_allowed | google_auth_failed.",
             },
-            "400": { description: "El parámetro state no coincide (posible CSRF)." },
-            "401": { description: "code inválido/caducado, o email de Google no verificado." },
-            "403": { description: "No existe usuario ni invitación válida para ese email (REGISTRATION_NOT_ALLOWED)." },
         },
     },
 });

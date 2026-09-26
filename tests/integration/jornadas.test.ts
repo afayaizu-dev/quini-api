@@ -68,6 +68,21 @@ describe("POST /api/v1/jornadas", () => {
         expectMatchesOpenApiSchema({ path: "/jornadas", method: "post", status: 201, body: response.body });
     });
 
+    test("sin partidos -> 201, jornada creada con partidos vacíos", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporada(header, "2026-27");
+
+        const response = await request(app)
+            .post("/api/v1/jornadas")
+            .set(header)
+            .send({ numeroJornada: 1, fecha: "2026-08-20" });
+
+        expect(response.status).toBe(201);
+        expect(response.body.partidos).toEqual([]);
+        expectMatchesOpenApiSchema({ path: "/jornadas", method: "post", status: 201, body: response.body });
+    });
+
     test("mismo numeroJornada en la misma temporada -> 409", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);

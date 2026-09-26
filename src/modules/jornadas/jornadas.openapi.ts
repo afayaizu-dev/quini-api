@@ -78,8 +78,8 @@ registerPath("/jornadas", {
     },
     post: {
         operationId: "jornadasCreate",
-        summary: "Crea una jornada con sus 15 partidos",
-        description: "Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes de guardar. Todo ocurre en una única transacción.",
+        summary: "Crea una jornada, opcionalmente con sus 15 partidos",
+        description: "'partidos' es opcional: si se omite, la jornada se crea sin partidos y pueden añadirse más tarde con PUT /:numeroJornada. Si se envía, debe traer los 15 completos. Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes de guardar. Todo ocurre en una única transacción.",
         tags: ["jornadas"],
         security: [{ bearerAuth: [] }],
         "x-required-role": "admin",

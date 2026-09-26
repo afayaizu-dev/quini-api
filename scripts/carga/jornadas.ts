@@ -98,7 +98,7 @@ export async function cargar(ctx: Contexto, opciones: { dryRun: boolean }): Prom
 
         let faltaAlgunEquipo = false;
         const partidosResueltos: { orden: number; equipoLocalId: string; equipoVisitanteId: string }[] = [];
-        for (const p of resultadoJornada.data.partidos) {
+        for (const p of resultadoJornada.data.partidos ?? []) {
             const equipoLocalId = await resolverEquipo(ctx, p.equipoLocal);
             const equipoVisitanteId = await resolverEquipo(ctx, p.equipoVisitante);
             if (!equipoLocalId) {

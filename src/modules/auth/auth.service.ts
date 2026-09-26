@@ -14,6 +14,7 @@ import {
     revokeRefreshToken,
 } from "./auth.repository.js";
 import type { TokenResponse } from "./auth.schemas.js";
+import { consumeHandoffCode } from "./google-handoff.js";
 import { hash, verify } from "./password.js";
 import { hashRefresh, newRefreshToken, signAccessToken } from "./tokens.js";
 import { parseTtlToMs } from "../../core/ttl.js";
@@ -174,4 +175,12 @@ export async function loginWithGoogle(profile: GoogleProfile, meta: RequestMeta)
     });
 
     return issueTokenPair(user, meta);
+}
+
+export async function exchangeGoogleCode(code: string): Promise<TokenResponse> {
+    const tokens = consumeHandoffCode(code);
+    if (!tokens) {
+        throw new UnauthorizedError("Código de login con Google inválido o caducado.");
+    }
+    return tokens;
 }

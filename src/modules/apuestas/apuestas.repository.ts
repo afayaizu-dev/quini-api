@@ -27,6 +27,7 @@ export interface ApuestaFila extends ApuestaColumnas {
     usuarioId: string;
     numeroApuesta: number;
     creadaPor: string;
+    creadaPorElMismo: boolean | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -36,6 +37,7 @@ interface CreateApuestaInput extends ApuestaColumnas {
     usuarioId: string;
     numeroApuesta: number;
     creadaPor: string;
+    creadaPorElMismo?: boolean;
 }
 
 export async function create(input: CreateApuestaInput, tx: DbOrTx = db): Promise<ApuestaFila> {
@@ -79,10 +81,10 @@ export async function findOne(
     return row;
 }
 
-export async function replace(id: string, input: ApuestaColumnas, tx: DbOrTx = db): Promise<ApuestaFila> {
+export async function replace(id: string, input: ApuestaColumnas, creadaPorElMismo: boolean | undefined, tx: DbOrTx = db): Promise<ApuestaFila> {
     const [row] = await tx
         .update(apuestas)
-        .set({ ...input, updatedAt: new Date() })
+        .set({ ...input, ...(creadaPorElMismo !== undefined && { creadaPorElMismo }), updatedAt: new Date() })
         .where(eq(apuestas.id, id))
         .returning();
     /* v8 ignore next -- @preserve */
@@ -111,7 +113,7 @@ export async function contarPorAutoria(
     const [row] = await tx
         .select({
             total: sql<number>`count(*)::int`,
-            propias: sql<number>`count(*) filter (where ${apuestas.creadaPor} = ${apuestas.usuarioId})::int`,
+            propias: sql<number>`count(*) filter (where coalesce(${apuestas.creadaPorElMismo}, ${apuestas.creadaPor} = ${apuestas.usuarioId}))::int`,
         })
         .from(apuestas)
         .innerJoin(jornadas, eq(jornadas.id, apuestas.jornadaId))

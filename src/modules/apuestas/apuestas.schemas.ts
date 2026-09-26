@@ -9,6 +9,7 @@ export const CreateApuestaSchema = z
         partidos: z.array(signoQuiniela).length(14),
         sugerenciaPleno15: plenoAl15.optional(),
         usuarioId: z.uuid().optional(),
+        creadaPorElMismo: z.boolean().optional(),
     })
     .strict();
 
@@ -19,6 +20,7 @@ export const UpdateApuestaSchema = z
         partidos: z.array(signoQuiniela).length(14),
         sugerenciaPleno15: plenoAl15.optional(),
         usuarioId: z.uuid().optional(),
+        creadaPorElMismo: z.boolean().optional(),
     })
     .strict();
 

@@ -100,6 +100,20 @@
                       }
                     },
                     "required": ["grant_type", "refresh_token"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "grant_type": {
+                        "type": "string",
+                        "const": "google_code"
+                      },
+                      "code": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": ["grant_type", "code"]
                   }
                 ],
                 "type": "object"
@@ -118,6 +132,13 @@
                   "value": {
                     "grant_type": "refresh_token",
                     "refresh_token": "kUyRts-..."
+                  }
+                },
+                "google_code": {
+                  "summary": "Canjear código de login con Google",
+                  "value": {
+                    "grant_type": "google_code",
+                    "code": "Lo7AsDGYplMii2-i3Xml36UyAULZ5FHiOcD03CDF5N0"
                   }
                 }
               }
@@ -412,49 +433,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Tokens emitidos (usuario vinculado, existente, o nuevo por invitación).",
-            "content": {
-              "application/json": {
-                "example": {
-                  "access_token": "eyJhbGciOiJIUzI1NiJ9...",
-                  "token_type": "Bearer",
-                  "expires_in": 900,
-                  "refresh_token": "kUyRts-..."
-                },
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "access_token": {
-                      "type": "string"
-                    },
-                    "token_type": {
-                      "type": "string",
-                      "const": "Bearer"
-                    },
-                    "expires_in": {
-                      "type": "integer",
-                      "exclusiveMinimum": 0,
-                      "maximum": 9007199254740991
-                    },
-                    "refresh_token": {
-                      "type": "string"
-                    }
-                  },
-                  "required": ["access_token", "token_type", "expires_in", "refresh_token"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "El parámetro state no coincide (posible CSRF)."
-          },
-          "401": {
-            "description": "code inválido/caducado, o email de Google no verificado."
-          },
-          "403": {
-            "description": "No existe usuario ni invitación válida para ese email (REGISTRATION_NOT_ALLOWED)."
+          "302": {
+            "description": "Redirección a `PUBLIC_APP_URL`/login con un parámetro de query. En éxito, `google_code` (código de un solo uso, caduca en 60s; el cliente debe canjearlo con POST /auth/token usando grant_type=google_code para obtener el par de tokens). En error, `google_error` con uno de: invalid_request | registration_not_allowed | google_auth_failed."
           }
         }
       }
@@ -1882,8 +1862,8 @@
       },
       "post": {
         "operationId": "jornadasCreate",
-        "summary": "Crea una jornada con sus 15 partidos",
-        "description": "Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes de guardar. Todo ocurre en una única transacción.",
+        "summary": "Crea una jornada, opcionalmente con sus 15 partidos",
+        "description": "'partidos' es opcional: si se omite, la jornada se crea sin partidos y pueden añadirse más tarde con PUT /:numeroJornada. Si se envía, debe traer los 15 completos. Resuelve equipoLocal/equipoVisitante contra el catálogo de equipos antes de guardar. Todo ocurre en una única transacción.",
         "tags": ["jornadas"],
         "security": [
           {
@@ -2018,7 +1998,7 @@
                     }
                   }
                 },
-                "required": ["numeroJornada", "fecha", "partidos"]
+                "required": ["numeroJornada", "fecha"]
               }
             }
           }
@@ -5177,7 +5157,7 @@
       "post": {
         "operationId": "apuestasCreate",
         "summary": "Registra una apuesta (1 o 2) para una jornada",
-        "description": "El usuario apuesta para sí mismo. Un admin puede apostar por otro pasando 'usuarioId' en el body.",
+        "description": "El usuario apuesta para sí mismo. Un admin puede apostar por otro pasando 'usuarioId' en el body, y también fijar 'creadaPorElMismo' o crear apuestas fuera de la ventana (jornada aún no calculada).",
         "tags": ["apuestas"],
         "security": [
           {
@@ -5247,6 +5227,9 @@
                     "type": "string",
                     "format": "uuid",
                     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "creadaPorElMismo": {
+                    "type": "boolean"
                   }
                 },
                 "required": ["numeroApuesta", "partidos"],
@@ -5374,13 +5357,13 @@
             "description": "Sin access token válido."
           },
           "403": {
-            "description": "'usuarioId' informado por un usuario que no es admin."
+            "description": "'usuarioId' o 'creadaPorElMismo' informados por un usuario que no es admin."
           },
           "404": {
             "description": "Jornada, temporada o 'usuarioId' inexistentes."
           },
           "409": {
-            "description": "Apuestas cerradas, jornada calculada, o ya existe esa apuesta para ese usuario."
+            "description": "Jornada calculada; apuestas cerradas para un usuario que no es admin (un admin sí puede crear fuera de ventana); o ya existe esa apuesta para ese usuario."
           }
         }
       },
@@ -5692,7 +5675,7 @@
       "put": {
         "operationId": "apuestasReplace",
         "summary": "Reemplaza los 14 signos de una apuesta",
-        "description": "El propio usuario, o un admin sobre la de otro pasando 'usuarioId' en el body.",
+        "description": "El propio usuario, o un admin sobre la de otro pasando 'usuarioId' en el body. Un admin también puede fijar 'creadaPorElMismo' o reemplazar fuera de la ventana (jornada aún no calculada).",
         "tags": ["apuestas"],
         "security": [
           {
@@ -5760,6 +5743,9 @@
                     "type": "string",
                     "format": "uuid",
                     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "creadaPorElMismo": {
+                    "type": "boolean"
                   }
                 },
                 "required": ["partidos"],
@@ -5879,13 +5865,13 @@
             "description": "Sin access token válido."
           },
           "403": {
-            "description": "'usuarioId' de otro miembro, informado por un usuario que no es admin."
+            "description": "'usuarioId' de otro miembro, o 'creadaPorElMismo', informados por un usuario que no es admin."
           },
           "404": {
             "description": "Jornada, temporada, 'usuarioId' o la apuesta no existen."
           },
           "409": {
-            "description": "Las apuestas de esta jornada están cerradas."
+            "description": "Jornada calculada, o apuestas cerradas para un usuario que no es admin (un admin sí puede reemplazar fuera de ventana)."
           }
         }
       },

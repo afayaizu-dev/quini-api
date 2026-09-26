@@ -24,9 +24,9 @@ export const CreateJornadaSchema = z
         temporada: codigoTemporada.optional(),
         numeroJornada: z.number().int().positive(),
         fecha: z.iso.date(),
-        partidos: z.array(PartidoSchema).length(15),
+        partidos: z.array(PartidoSchema).length(15).optional(),
     })
-    .refine((data) => ordenesCompletosYSinDuplicados(data.partidos), {
+    .refine((data) => data.partidos === undefined || ordenesCompletosYSinDuplicados(data.partidos), {
         message: "Los 15 partidos deben tener 'orden' de 1 a 15, sin duplicados ni huecos.",
         path: ["partidos"],
     });

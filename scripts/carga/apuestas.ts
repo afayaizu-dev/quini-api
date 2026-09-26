@@ -109,7 +109,7 @@ export async function cargar(ctx: Contexto, opciones: { dryRun: boolean }): Prom
 
         if (existente) {
             if (!opciones.dryRun) {
-                await apuestasRepository.replace(existente.id, columnas);
+                await apuestasRepository.replace(existente.id, columnas, undefined);
             }
             actualizados++;
         } else if (opciones.dryRun) {

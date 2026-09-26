@@ -72,6 +72,7 @@ function apuestaBody(
         partidos?: string[];
         sugerenciaPleno15?: string;
         usuarioId?: string;
+        creadaPorElMismo?: boolean;
     } = {},
 ) {
     return {
@@ -79,17 +80,19 @@ function apuestaBody(
         partidos: overrides.partidos ?? ["1", "X", "2", "1", "1", "X", "2", "1", "X", "2", "1", "1", "X", "2"],
         ...(overrides.sugerenciaPleno15 !== undefined ? { sugerenciaPleno15: overrides.sugerenciaPleno15 } : {}),
         ...(overrides.usuarioId !== undefined ? { usuarioId: overrides.usuarioId } : {}),
+        ...(overrides.creadaPorElMismo !== undefined ? { creadaPorElMismo: overrides.creadaPorElMismo } : {}),
     };
 }
 
 
 function updateApuestaBody(
-    overrides: { partidos?: string[]; sugerenciaPleno15?: string; usuarioId?: string } = {},
+    overrides: { partidos?: string[]; sugerenciaPleno15?: string; usuarioId?: string; creadaPorElMismo?: boolean } = {},
 ) {
     return {
         partidos: overrides.partidos ?? ["1", "X", "2", "1", "1", "X", "2", "1", "X", "2", "1", "1", "X", "2"],
         ...(overrides.sugerenciaPleno15 !== undefined ? { sugerenciaPleno15: overrides.sugerenciaPleno15 } : {}),
         ...(overrides.usuarioId !== undefined ? { usuarioId: overrides.usuarioId } : {}),
+        ...(overrides.creadaPorElMismo !== undefined ? { creadaPorElMismo: overrides.creadaPorElMismo } : {}),
     };
 }
 
@@ -145,6 +148,49 @@ describe("POST /api/v1/jornadas/:numeroJornada/apuestas", () => {
         expect(response.status).toBe(201);
         expect(response.body.creadaPorElMismo).toBe(false);
         expect(response.body.usuarioId).toBe(otro.id);
+    });
+
+    test("admin, propia, creadaPorElMismo: false explícito -> 201 + creadaPorElMismo: false", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+
+        const response = await request(app)
+            .post("/api/v1/jornadas/1/apuestas")
+            .set(header)
+            .send(apuestaBody({ creadaPorElMismo: false }));
+
+        expect(response.status).toBe(201);
+        expect(response.body.creadaPorElMismo).toBe(false);
+    });
+
+    test("admin, usuarioId de otro, creadaPorElMismo: true explícito -> 201 + creadaPorElMismo: true", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+
+        const otro = await createUser();
+        const response = await request(app)
+            .post("/api/v1/jornadas/1/apuestas")
+            .set(header)
+            .send(apuestaBody({ usuarioId: otro.id, creadaPorElMismo: true }));
+
+        expect(response.status).toBe(201);
+        expect(response.body.creadaPorElMismo).toBe(true);
+    });
+
+    test("creadaPorElMismo, como user -> 403", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+
+        const user = await createUser();
+        const response = await request(app)
+            .post("/api/v1/jornadas/1/apuestas")
+            .set(await authHeader(user))
+            .send(apuestaBody({ creadaPorElMismo: false }));
+
+        expect(response.status).toBe(403);
     });
 
     test("usuarioId inexistente, como admin -> 404", async () => {
@@ -251,17 +297,53 @@ describe("POST /api/v1/jornadas/:numeroJornada/apuestas", () => {
         expect(response.body.sugerenciaPleno15).toBeNull();
     });
 
-    test("sin fechas configuradas -> 409", async () => {
+    test("sin fechas configuradas, como user -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+
+        const user = await createUser();
+        const response = await request(app)
+            .post("/api/v1/jornadas/1/apuestas")
+            .set(await authHeader(user))
+            .send(apuestaBody());
+
+        expect(response.status).toBe(409);
+    });
+
+    test("sin fechas configuradas, como admin -> 201 (el admin sí puede)", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearJornadaLista(header);
 
         const response = await request(app).post("/api/v1/jornadas/1/apuestas").set(header).send(apuestaBody());
 
+        expect(response.status).toBe(201);
+    });
+
+    test("antes de la fecha de apertura, como user -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaLista(header);
+        await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({
+                fechaAperturaApuestas: "2099-01-01T00:00:00Z",
+                fechaCierreApuestas: "2099-06-01T00:00:00Z",
+                fechaCierreJornada: null,
+            });
+
+        const user = await createUser();
+        const response = await request(app)
+            .post("/api/v1/jornadas/1/apuestas")
+            .set(await authHeader(user))
+            .send(apuestaBody());
+
         expect(response.status).toBe(409);
     });
 
-    test("antes de la fecha de apertura -> 409", async () => {
+    test("antes de la fecha de apertura, como admin -> 201 (el admin sí puede)", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearJornadaLista(header);
@@ -276,10 +358,10 @@ describe("POST /api/v1/jornadas/:numeroJornada/apuestas", () => {
 
         const response = await request(app).post("/api/v1/jornadas/1/apuestas").set(header).send(apuestaBody());
 
-        expect(response.status).toBe(409);
+        expect(response.status).toBe(201);
     });
 
-    test("después del cierre -> 409", async () => {
+    test("después del cierre, como user -> 409", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearJornadaLista(header);
@@ -294,7 +376,7 @@ describe("POST /api/v1/jornadas/:numeroJornada/apuestas", () => {
         expect(response.status).toBe(409);
     });
 
-    test("después del cierre, como admin -> 409 (tampoco el admin)", async () => {
+    test("después del cierre, como admin -> 201 (el admin sí puede crear fuera de ventana)", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearJornadaLista(header);
@@ -302,10 +384,10 @@ describe("POST /api/v1/jornadas/:numeroJornada/apuestas", () => {
 
         const response = await request(app).post("/api/v1/jornadas/1/apuestas").set(header).send(apuestaBody());
 
-        expect(response.status).toBe(409);
+        expect(response.status).toBe(201);
     });
 
-    test("jornada ya calculada -> 409", async () => {
+    test("jornada ya calculada, como admin -> 409 (tampoco el admin)", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearJornadaLista(header);
@@ -388,7 +470,53 @@ describe("PUT /api/v1/jornadas/:numeroJornada/apuestas/:numeroApuesta", () => {
         expect(response.status).toBe(200);
     });
 
-    test("después del cierre -> 409", async () => {
+    test("admin, propia, creadaPorElMismo: false explícito -> 200 + creadaPorElMismo: false", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+        await request(app).post("/api/v1/jornadas/1/apuestas").set(header).send(apuestaBody());
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/apuestas/1")
+            .set(header)
+            .send(updateApuestaBody({ creadaPorElMismo: false }));
+
+        expect(response.status).toBe(200);
+        expect(response.body.creadaPorElMismo).toBe(false);
+    });
+
+    test("creadaPorElMismo, como user -> 403", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+
+        const user = await createUser();
+        const userHeader = await authHeader(user);
+        await request(app).post("/api/v1/jornadas/1/apuestas").set(userHeader).send(apuestaBody());
+
+        const response = await request(app)
+            .put("/api/v1/jornadas/1/apuestas/1")
+            .set(userHeader)
+            .send(updateApuestaBody({ creadaPorElMismo: false }));
+
+        expect(response.status).toBe(403);
+    });
+
+    test("después del cierre, como user -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+        const user = await createUser();
+        const userHeader = await authHeader(user);
+        await request(app).post("/api/v1/jornadas/1/apuestas").set(userHeader).send(apuestaBody());
+        await cerrarApuestas(header);
+
+        const response = await request(app).put("/api/v1/jornadas/1/apuestas/1").set(userHeader).send(updateApuestaBody());
+
+        expect(response.status).toBe(409);
+    });
+
+    test("después del cierre, como admin -> 200 (el admin sí puede reemplazar fuera de ventana)", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearJornadaConApuestasAbiertas(header);
@@ -397,7 +525,7 @@ describe("PUT /api/v1/jornadas/:numeroJornada/apuestas/:numeroApuesta", () => {
 
         const response = await request(app).put("/api/v1/jornadas/1/apuestas/1").set(header).send(updateApuestaBody());
 
-        expect(response.status).toBe(409);
+        expect(response.status).toBe(200);
     });
 
     test("apuesta inexistente -> 404", async () => {
