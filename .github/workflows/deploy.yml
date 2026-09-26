@@ -39,6 +39,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd ~/quini-api
             export TAG=${{ github.sha }}
             docker compose --env-file .env.prod -f docker-compose.prod.yml pull api
