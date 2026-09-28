@@ -85,7 +85,8 @@ registerPath("/dashboard/miembro", {
     get: {
         operationId: "dashboardMiembro",
         summary: "Agregados de un miembro",
-        description: "Sin '?usuario=', devuelve los datos del usuario autenticado. Un admin puede consultar los de cualquier miembro.",
+        description:
+            "Sin '?usuario=', devuelve los datos del usuario autenticado. Cualquier usuario autenticado puede consultar los de cualquier miembro, como parte de la transparencia de la clasificación.",
         tags: ["dashboard"],
         security: [{ bearerAuth: [] }],
         parameters: [temporadaQueryParam, usuarioQueryParam],
@@ -95,7 +96,6 @@ registerPath("/dashboard/miembro", {
                 content: { "application/json": { schema: DashboardMiembroResponseSchema, example: miembroEjemplo } },
             },
             "401": { description: "Sin access token válido." },
-            "403": { description: "'usuario' de otro miembro, pedido por un usuario que no es admin." },
             "404": { description: "Temporada o usuario inexistentes; o no hay temporada activa y no se especificó ninguna." },
         },
     },

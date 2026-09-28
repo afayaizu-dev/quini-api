@@ -118,7 +118,7 @@ describe("GET /api/v1/dashboard/miembro", () => {
         expectMatchesOpenApiSchema({ path: "/dashboard/miembro", method: "get", status: 200, body: response.body });
     });
 
-    test("?usuario={otro} como user -> 403", async () => {
+    test("?usuario={otro} como user -> 200, transparencia total de la clasificación", async () => {
         const admin = await createAdmin();
         const adminHeader = await authHeader(admin);
         await crearTemporada(adminHeader, "2026-27");
@@ -129,7 +129,8 @@ describe("GET /api/v1/dashboard/miembro", () => {
             .get(`/api/v1/dashboard/miembro?usuario=${otro.id}`)
             .set(await authHeader(user));
 
-        expect(response.status).toBe(403);
+        expect(response.status).toBe(200);
+        expect(response.body.usuarioId).toBe(otro.id);
     });
 
     test("?usuario={otro} como admin -> 200", async () => {
@@ -142,6 +143,19 @@ describe("GET /api/v1/dashboard/miembro", () => {
 
         expect(response.status).toBe(200);
         expect(response.body.usuarioId).toBe(otro.id);
+    });
+
+    test("?usuario={inexistente} -> 404", async () => {
+        const admin = await createAdmin();
+        const adminHeader = await authHeader(admin);
+        await crearTemporada(adminHeader, "2026-27");
+        const user = await createUser();
+
+        const response = await request(app)
+            .get("/api/v1/dashboard/miembro?usuario=019ff7eb-0000-7000-8000-000000000000")
+            .set(await authHeader(user));
+
+        expect(response.status).toBe(404);
     });
 
     test("sin jornadas calculadas -> 200 con null/0, no 500, y porcentaje sin división por cero", async () => {

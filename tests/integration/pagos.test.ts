@@ -187,13 +187,13 @@ describe("POST /api/v1/pagos", () => {
 });
 
 describe("GET /api/v1/pagos", () => {
-    test("como user -> 403", async () => {
+    test("como user -> 200, transparencia total de la clasificación", async () => {
         const user = await createUser();
         const response = await request(app).get("/api/v1/pagos").set(await authHeader(user));
-        expect(response.status).toBe(403);
+        expect(response.status).toBe(200);
     });
 
-    test("?usuario={id} como admin -> 200 filtrado", async () => {
+    test("?usuario={id} como user -> 200 filtrado (ve los pagos de cualquier miembro)", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         const user1 = await createUser();
@@ -201,7 +201,7 @@ describe("GET /api/v1/pagos", () => {
         await request(app).post("/api/v1/pagos").set(header).send(pagoBody(user1.id));
         await request(app).post("/api/v1/pagos").set(header).send(pagoBody(user2.id));
 
-        const response = await request(app).get(`/api/v1/pagos?usuario=${user1.id}`).set(header);
+        const response = await request(app).get(`/api/v1/pagos?usuario=${user1.id}`).set(await authHeader(user2));
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveLength(1);

@@ -72,10 +72,10 @@ registerPath("/pagos", {
     get: {
         operationId: "pagosFindAll",
         summary: "Lista los pagos, con filtros opcionales",
-        description: "Filtra por usuario y/o por rango de fechaPago (desde/hasta, ambos inclusive).",
+        description:
+            "Filtra por usuario y/o por rango de fechaPago (desde/hasta, ambos inclusive). Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
         tags: ["pagos"],
         security: [{ bearerAuth: [] }],
-        "x-required-role": "admin",
         parameters: [usuarioQueryParam, desdeQueryParam, hastaQueryParam],
         responses: {
             "200": {
@@ -83,7 +83,6 @@ registerPath("/pagos", {
                 content: { "application/json": { schema: z.array(PagoResponseSchema), example: [pagoEjemplo] } },
             },
             "401": { description: "Sin access token válido." },
-            "403": { description: "El usuario autenticado no es admin." },
         },
     },
 });

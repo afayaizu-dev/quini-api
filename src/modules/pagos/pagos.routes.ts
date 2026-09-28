@@ -20,7 +20,6 @@ pagosRouter.post(
 pagosRouter.get(
     "/",
     requireAuth,
-    requireRole("admin"),
     validate({ query: PagosQuerySchema }),
     findAll,
 );

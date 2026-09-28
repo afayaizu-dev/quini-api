@@ -2,7 +2,7 @@ import { NotFoundError } from "../../core/errors.js";
 import * as dashboardRepository from "./dashboard.repository.js";
 import * as temporadasService from "../temporadas/temporadas.service.js";
 import * as jornadasService from "../jornadas/jornadas.service.js";
-import * as usuariosService from "../usuarios/usuarios.service.js";
+import * as usuariosRepository from "../usuarios/usuarios.repository.js";
 import * as pagosService from "../pagos/pagos.service.js";
 import * as pagosRepository from "../pagos/pagos.repository.js";
 import * as apuestasRepository from "../apuestas/apuestas.repository.js";
@@ -42,7 +42,11 @@ function toLiquidacion(fila: ResultadoMiembroFila) {
 
 export async function miembro(query: DashboardMiembroQuery, auth: AuthContext) {
     const temporadaActual = await temporadasService.resolveTemporada(query.temporada);
-    const usuarioId = await usuariosService.resolveUsuarioObjetivo(auth, query.usuario);
+    const usuarioId = query.usuario ?? auth.userId;
+    if (query.usuario !== undefined) {
+        const existe = await usuariosRepository.findById(usuarioId);
+        if (!existe) throw new NotFoundError(`No existe el usuario ${usuarioId}.`);
+    }
 
     const agg = await dashboardRepository.agregados({ temporadaId: temporadaActual.id, usuarioId });
     const ingresosTotales = await pagosRepository.sumImportes(usuarioId);

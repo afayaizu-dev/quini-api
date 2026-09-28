@@ -286,7 +286,7 @@ flowchart LR
 | Contraseña | `[completar]`                 |
 | Rol        | `user`                        |
 
-La cuenta tiene rol **`user`** deliberadamente: da acceso de lectura a 19 de las 22 operaciones de consulta y **ninguna capacidad destructiva**. Las tres restantes (`GET /usuarios`, `GET /usuarios/{id}` y `GET /pagos`) devolverán `403 FORBIDDEN`: no es una limitación del acceso concedido, es la autorización por rol funcionando.
+La cuenta tiene rol **`user`** deliberadamente: da acceso de lectura a casi todas las operaciones de consulta (incluida la clasificación completa, transparente para cualquier miembro: `GET /pagos` y `GET /dashboard/miembro?usuario=`) y **ninguna capacidad destructiva**. Las dos restantes (`GET /usuarios` y `GET /usuarios/{id}`) devolverán `403 FORBIDDEN`: no es una limitación del acceso concedido, es la autorización por rol funcionando.
 
 ### Recorrido sugerido
 
