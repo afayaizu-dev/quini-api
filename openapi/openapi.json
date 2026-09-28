@@ -6461,14 +6461,13 @@
       "get": {
         "operationId": "pagosFindAll",
         "summary": "Lista los pagos, con filtros opcionales",
-        "description": "Filtra por usuario y/o por rango de fechaPago (desde/hasta, ambos inclusive).",
+        "description": "Filtra por usuario y/o por rango de fechaPago (desde/hasta, ambos inclusive). Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
         "tags": ["pagos"],
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-required-role": "admin",
         "parameters": [
           {
             "name": "usuario",
@@ -6566,9 +6565,6 @@
           },
           "401": {
             "description": "Sin access token válido."
-          },
-          "403": {
-            "description": "El usuario autenticado no es admin."
           }
         }
       }
@@ -6697,7 +6693,7 @@
       "get": {
         "operationId": "dashboardMiembro",
         "summary": "Agregados de un miembro",
-        "description": "Sin '?usuario=', devuelve los datos del usuario autenticado. Un admin puede consultar los de cualquier miembro.",
+        "description": "Sin '?usuario=', devuelve los datos del usuario autenticado. Cualquier usuario autenticado puede consultar los de cualquier miembro, como parte de la transparencia de la clasificación.",
         "tags": ["dashboard"],
         "security": [
           {
@@ -6842,9 +6838,6 @@
           },
           "401": {
             "description": "Sin access token válido."
-          },
-          "403": {
-            "description": "'usuario' de otro miembro, pedido por un usuario que no es admin."
           },
           "404": {
             "description": "Temporada o usuario inexistentes; o no hay temporada activa y no se especificó ninguna."
