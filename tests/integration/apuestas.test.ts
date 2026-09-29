@@ -550,12 +550,46 @@ describe("DELETE /api/v1/jornadas/:numeroJornada/apuestas/:numeroApuesta", () =>
         expect(response.status).toBe(204);
     });
 
-    test("después del cierre -> 409", async () => {
+    test("como user, después del cierre -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+
+        const user = await createUser();
+        const userHeader = await authHeader(user);
+        await request(app).post("/api/v1/jornadas/1/apuestas").set(userHeader).send(apuestaBody());
+        await cerrarApuestas(header);
+
+        const response = await request(app).delete("/api/v1/jornadas/1/apuestas/1").set(userHeader);
+
+        expect(response.status).toBe(409);
+    });
+
+    test("como admin, después del cierre -> 204", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearJornadaConApuestasAbiertas(header);
         await request(app).post("/api/v1/jornadas/1/apuestas").set(header).send(apuestaBody());
         await cerrarApuestas(header);
+
+        const response = await request(app).delete("/api/v1/jornadas/1/apuestas/1").set(header);
+
+        expect(response.status).toBe(204);
+    });
+
+    test("jornada ya calculada, como admin -> 409 (tampoco el admin)", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearJornadaConApuestasAbiertas(header);
+        await request(app).post("/api/v1/jornadas/1/apuestas").set(header).send(apuestaBody());
+        await request(app)
+            .put("/api/v1/jornadas/1/fechas")
+            .set(header)
+            .send({
+                fechaAperturaApuestas: "2020-01-01T00:00:00Z",
+                fechaCierreApuestas: "2020-06-01T00:00:00Z",
+                fechaCierreJornada: "2020-06-02T00:00:00Z",
+            });
 
         const response = await request(app).delete("/api/v1/jornadas/1/apuestas/1").set(header);
 

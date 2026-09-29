@@ -135,7 +135,7 @@ export async function remove(
     auth: AuthContext,
 ) {
     const jornada = await jornadasService.findByNumero(numeroJornada, temporadaCodigo);
-    jornadasService.assertApuestasAbiertas(jornada);
+    jornadasService.assertApuestasAbiertas(jornada, auth);
 
     const existente = await apuestasRepository.findOne(jornada.id, auth.userId, numeroApuesta);
     if (!existente) {
