@@ -6,7 +6,7 @@ beforeEach(async () => {
 
     await db.execute(sql`
         TRUNCATE TABLE
-            pagos, resultados_miembro, apuestas, resultados, partidos, jornadas, equipos, temporadas,
+            pagos, ajustes_bote, resultados_miembro, apuestas, resultados, partidos, jornadas, equipos, temporadas,
             oauth_accounts, refresh_tokens, invitations, users
         RESTART IDENTITY CASCADE
     `);

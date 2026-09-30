@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { resultadosMiembro } from "../../db/schema/resultados_miembro.js";
 import { jornadas } from "../../db/schema/jornadas.js";
+import { ajustesBote } from "../../db/schema/ajustes_bote.js";
 
 export interface AgregadosFiltros {
     temporadaId?: string | undefined;
@@ -66,6 +67,12 @@ export async function agregados(filtros: AgregadosFiltros, tx: DbOrTx = db): Pro
 
 
 
+
+export async function sumaAjustesBote(tx: DbOrTx = db): Promise<number> {
+    const [row] = await tx.select({ total: sql<string>`COALESCE(SUM(${ajustesBote.importe}), 0)` }).from(ajustesBote);
+    /* v8 ignore next -- @preserve */
+    return row ? Number(row.total) : 0;
+}
 
 export async function usuariosConAciertos(temporadaId: string, aciertos: number, tx: DbOrTx = db): Promise<string[]> {
     const filas = await tx

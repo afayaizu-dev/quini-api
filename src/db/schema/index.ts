@@ -10,3 +10,4 @@ export * from "./apuestas.js"
 export * from "./resultados_miembro.js";
 export * from "./escalones_pago.js";
 export * from "./pagos.js";
+export * from "./ajustes_bote.js";

@@ -54,6 +54,10 @@
     {
       "name": "dashboard",
       "description": "Agregados de miembros, jornadas y temporadas."
+    },
+    {
+      "name": "ajustes-bote",
+      "description": "Ajustes manuales globales del bote."
     }
   ],
   "paths": {
@@ -7162,8 +7166,7 @@
                       "minimum": 0
                     },
                     "boteTotal": {
-                      "type": "number",
-                      "minimum": 0
+                      "type": "number"
                     },
                     "jornadasCalculadas": {
                       "type": "integer",
@@ -7192,6 +7195,226 @@
           },
           "404": {
             "description": "No existe esa temporada, o no hay temporada activa y no se especificó ninguna."
+          }
+        }
+      }
+    },
+    "/ajustes-bote": {
+      "post": {
+        "operationId": "ajustesBoteCreate",
+        "summary": "Registra un ajuste manual del bote",
+        "description": "Ajuste global (no ligado a un usuario ni a una temporada) que suma o resta al bote total. El importe admite valores negativos.",
+        "tags": ["ajustes-bote"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "importe": -25,
+                "motivo": "Corrección por error en el cálculo de la jornada 3",
+                "fecha": "2026-09-01"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "importe": {
+                    "type": "number"
+                  },
+                  "motivo": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fecha": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": ["importe", "motivo", "fecha"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ajuste de bote registrado.",
+            "headers": {
+              "Location": {
+                "description": "/api/v1/ajustes-bote/{id}",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                  "importe": -25,
+                  "motivo": "Corrección por error en el cálculo de la jornada 3",
+                  "fecha": "2026-09-01",
+                  "registradoPor": "019ff7eb-9999-7b8c-a948-6ca9a14625e6",
+                  "createdAt": "2026-09-01T10:00:00.000Z"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "importe": {
+                      "type": "number"
+                    },
+                    "motivo": {
+                      "type": "string"
+                    },
+                    "fecha": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "registradoPor": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    }
+                  },
+                  "required": ["id", "importe", "motivo", "fecha", "registradoPor", "createdAt"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "importe con más de 2 decimales, motivo vacío, o fecha con formato inválido."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          }
+        }
+      },
+      "get": {
+        "operationId": "ajustesBoteFindAll",
+        "summary": "Lista todos los ajustes de bote",
+        "description": "Lista global de ajustes, sin filtrar por temporada. Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
+        "tags": ["ajustes-bote"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de ajustes de bote.",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                    "importe": -25,
+                    "motivo": "Corrección por error en el cálculo de la jornada 3",
+                    "fecha": "2026-09-01",
+                    "registradoPor": "019ff7eb-9999-7b8c-a948-6ca9a14625e6",
+                    "createdAt": "2026-09-01T10:00:00.000Z"
+                  }
+                ],
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "importe": {
+                        "type": "number"
+                      },
+                      "motivo": {
+                        "type": "string"
+                      },
+                      "fecha": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "registradoPor": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": ["id", "importe", "motivo", "fecha", "registradoPor", "createdAt"],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin access token válido."
+          }
+        }
+      }
+    },
+    "/ajustes-bote/{id}": {
+      "delete": {
+        "operationId": "ajustesBoteRemove",
+        "summary": "Elimina un ajuste de bote",
+        "description": "Un ajuste mal apuntado se borra y se vuelve a crear; no existe PUT.",
+        "tags": ["ajustes-bote"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Ajuste de bote eliminado."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe ese ajuste de bote."
           }
         }
       }

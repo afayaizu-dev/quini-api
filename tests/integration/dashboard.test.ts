@@ -288,6 +288,34 @@ describe("GET /api/v1/dashboard/temporada", () => {
     });
 
 
+    test("con un ajuste de bote global -> boteTotal = sumaBote + ajuste (no ligado a temporada)", async () => {
+        const admin = await createAdmin();
+        const adminHeader = await authHeader(admin);
+        const userA = await createUser();
+        const userB = await createUser();
+        const userC = await createUser();
+        await prepararJornadaConTresMiembros(
+            adminHeader,
+            await authHeader(userA),
+            await authHeader(userB),
+            await authHeader(userC),
+        );
+
+        const sinAjuste = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
+        expect(sinAjuste.status).toBe(200);
+        const boteSinAjuste = sinAjuste.body.boteTotal;
+
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(adminHeader)
+            .send({ importe: 10, motivo: "Corrección manual", fecha: "2026-09-01" });
+
+        const conAjuste = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
+
+        expect(conAjuste.status).toBe(200);
+        expect(conAjuste.body.boteTotal).toBe(boteSinAjuste + 10);
+    });
+
     test("sin temporada activa -> 404", async () => {
         const admin = await createAdmin();
         const adminHeader = await authHeader(admin);

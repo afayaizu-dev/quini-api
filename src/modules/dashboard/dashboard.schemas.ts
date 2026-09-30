@@ -60,6 +60,6 @@ export const DashboardTemporadaResponseSchema = z.object({
     usuariosMinAciertos: z.array(z.uuid()),
     premiosTotales: importeEuros,
     pagosTotales: importeEuros,
-    boteTotal: importeEuros,
+    boteTotal: importeConSigno,
     jornadasCalculadas: z.number().int().min(0),
 });

@@ -1,0 +1,41 @@
+import { eq, sql } from "drizzle-orm";
+import { db, type DbOrTx } from "../../db/index.js";
+import { ajustesBote } from "../../db/schema/ajustes_bote.js";
+
+export interface AjusteBoteInput {
+    importe: number;
+    motivo: string;
+    fecha: string;
+    registradoPor: string;
+}
+
+export interface AjusteBoteFila extends AjusteBoteInput {
+    id: string;
+    createdAt: Date;
+}
+
+export async function create(input: AjusteBoteInput, tx: DbOrTx = db): Promise<AjusteBoteFila> {
+    const [row] = await tx.insert(ajustesBote).values(input).returning();
+    /* v8 ignore next -- @preserve */
+    if (!row) throw new Error("No se pudo registrar el ajuste de bote");
+    return row;
+}
+
+export async function findAll(tx: DbOrTx = db): Promise<AjusteBoteFila[]> {
+    return tx.select().from(ajustesBote);
+}
+
+export async function findById(id: string, tx: DbOrTx = db): Promise<AjusteBoteFila | undefined> {
+    const [row] = await tx.select().from(ajustesBote).where(eq(ajustesBote.id, id));
+    return row;
+}
+
+export async function remove(id: string, tx: DbOrTx = db) {
+    await tx.delete(ajustesBote).where(eq(ajustesBote.id, id));
+}
+
+export async function sumaAjustesBote(tx: DbOrTx = db): Promise<number> {
+    const [row] = await tx.select({ total: sql<string>`COALESCE(SUM(${ajustesBote.importe}), 0)` }).from(ajustesBote);
+    /* v8 ignore next -- @preserve */
+    return row ? Number(row.total) : 0;
+}
