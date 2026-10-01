@@ -14,6 +14,7 @@ import "../modules/calculos/calculos.openapi.js";
 import "../modules/pagos/pagos.openapi.js";
 import "../modules/dashboard/dashboard.openapi.js";
 import "../modules/ajustes-bote/ajustes-bote.openapi.js";
+import "../modules/boletin/boletin.openapi.js";
 
 
 
@@ -38,6 +39,7 @@ const document = createDocument({
         { name: "pagos", description: "Gestión de pagos de los usuarios." },
         { name: "dashboard", description: "Agregados de miembros, jornadas y temporadas." },
         { name: "ajustes-bote", description: "Ajustes manuales globales del bote." },
+        { name: "boletin", description: "Envío del boletín de la jornada por correo a los socios." },
     ],
     paths,
     components: { securitySchemes },

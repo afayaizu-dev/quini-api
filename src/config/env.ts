@@ -24,6 +24,8 @@ const EnvSchema = z.object({
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     GOOGLE_REDIRECT_URI: z.url().optional(),
+    GMAIL_REFRESH_TOKEN: z.string().optional(),
+    GMAIL_SENDER_EMAIL: z.string().email().optional(),
     METRICS_ENABLED: booleanString.default(true),
     METRICS_PATH: z.string().default("/metrics"),
 });

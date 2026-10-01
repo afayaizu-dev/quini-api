@@ -11,6 +11,7 @@ import { calculosRouter } from "./modules/calculos/calculos.routes.js";
 import { pagosRouter } from "./modules/pagos/pagos.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { ajustesBoteRouter } from "./modules/ajustes-bote/ajustes-bote.routes.js";
+import { boletinRouter } from "./modules/boletin/boletin.routes.js";
 
 
 export const router = Router();
@@ -27,3 +28,4 @@ router.use("/calculos", calculosRouter);
 router.use("/pagos", pagosRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/ajustes-bote", ajustesBoteRouter);
+router.use("/boletin", boletinRouter);
