@@ -19,6 +19,8 @@ export type AjusteBoteIdParam = z.infer<typeof AjusteBoteIdParamSchema>;
 
 export const AjusteBoteResponseSchema = z.object({
     id: z.uuid(),
+    temporadaId: z.uuid(),
+    origenTemporadaId: z.uuid().nullable(),
     importe: importeConSigno,
     motivo: z.string(),
     fecha: z.iso.date(),

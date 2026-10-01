@@ -71,6 +71,13 @@
       "when": 1790755564375,
       "tag": "0009_marvelous_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790882663218,
+      "tag": "0010_bote_por_temporada",
+      "breakpoints": true
     }
   ]
 }

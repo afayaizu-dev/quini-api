@@ -11,10 +11,37 @@ function ajusteBoteBody(overrides: { importe?: number; motivo?: string; fecha?: 
     };
 }
 
+interface OpcionesTemporada {
+    fechaInicio?: string;
+    fechaFin?: string;
+    activar?: boolean;
+}
+
+async function crearTemporada(
+    header: Record<string, string>,
+    codigo = "2026-27",
+    opciones: OpcionesTemporada = {},
+): Promise<string> {
+    const creada = await request(app)
+        .post("/api/v1/temporadas")
+        .set(header)
+        .send({
+            codigo,
+            nombre: `Temporada ${codigo}`,
+            fechaInicio: opciones.fechaInicio ?? "2026-08-15",
+            fechaFin: opciones.fechaFin ?? "2027-05-30",
+        });
+    if (opciones.activar ?? true) {
+        await request(app).post(`/api/v1/temporadas/${codigo}/activar`).set(header);
+    }
+    return creada.body.id as string;
+}
+
 describe("POST /api/v1/ajustes-bote", () => {
-    test("válido (admin), importe negativo -> 201", async () => {
+    test("válido (admin), importe negativo -> 201 en la temporada activa", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
+        const temporadaId = await crearTemporada(header);
 
         const response = await request(app).post("/api/v1/ajustes-bote").set(header).send(ajusteBoteBody());
 
@@ -22,12 +49,20 @@ describe("POST /api/v1/ajustes-bote", () => {
         expect(response.headers.location).toBe(`/api/v1/ajustes-bote/${response.body.id}`);
         expect(response.body.importe).toBe(-25);
         expect(response.body.registradoPor).toBe(admin.id);
-        expectMatchesOpenApiSchema({ path: "/ajustes-bote", method: "post", status: 201, body: response.body });
+        expect(response.body.temporadaId).toBe(temporadaId);
+        expect(response.body.origenTemporadaId).toBeNull();
+        expectMatchesOpenApiSchema({
+            path: "/ajustes-bote",
+            method: "post",
+            status: 201,
+            body: response.body,
+        });
     });
 
     test("válido (admin), importe positivo -> 201", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
+        await crearTemporada(header);
 
         const response = await request(app)
             .post("/api/v1/ajustes-bote")
@@ -36,6 +71,17 @@ describe("POST /api/v1/ajustes-bote", () => {
 
         expect(response.status).toBe(201);
         expect(response.body.importe).toBe(30);
+    });
+
+    test("sin temporada activa -> 404", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporada(header, "2026-27", { activar: false });
+
+        const response = await request(app).post("/api/v1/ajustes-bote").set(header).send(ajusteBoteBody());
+
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe("NOT_FOUND");
     });
 
     test("como user -> 403", async () => {
@@ -95,6 +141,7 @@ describe("GET /api/v1/ajustes-bote", () => {
     test("como user -> 200, transparencia total", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
+        await crearTemporada(header);
         await request(app).post("/api/v1/ajustes-bote").set(header).send(ajusteBoteBody());
         await request(app)
             .post("/api/v1/ajustes-bote")
@@ -102,11 +149,18 @@ describe("GET /api/v1/ajustes-bote", () => {
             .send(ajusteBoteBody({ importe: 15 }));
 
         const user = await createUser();
-        const response = await request(app).get("/api/v1/ajustes-bote").set(await authHeader(user));
+        const response = await request(app)
+            .get("/api/v1/ajustes-bote")
+            .set(await authHeader(user));
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveLength(2);
-        expectMatchesOpenApiSchema({ path: "/ajustes-bote", method: "get", status: 200, body: response.body });
+        expectMatchesOpenApiSchema({
+            path: "/ajustes-bote",
+            method: "get",
+            status: 200,
+            body: response.body,
+        });
     });
 
     test("sin token -> 401", async () => {
@@ -119,6 +173,7 @@ describe("DELETE /api/v1/ajustes-bote/:id", () => {
     test("(admin) -> 204", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
+        await crearTemporada(header);
         const creado = await request(app).post("/api/v1/ajustes-bote").set(header).send(ajusteBoteBody());
 
         const response = await request(app).delete(`/api/v1/ajustes-bote/${creado.body.id}`).set(header);
@@ -131,6 +186,7 @@ describe("DELETE /api/v1/ajustes-bote/:id", () => {
     test("como user -> 403", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
+        await crearTemporada(header);
         const creado = await request(app).post("/api/v1/ajustes-bote").set(header).send(ajusteBoteBody());
 
         const user = await createUser();

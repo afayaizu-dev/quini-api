@@ -6,11 +6,19 @@ export interface AjusteBoteInput {
     importe: number;
     motivo: string;
     fecha: string;
+    temporadaId: string;
+    origenTemporadaId?: string | null;
     registradoPor: string;
 }
 
-export interface AjusteBoteFila extends AjusteBoteInput {
+export interface AjusteBoteFila {
     id: string;
+    importe: number;
+    motivo: string;
+    fecha: string;
+    temporadaId: string;
+    origenTemporadaId: string | null;
+    registradoPor: string;
     createdAt: Date;
 }
 

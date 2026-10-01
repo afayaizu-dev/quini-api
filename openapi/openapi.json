@@ -7207,7 +7207,7 @@
       "post": {
         "operationId": "ajustesBoteCreate",
         "summary": "Registra un ajuste manual del bote",
-        "description": "Ajuste global (no ligado a un usuario ni a una temporada) que suma o resta al bote total. El importe admite valores negativos.",
+        "description": "Ajuste manual que suma o resta al bote de la temporada activa. El importe admite valores negativos.",
         "tags": ["ajustes-bote"],
         "security": [
           {
@@ -7261,6 +7261,8 @@
               "application/json": {
                 "example": {
                   "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                  "temporadaId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "origenTemporadaId": null,
                   "importe": -25,
                   "motivo": "Corrección por error en el cálculo de la jornada 3",
                   "fecha": "2026-09-01",
@@ -7274,6 +7276,23 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporadaId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "origenTemporadaId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     },
                     "importe": {
                       "type": "number"
@@ -7297,7 +7316,16 @@
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                     }
                   },
-                  "required": ["id", "importe", "motivo", "fecha", "registradoPor", "createdAt"],
+                  "required": [
+                    "id",
+                    "temporadaId",
+                    "origenTemporadaId",
+                    "importe",
+                    "motivo",
+                    "fecha",
+                    "registradoPor",
+                    "createdAt"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -7311,6 +7339,9 @@
           },
           "403": {
             "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No hay ninguna temporada activa."
           }
         }
       },
@@ -7332,6 +7363,8 @@
                 "example": [
                   {
                     "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                    "temporadaId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "origenTemporadaId": null,
                     "importe": -25,
                     "motivo": "Corrección por error en el cálculo de la jornada 3",
                     "fecha": "2026-09-01",
@@ -7348,6 +7381,23 @@
                         "type": "string",
                         "format": "uuid",
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "temporadaId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "origenTemporadaId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       "importe": {
                         "type": "number"
@@ -7371,7 +7421,16 @@
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                       }
                     },
-                    "required": ["id", "importe", "motivo", "fecha", "registradoPor", "createdAt"],
+                    "required": [
+                      "id",
+                      "temporadaId",
+                      "origenTemporadaId",
+                      "importe",
+                      "motivo",
+                      "fecha",
+                      "registradoPor",
+                      "createdAt"
+                    ],
                     "additionalProperties": false
                   }
                 }
