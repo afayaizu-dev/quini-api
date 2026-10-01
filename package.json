@@ -19,6 +19,7 @@
     "db:down": "docker compose -f docker/docker-compose.yml down",
     "db:reset": "docker compose -f docker/docker-compose.yml down -v && npm run db:up",
     "db:psql": "docker compose -f docker/docker-compose.yml exec postgres psql -U quini -d quini",
+    "db:pull-prod": "bash docker/pull-prod.sh",
     "db:generate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs migrate",
     "db:studio": "node --env-file=.env node_modules/drizzle-kit/bin.cjs studio",
