@@ -132,7 +132,8 @@ registerPath("/temporadas/{codigo}", {
     delete: {
         operationId: "temporadasRemove",
         summary: "Elimina una temporada",
-        description: "Solo se puede borrar si no tiene jornadas asociadas (restricción RESTRICT en BD).",
+        description:
+            "Solo se puede borrar si no tiene jornadas ni ajustes de bote manuales y no es el origen del bote heredado de otra temporada (RESTRICT en BD). Su propio bote heredado se borra con ella.",
         tags: ["temporadas"],
         security: [{ bearerAuth: [] }],
         "x-required-role": "admin",
@@ -142,7 +143,7 @@ registerPath("/temporadas/{codigo}", {
             "401": { description: "Sin access token válido." },
             "403": { description: "El usuario autenticado no es admin." },
             "404": { description: "No existe una temporada con ese código." },
-            "409": { description: "La temporada tiene jornadas asociadas (RESTRICT)." },
+            "409": { description: "La temporada tiene jornadas o ajustes de bote asociados, o es origen de un bote heredado (RESTRICT)." },
         },
     },
 });
@@ -152,7 +153,7 @@ registerPath("/temporadas/{codigo}/activar", {
         operationId: "temporadasActivate",
         summary: "Marca una temporada como la activa",
         description:
-            "Desactiva cualquier otra temporada activa y activa esta, en una única transacción (garantizado además por un índice único parcial en BD).",
+            "Desactiva cualquier otra temporada activa y activa esta, en una única transacción (garantizado además por un índice único parcial en BD). Si la temporada que estaba activa empezó antes que esta, en la misma transacción se crea (o se recalcula, si ya existía) en esta un ajuste 'Bote heredado de <código anterior>' con el bote final de la anterior y fecha = fechaInicio. Re-activar la misma temporada o una más antigua no toca ningún bote heredado, y un bote heredado cuyo origen no es la temporada anterior activa tampoco se modifica.",
         tags: ["temporadas"],
         security: [{ bearerAuth: [] }],
         "x-required-role": "admin",

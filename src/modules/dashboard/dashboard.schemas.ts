@@ -44,6 +44,7 @@ export const DashboardJornadaResponseSchema = z.object({
     temporada: z.string(),
     pagosJornada: importeEuros,
     boteJornada: importeEuros,
+    boteJornadaAjustado: importeConSigno,
     premiosTotales: importeEuros,
     mediaAciertosDosApuestas: z.number().min(0).max(14).nullable(),
     mediaAciertosMaximos: z.number().min(0).max(14).nullable(),

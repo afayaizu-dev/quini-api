@@ -1101,7 +1101,7 @@
       "delete": {
         "operationId": "temporadasRemove",
         "summary": "Elimina una temporada",
-        "description": "Solo se puede borrar si no tiene jornadas asociadas (restricción RESTRICT en BD).",
+        "description": "Solo se puede borrar si no tiene jornadas ni ajustes de bote manuales y no es el origen del bote heredado de otra temporada (RESTRICT en BD). Su propio bote heredado se borra con ella.",
         "tags": ["temporadas"],
         "security": [
           {
@@ -1135,7 +1135,7 @@
             "description": "No existe una temporada con ese código."
           },
           "409": {
-            "description": "La temporada tiene jornadas asociadas (RESTRICT)."
+            "description": "La temporada tiene jornadas o ajustes de bote asociados, o es origen de un bote heredado (RESTRICT)."
           }
         }
       }
@@ -1144,7 +1144,7 @@
       "post": {
         "operationId": "temporadasActivate",
         "summary": "Marca una temporada como la activa",
-        "description": "Desactiva cualquier otra temporada activa y activa esta, en una única transacción (garantizado además por un índice único parcial en BD).",
+        "description": "Desactiva cualquier otra temporada activa y activa esta, en una única transacción (garantizado además por un índice único parcial en BD). Si la temporada que estaba activa empezó antes que esta, en la misma transacción se crea (o se recalcula, si ya existía) en esta un ajuste 'Bote heredado de <código anterior>' con el bote final de la anterior y fecha = fechaInicio. Re-activar la misma temporada o una más antigua no toca ningún bote heredado, y un bote heredado cuyo origen no es la temporada anterior activa tampoco se modifica.",
         "tags": ["temporadas"],
         "security": [
           {
@@ -6142,7 +6142,7 @@
             "description": "Temporada o jornada inexistentes; o no hay temporada activa y no se especificó ninguna."
           },
           "409": {
-            "description": "Temporada no activa, apuestas todavía abiertas, sin resultados registrados, o sin ninguna apuesta."
+            "description": "Temporada no activa (no se recalculan jornadas de temporadas cerradas: el bote heredado quedaría desfasado), apuestas todavía abiertas, sin resultados registrados, o sin ninguna apuesta."
           }
         }
       },
@@ -6857,7 +6857,7 @@
       "get": {
         "operationId": "dashboardJornada",
         "summary": "Agregados y clasificación de una jornada",
-        "description": "Solo disponible una vez la jornada tiene un cálculo ejecutado (POST /calculos).",
+        "description": "Solo disponible una vez la jornada tiene un cálculo ejecutado (POST /calculos). 'boteJornada' es el bote generado solo en esta jornada; 'boteJornadaAjustado' es el bote acumulado de la temporada hasta esta jornada: ajustes con fecha <= fecha de la jornada (el bote heredado cuenta siempre) más el bote de las jornadas con número <= este. En la última jornada coincide con 'boteTotal' de /dashboard/temporada salvo ajustes posteriores a ella.",
         "tags": ["dashboard"],
         "security": [
           {
@@ -6896,6 +6896,7 @@
                   "temporada": "2026-27",
                   "pagosJornada": 22,
                   "boteJornada": 17.49,
+                  "boteJornadaAjustado": 140.94,
                   "premiosTotales": 10.49,
                   "mediaAciertosDosApuestas": 7.2,
                   "mediaAciertosMaximos": 8.4,
@@ -6933,6 +6934,9 @@
                     "boteJornada": {
                       "type": "number",
                       "minimum": 0
+                    },
+                    "boteJornadaAjustado": {
+                      "type": "number"
                     },
                     "premiosTotales": {
                       "type": "number",
@@ -7054,6 +7058,7 @@
                     "temporada",
                     "pagosJornada",
                     "boteJornada",
+                    "boteJornadaAjustado",
                     "premiosTotales",
                     "mediaAciertosDosApuestas",
                     "mediaAciertosMaximos",
@@ -7080,7 +7085,7 @@
       "get": {
         "operationId": "dashboardTemporada",
         "summary": "Agregados de una temporada completa",
-        "description": "Máximos y mínimos de aciertos con quiénes los lograron (pueden ser varios), y los totales de premios, pagos y bote.",
+        "description": "Máximos y mínimos de aciertos con quiénes los lograron (pueden ser varios), y los totales de premios, pagos y bote. 'boteTotal' = ajustes de bote de esta temporada (incluido el heredado) + bote de sus jornadas calculadas.",
         "tags": ["dashboard"],
         "security": [
           {
@@ -7207,7 +7212,7 @@
       "post": {
         "operationId": "ajustesBoteCreate",
         "summary": "Registra un ajuste manual del bote",
-        "description": "Ajuste global (no ligado a un usuario ni a una temporada) que suma o resta al bote total. El importe admite valores negativos.",
+        "description": "Ajuste manual que suma o resta al bote de una temporada. Sin 'temporada' en el body se usa la activa; solo se admiten ajustes en la temporada activa. El importe admite valores negativos.",
         "tags": ["ajustes-bote"],
         "security": [
           {
@@ -7238,6 +7243,10 @@
                     "type": "string",
                     "format": "date",
                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "temporada": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}$"
                   }
                 },
                 "required": ["importe", "motivo", "fecha"],
@@ -7261,6 +7270,8 @@
               "application/json": {
                 "example": {
                   "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                  "temporadaId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                  "origenTemporadaId": null,
                   "importe": -25,
                   "motivo": "Corrección por error en el cálculo de la jornada 3",
                   "fecha": "2026-09-01",
@@ -7274,6 +7285,23 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "temporadaId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "origenTemporadaId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     },
                     "importe": {
                       "type": "number"
@@ -7297,41 +7325,80 @@
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                     }
                   },
-                  "required": ["id", "importe", "motivo", "fecha", "registradoPor", "createdAt"],
+                  "required": [
+                    "id",
+                    "temporadaId",
+                    "origenTemporadaId",
+                    "importe",
+                    "motivo",
+                    "fecha",
+                    "registradoPor",
+                    "createdAt"
+                  ],
                   "additionalProperties": false
                 }
               }
             }
           },
           "400": {
-            "description": "importe con más de 2 decimales, motivo vacío, o fecha con formato inválido."
+            "description": "importe con más de 2 decimales, motivo vacío, fecha o temporada con formato inválido."
           },
           "401": {
             "description": "Sin access token válido."
           },
           "403": {
             "description": "El usuario autenticado no es admin."
+          },
+          "404": {
+            "description": "No existe esa temporada, o no hay temporada activa y no se especificó ninguna."
+          },
+          "409": {
+            "description": "La temporada indicada no es la activa."
           }
         }
       },
       "get": {
         "operationId": "ajustesBoteFindAll",
-        "summary": "Lista todos los ajustes de bote",
-        "description": "Lista global de ajustes, sin filtrar por temporada. Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
+        "summary": "Lista los ajustes de bote de una temporada",
+        "description": "Sin '?temporada=', lista los de la temporada activa. Incluye el bote heredado (origenTemporadaId no nulo). Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
         "tags": ["ajustes-bote"],
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Lista de ajustes de bote.",
+            "description": "Ajustes de bote de la temporada, ordenados por fecha.",
             "content": {
               "application/json": {
                 "example": [
                   {
+                    "id": "019ffc0e-cccc-7c46-b05d-46bf7829c804",
+                    "temporadaId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "origenTemporadaId": "019ff7eb-1111-7b8c-a948-6ca9a14625e5",
+                    "importe": 123.45,
+                    "motivo": "Bote heredado de 2025-26",
+                    "fecha": "2026-08-15",
+                    "registradoPor": "019ff7eb-9999-7b8c-a948-6ca9a14625e6",
+                    "createdAt": "2026-08-15T10:00:00.000Z"
+                  },
+                  {
                     "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
+                    "temporadaId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "origenTemporadaId": null,
                     "importe": -25,
                     "motivo": "Corrección por error en el cálculo de la jornada 3",
                     "fecha": "2026-09-01",
@@ -7348,6 +7415,23 @@
                         "type": "string",
                         "format": "uuid",
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "temporadaId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "origenTemporadaId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       "importe": {
                         "type": "number"
@@ -7371,15 +7455,30 @@
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                       }
                     },
-                    "required": ["id", "importe", "motivo", "fecha", "registradoPor", "createdAt"],
+                    "required": [
+                      "id",
+                      "temporadaId",
+                      "origenTemporadaId",
+                      "importe",
+                      "motivo",
+                      "fecha",
+                      "registradoPor",
+                      "createdAt"
+                    ],
                     "additionalProperties": false
                   }
                 }
               }
             }
           },
+          "400": {
+            "description": "'temporada' con formato inválido."
+          },
           "401": {
             "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe esa temporada, o no hay temporada activa y no se especificó ninguna."
           }
         }
       }
@@ -7388,7 +7487,7 @@
       "delete": {
         "operationId": "ajustesBoteRemove",
         "summary": "Elimina un ajuste de bote",
-        "description": "Un ajuste mal apuntado se borra y se vuelve a crear; no existe PUT.",
+        "description": "Un ajuste mal apuntado se borra y se vuelve a crear; no existe PUT. Solo ajustes de la temporada activa.",
         "tags": ["ajustes-bote"],
         "security": [
           {
@@ -7419,6 +7518,9 @@
           },
           "404": {
             "description": "No existe ese ajuste de bote."
+          },
+          "409": {
+            "description": "El ajuste es un bote heredado, o pertenece a una temporada que no es la activa."
           }
         }
       }

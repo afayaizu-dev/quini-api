@@ -63,6 +63,7 @@ const jornadaEjemplo = {
     temporada: "2026-27",
     pagosJornada: 22.0,
     boteJornada: 17.49,
+    boteJornadaAjustado: 140.94,
     premiosTotales: 10.49,
     mediaAciertosDosApuestas: 7.2,
     mediaAciertosMaximos: 8.4,
@@ -105,7 +106,8 @@ registerPath("/dashboard/jornada", {
     get: {
         operationId: "dashboardJornada",
         summary: "Agregados y clasificación de una jornada",
-        description: "Solo disponible una vez la jornada tiene un cálculo ejecutado (POST /calculos).",
+        description:
+            "Solo disponible una vez la jornada tiene un cálculo ejecutado (POST /calculos). 'boteJornada' es el bote generado solo en esta jornada; 'boteJornadaAjustado' es el bote acumulado de la temporada hasta esta jornada: ajustes con fecha <= fecha de la jornada (el bote heredado cuenta siempre) más el bote de las jornadas con número <= este. En la última jornada coincide con 'boteTotal' de /dashboard/temporada salvo ajustes posteriores a ella.",
         tags: ["dashboard"],
         security: [{ bearerAuth: [] }],
         parameters: [jornadaQueryParam, temporadaQueryParam],
@@ -125,7 +127,8 @@ registerPath("/dashboard/temporada", {
     get: {
         operationId: "dashboardTemporada",
         summary: "Agregados de una temporada completa",
-        description: "Máximos y mínimos de aciertos con quiénes los lograron (pueden ser varios), y los totales de premios, pagos y bote.",
+        description:
+            "Máximos y mínimos de aciertos con quiénes los lograron (pueden ser varios), y los totales de premios, pagos y bote. 'boteTotal' = ajustes de bote de esta temporada (incluido el heredado) + bote de sus jornadas calculadas.",
         tags: ["dashboard"],
         security: [{ bearerAuth: [] }],
         parameters: [temporadaQueryParam],

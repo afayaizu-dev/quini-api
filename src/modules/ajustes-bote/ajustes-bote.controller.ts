@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { UnauthorizedError } from "../../core/errors.js";
 import * as ajustesBoteService from "./ajustes-bote.service.js";
-import type { CreateAjusteBoteInput, AjusteBoteIdParam } from "./ajustes-bote.schemas.js";
+import type { CreateAjusteBoteInput, AjusteBoteIdParam, AjustesBoteQuery } from "./ajustes-bote.schemas.js";
 
 function requireAuthContext(req: Request) {
     /* v8 ignore next -- @preserve */
@@ -18,8 +18,9 @@ export async function create(req: Request, res: Response): Promise<void> {
     res.status(201).location(`/api/v1/ajustes-bote/${ajuste.id}`).json(ajuste);
 }
 
-export async function findAll(_req: Request, res: Response): Promise<void> {
-    const lista = await ajustesBoteService.findAll();
+export async function findAll(req: Request, res: Response): Promise<void> {
+    const { temporada } = req.query as unknown as AjustesBoteQuery;
+    const lista = await ajustesBoteService.findAll(temporada);
     res.status(200).json(lista);
 }
 

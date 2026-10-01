@@ -78,12 +78,21 @@ export async function jornada(query: DashboardJornadaQuery) {
     }
 
     const agg = await dashboardRepository.agregados({ jornadaId: jornadaResuelta.id });
+    const acumulado = await dashboardRepository.agregados({
+        temporadaId: temporadaActual.id,
+        hastaNumeroJornada: query.jornada,
+    });
+    const ajustesHastaJornada = await dashboardRepository.sumaAjustesBote({
+        temporadaId: temporadaActual.id,
+        hastaFecha: jornadaResuelta.fecha,
+    });
 
     return {
         jornada: query.jornada,
         temporada: temporadaActual.codigo,
         pagosJornada: agg.sumaImporteEscalon,
         boteJornada: agg.sumaBote,
+        boteJornadaAjustado: redondear(ajustesHastaJornada + acumulado.sumaBote),
         premiosTotales: agg.sumaPremios,
         mediaAciertosDosApuestas: agg.mediaAciertosAmbas,
         mediaAciertosMaximos: agg.mediaAciertosMax,
@@ -94,7 +103,7 @@ export async function jornada(query: DashboardJornadaQuery) {
 export async function temporada(query: DashboardTemporadaQuery) {
     const temporadaResuelta = await temporadasService.resolveTemporada(query.temporada);
     const agg = await dashboardRepository.agregados({ temporadaId: temporadaResuelta.id });
-    const ajustesBote = await dashboardRepository.sumaAjustesBote();
+    const boteTotal = await dashboardRepository.boteTemporada(temporadaResuelta.id);
 
     const usuariosMaxAciertos =
         agg.maxAciertos === null ? [] : await dashboardRepository.usuariosConAciertos(temporadaResuelta.id, agg.maxAciertos);
@@ -109,7 +118,7 @@ export async function temporada(query: DashboardTemporadaQuery) {
         usuariosMinAciertos,
         premiosTotales: agg.sumaPremios,
         pagosTotales: agg.sumaImporteEscalon,
-        boteTotal: ajustesBote + agg.sumaBote,
+        boteTotal,
         jornadasCalculadas: agg.jornadasCalculadas,
     };
 }

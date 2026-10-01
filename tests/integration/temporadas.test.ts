@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
 import request from "supertest";
 import { app, createAdmin, createUser, authHeader } from "../helpers/auth.js";
+import { eq } from "drizzle-orm";
 import { db } from "../../src/db/index.js";
+import { ajustesBote } from "../../src/db/schema/ajustes_bote.js";
 import { jornadas } from "../../src/db/schema/jornadas.js";
+import { resultadosMiembro } from "../../src/db/schema/resultados_miembro.js";
 import { expectMatchesOpenApiSchema } from "../helpers/openapi.js";
 import * as temporadasService from "../../src/modules/temporadas/temporadas.service.js";
 
@@ -250,5 +253,295 @@ describe("resolveTemporada sin código (unit, sin HTTP)", () => {
         await request(app).post("/api/v1/temporadas").set(header).send(temporadaBody());
 
         await expect(temporadasService.resolveTemporada()).rejects.toThrow("No hay ninguna temporada activa.");
+    });
+});
+
+const TEMPORADA_A = {
+    codigo: "2025-26",
+    nombre: "Temporada 2025/26",
+    fechaInicio: "2025-08-15",
+    fechaFin: "2026-05-30",
+};
+const TEMPORADA_B = {
+    codigo: "2026-27",
+    nombre: "Temporada 2026/27",
+    fechaInicio: "2026-08-15",
+    fechaFin: "2027-05-30",
+};
+
+const TEMPORADA_C = {
+    codigo: "2027-28",
+    nombre: "Temporada 2027/28",
+    fechaInicio: "2027-08-15",
+    fechaFin: "2028-05-30",
+};
+
+interface AjusteRespuesta {
+    id: string;
+    importe: number;
+    motivo: string;
+    fecha: string;
+    temporadaId: string;
+    origenTemporadaId: string | null;
+    registradoPor: string;
+}
+
+async function crearTemporadaHttp(
+    header: Record<string, string>,
+    datos: typeof TEMPORADA_A,
+): Promise<string> {
+    const response = await request(app)
+        .post("/api/v1/temporadas")
+        .set(header)
+        .send(temporadaBody(datos));
+    expect(response.status).toBe(201);
+    return response.body.id as string;
+}
+
+async function activar(header: Record<string, string>, codigo: string) {
+    const response = await request(app).post(`/api/v1/temporadas/${codigo}/activar`).set(header);
+    expect(response.status).toBe(200);
+}
+
+async function sembrarJornadaCalculada(
+    temporadaId: string,
+    numeroJornada: number,
+    fecha: string,
+    usuarioId: string,
+    bote: number,
+) {
+    const [jornada] = await db
+        .insert(jornadas)
+        .values({ temporadaId, numeroJornada, fecha, createdBy: usuarioId })
+        .returning();
+    if (!jornada) throw new Error("No se pudo sembrar la jornada");
+    await db.insert(resultadosMiembro).values({
+        jornadaId: jornada.id,
+        usuarioId,
+        aciertosMax: 10,
+        ranking: 1,
+        escalon: 1,
+        importeEscalon: 1.5,
+        bote,
+    });
+}
+
+async function ajustesDe(
+    header: Record<string, string>,
+    codigo: string,
+): Promise<AjusteRespuesta[]> {
+    const response = await request(app).get(`/api/v1/ajustes-bote?temporada=${codigo}`).set(header);
+    expect(response.status).toBe(200);
+    return response.body as AjusteRespuesta[];
+}
+
+async function boteTotalDe(header: Record<string, string>, codigo: string): Promise<number> {
+    const response = await request(app)
+        .get(`/api/v1/dashboard/temporada?temporada=${codigo}`)
+        .set(header);
+    expect(response.status).toBe(200);
+    return response.body.boteTotal as number;
+}
+
+// A activa con bote final 12.30 = ajustes (10.10 - 2.05) + jornadas (3.35 + 0.90). B creada sin activar.
+async function prepararTemporadaAConBote(header: Record<string, string>, adminId: string) {
+    const idA = await crearTemporadaHttp(header, TEMPORADA_A);
+    const idB = await crearTemporadaHttp(header, TEMPORADA_B);
+    await activar(header, TEMPORADA_A.codigo);
+    const ajusteInicial = await request(app)
+        .post("/api/v1/ajustes-bote")
+        .set(header)
+        .send({ importe: 10.1, motivo: "Bote inicial", fecha: "2025-08-15" });
+    expect(ajusteInicial.status).toBe(201);
+    const ajusteGastos = await request(app)
+        .post("/api/v1/ajustes-bote")
+        .set(header)
+        .send({ importe: -2.05, motivo: "Gastos", fecha: "2025-09-01" });
+    expect(ajusteGastos.status).toBe(201);
+    await sembrarJornadaCalculada(idA, 1, "2025-08-20", adminId, 3.35);
+    await sembrarJornadaCalculada(idA, 2, "2025-08-27", adminId, 0.9);
+    return { idA, idB };
+}
+
+describe("Bote heredado al activar una temporada", () => {
+    test("sin temporada activa previa -> no se crea bote heredado", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporadaHttp(header, TEMPORADA_A);
+
+        await activar(header, TEMPORADA_A.codigo);
+
+        expect(await ajustesDe(header, TEMPORADA_A.codigo)).toEqual([]);
+    });
+
+    test("activar una temporada posterior hereda el bote final de la anterior (ajustes + jornadas)", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        const { idA, idB } = await prepararTemporadaAConBote(header, admin.id);
+
+        await activar(header, TEMPORADA_B.codigo);
+
+        const ajustesB = await ajustesDe(header, TEMPORADA_B.codigo);
+        expect(ajustesB).toHaveLength(1);
+        expect(ajustesB[0]).toMatchObject({
+            importe: 12.3,
+            motivo: "Bote heredado de 2025-26",
+            fecha: TEMPORADA_B.fechaInicio,
+            temporadaId: idB,
+            origenTemporadaId: idA,
+            registradoPor: admin.id,
+        });
+        expect(await boteTotalDe(header, TEMPORADA_A.codigo)).toBe(12.3);
+        expect(await boteTotalDe(header, TEMPORADA_B.codigo)).toBe(12.3);
+    });
+
+    test("activar otra vez la temporada ya activa no duplica ni recalcula el heredado", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await prepararTemporadaAConBote(header, admin.id);
+        await activar(header, TEMPORADA_B.codigo);
+        const antes = await ajustesDe(header, TEMPORADA_B.codigo);
+        expect(antes).toHaveLength(1);
+
+        await activar(header, TEMPORADA_B.codigo);
+
+        expect(await ajustesDe(header, TEMPORADA_B.codigo)).toEqual(antes);
+    });
+
+    test("reactivar una temporada más antigua no le crea heredado y la nueva conserva el suyo", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await prepararTemporadaAConBote(header, admin.id);
+        await activar(header, TEMPORADA_B.codigo);
+
+        await activar(header, TEMPORADA_A.codigo);
+
+        const ajustesA = await ajustesDe(header, TEMPORADA_A.codigo);
+        expect(ajustesA).toHaveLength(2);
+        expect(ajustesA.every((a) => a.origenTemporadaId === null)).toBe(true);
+        const ajustesB = await ajustesDe(header, TEMPORADA_B.codigo);
+        expect(ajustesB).toHaveLength(1);
+        expect(ajustesB[0]?.importe).toBe(12.3);
+    });
+
+    test("volver a activar la nueva tras corregir la antigua recalcula su heredado sin duplicarlo", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        const { idA } = await prepararTemporadaAConBote(header, admin.id);
+        await activar(header, TEMPORADA_B.codigo);
+        const [heredadoInicial] = await ajustesDe(header, TEMPORADA_B.codigo);
+        await activar(header, TEMPORADA_A.codigo);
+        const correccion = await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send({ importe: 5, motivo: "Corrección tardía", fecha: "2026-05-01" });
+        expect(correccion.status).toBe(201);
+
+        await activar(header, TEMPORADA_B.codigo);
+
+        const ajustesB = await ajustesDe(header, TEMPORADA_B.codigo);
+        expect(ajustesB).toHaveLength(1);
+        expect(ajustesB[0]?.id).toBe(heredadoInicial?.id);
+        expect(ajustesB[0]).toMatchObject({
+            importe: 17.3,
+            motivo: "Bote heredado de 2025-26",
+            fecha: TEMPORADA_B.fechaInicio,
+            origenTemporadaId: idA,
+            registradoPor: admin.id,
+        });
+        expect(await boteTotalDe(header, TEMPORADA_B.codigo)).toBe(17.3);
+    });
+
+    test("activar C directamente tras A->B->C->A no reemplaza el heredado de C (origen B)", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        const { idB } = await prepararTemporadaAConBote(header, admin.id);
+        const idC = await crearTemporadaHttp(header, TEMPORADA_C);
+        await activar(header, TEMPORADA_B.codigo);
+        await sembrarJornadaCalculada(idB, 1, "2026-09-01", admin.id, 2);
+        await activar(header, TEMPORADA_C.codigo);
+        const [heredadoInicial] = await ajustesDe(header, TEMPORADA_C.codigo);
+        expect(heredadoInicial).toMatchObject({
+            importe: 14.3,
+            motivo: "Bote heredado de 2026-27",
+            origenTemporadaId: idB,
+        });
+        await activar(header, TEMPORADA_A.codigo);
+
+        await activar(header, TEMPORADA_C.codigo);
+
+        const ajustesC = await ajustesDe(header, TEMPORADA_C.codigo);
+        expect(ajustesC).toHaveLength(1);
+        expect(ajustesC[0]).toEqual(heredadoInicial);
+        expect(ajustesC[0]?.temporadaId).toBe(idC);
+    });
+
+    test("el heredado cuenta en boteJornadaAjustado aunque la jornada sea anterior a fechaInicio", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        const { idB } = await prepararTemporadaAConBote(header, admin.id);
+        await activar(header, TEMPORADA_B.codigo);
+        await sembrarJornadaCalculada(idB, 1, "2026-08-10", admin.id, 1.5);
+
+        const response = await request(app).get("/api/v1/dashboard/jornada?jornada=1").set(header);
+
+        expect(response.status).toBe(200);
+        expect(response.body.boteJornadaAjustado).toBe(13.8);
+    });
+});
+
+describe("DELETE de temporadas con ajustes de bote", () => {
+    test("temporada cuyo único ajuste es su bote heredado -> 204 y el heredado se borra con ella", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporadaHttp(header, TEMPORADA_A);
+        const idB = await crearTemporadaHttp(header, TEMPORADA_B);
+        await activar(header, TEMPORADA_A.codigo);
+        await activar(header, TEMPORADA_B.codigo);
+        await activar(header, TEMPORADA_A.codigo);
+
+        const response = await request(app)
+            .delete(`/api/v1/temporadas/${TEMPORADA_B.codigo}`)
+            .set(header);
+
+        expect(response.status).toBe(204);
+        expect(
+            await db.select().from(ajustesBote).where(eq(ajustesBote.temporadaId, idB)),
+        ).toHaveLength(0);
+    });
+
+    test("temporada con ajustes manuales -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporadaHttp(header, TEMPORADA_A);
+        await activar(header, TEMPORADA_A.codigo);
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send({ importe: 10, motivo: "Bote inicial", fecha: "2025-08-15" });
+
+        const response = await request(app)
+            .delete(`/api/v1/temporadas/${TEMPORADA_A.codigo}`)
+            .set(header);
+
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe(
+            "No se puede borrar una temporada que tiene jornadas o ajustes de bote asociados.",
+        );
+    });
+
+    test("temporada que es origen del bote heredado de otra -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporadaHttp(header, TEMPORADA_A);
+        await crearTemporadaHttp(header, TEMPORADA_B);
+        await activar(header, TEMPORADA_A.codigo);
+        await activar(header, TEMPORADA_B.codigo);
+
+        const response = await request(app)
+            .delete(`/api/v1/temporadas/${TEMPORADA_A.codigo}`)
+            .set(header);
+
+        expect(response.status).toBe(409);
     });
 });

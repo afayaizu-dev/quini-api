@@ -170,6 +170,28 @@ describe("POST /api/v1/calculos", () => {
         expect(response.status).toBe(409);
     });
 
+    test("recalcular una jornada de una temporada ya no activa -> 409 explícito y no toca la liquidación", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await prepararJornadaCalculable(header);
+        const primero = await request(app).post("/api/v1/calculos").set(header).send({ jornada: 1 });
+        expect(primero.status).toBe(200);
+        await crearTemporada(header, "2025-26", true);
+
+        const response = await request(app)
+            .post("/api/v1/calculos")
+            .set(header)
+            .send({ jornada: 1, temporada: "2026-27" });
+
+        expect(response.status).toBe(409);
+        expect(response.body.error).toBe("CONFLICT");
+        expect(response.body.message).toBe(
+            "La temporada '2026-27' no está activa: no se pueden recalcular sus jornadas.",
+        );
+        const guardado = await request(app).get("/api/v1/calculos?jornada=1&temporada=2026-27").set(header);
+        expect(guardado.body).toEqual(primero.body);
+    });
+
     test("sin temporada activa y sin temporada en el body -> 404", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);

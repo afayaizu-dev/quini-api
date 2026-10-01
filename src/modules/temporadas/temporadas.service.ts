@@ -1,5 +1,7 @@
 import { ConflictError, NotFoundError } from "../../core/errors.js";
 import { db, type DbOrTx } from "../../db/index.js";
+import * as ajustesBoteRepository from "../ajustes-bote/ajustes-bote.repository.js";
+import * as dashboardRepository from "../dashboard/dashboard.repository.js";
 import * as temporadasRepository from "./temporadas.repository.js";
 import type { CreateTemporadaInput, UpdateTemporadaInput } from "./temporadas.schemas.js";
 import { isUniqueViolation, isForeignKeyViolation } from "../../core/error.js";
@@ -44,22 +46,68 @@ export async function update(codigo: string, input: UpdateTemporadaInput) {
 }
 
 export async function remove(codigo: string) {
-    await resolveTemporada(codigo);
+    const temporada = await resolveTemporada(codigo);
     try {
-        await temporadasRepository.remove(codigo);
+        await db.transaction(async (tx) => {
+            // El heredado propio se va con la temporada; jornadas, ajustes manuales o ser origen
+            // del heredado de otra temporada siguen bloqueando por FK RESTRICT.
+            await ajustesBoteRepository.removeHeredado(temporada.id, tx);
+            await temporadasRepository.remove(codigo, tx);
+        });
     } catch (err) {
         /* v8 ignore next -- @preserve */
         if (isForeignKeyViolation(err)) {
-            throw new ConflictError("No se puede borrar una temporada que tiene jornadas asociadas.");
+            throw new ConflictError(
+                "No se puede borrar una temporada que tiene jornadas o ajustes de bote asociados.",
+            );
         }
         /* v8 ignore next -- @preserve */
         throw err;
     }
 }
 
-export async function activate(codigo: string) {
+interface TemporadaRef {
+    id: string;
+    codigo: string;
+    fechaInicio: string;
+}
+
+// Crea (o recalcula, si ya existe) el ajuste "Bote heredado de <anterior>" en la nueva temporada.
+// Un heredado cuyo origen no es `anterior` no se toca: su bote de origen seguiría perdiéndose si se sobrescribiera.
+async function registrarBoteHeredado(
+    anterior: TemporadaRef,
+    nueva: TemporadaRef,
+    registradoPor: string,
+    tx: DbOrTx,
+) {
+    const existente = await ajustesBoteRepository.findHeredado(nueva.id, tx);
+    if (existente && existente.origenTemporadaId !== anterior.id) {
+        return;
+    }
+    const datos = {
+        importe: await dashboardRepository.boteTemporada(anterior.id, tx),
+        motivo: `Bote heredado de ${anterior.codigo}`,
+        fecha: nueva.fechaInicio,
+        temporadaId: nueva.id,
+        origenTemporadaId: anterior.id,
+        registradoPor,
+    };
+    if (existente) {
+        await ajustesBoteRepository.updateHeredado(existente.id, datos, tx);
+    } else {
+        await ajustesBoteRepository.create(datos, tx);
+    }
+}
+
+export async function activate(codigo: string, registradoPor: string) {
     return db.transaction(async (tx) => {
-        await resolveTemporada(codigo, tx);
-        return temporadasRepository.activate(codigo, tx);
+        const nueva = await resolveTemporada(codigo, tx);
+        const anterior = await temporadasRepository.findActiva(tx);
+        const activada = await temporadasRepository.activate(codigo, tx);
+        // Solo se hereda hacia delante: re-activar la misma o una temporada más antigua no toca heredados.
+        if (anterior && anterior.id !== nueva.id && anterior.fechaInicio < nueva.fechaInicio) {
+            await registrarBoteHeredado(anterior, nueva, registradoPor, tx);
+        }
+        return activada;
     });
 }

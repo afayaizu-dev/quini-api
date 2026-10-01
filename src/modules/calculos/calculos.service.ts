@@ -74,7 +74,9 @@ function toResponse(numeroJornada: number, temporadaCodigo: string, filas: Liqui
 export async function ejecutar(input: EjecutarCalculoInput) {
     const temporada = await temporadasService.resolveTemporada(input.temporada);
     if (!temporada.activa) {
-        throw new ConflictError(`La temporada '${temporada.codigo}' no está activa.`);
+        throw new ConflictError(
+            `La temporada '${temporada.codigo}' no está activa: no se pueden recalcular sus jornadas.`,
+        );
     }
 
     const jornada = await jornadasService.findByNumero(input.jornada, temporada.codigo);

@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { ajustesBote } from "../../db/schema/ajustes_bote.js";
 
@@ -6,11 +6,19 @@ export interface AjusteBoteInput {
     importe: number;
     motivo: string;
     fecha: string;
+    temporadaId: string;
+    origenTemporadaId?: string | null;
     registradoPor: string;
 }
 
-export interface AjusteBoteFila extends AjusteBoteInput {
+export interface AjusteBoteFila {
     id: string;
+    importe: number;
+    motivo: string;
+    fecha: string;
+    temporadaId: string;
+    origenTemporadaId: string | null;
+    registradoPor: string;
     createdAt: Date;
 }
 
@@ -21,8 +29,12 @@ export async function create(input: AjusteBoteInput, tx: DbOrTx = db): Promise<A
     return row;
 }
 
-export async function findAll(tx: DbOrTx = db): Promise<AjusteBoteFila[]> {
-    return tx.select().from(ajustesBote);
+export async function findByTemporada(temporadaId: string, tx: DbOrTx = db): Promise<AjusteBoteFila[]> {
+    return tx
+        .select()
+        .from(ajustesBote)
+        .where(eq(ajustesBote.temporadaId, temporadaId))
+        .orderBy(asc(ajustesBote.fecha), asc(ajustesBote.createdAt));
 }
 
 export async function findById(id: string, tx: DbOrTx = db): Promise<AjusteBoteFila | undefined> {
@@ -34,8 +46,27 @@ export async function remove(id: string, tx: DbOrTx = db) {
     await tx.delete(ajustesBote).where(eq(ajustesBote.id, id));
 }
 
-export async function sumaAjustesBote(tx: DbOrTx = db): Promise<number> {
-    const [row] = await tx.select({ total: sql<string>`COALESCE(SUM(${ajustesBote.importe}), 0)` }).from(ajustesBote);
-    /* v8 ignore next -- @preserve */
-    return row ? Number(row.total) : 0;
+export async function findHeredado(
+    temporadaId: string,
+    tx: DbOrTx = db,
+): Promise<AjusteBoteFila | undefined> {
+    const [row] = await tx
+        .select()
+        .from(ajustesBote)
+        .where(and(eq(ajustesBote.temporadaId, temporadaId), isNotNull(ajustesBote.origenTemporadaId)));
+    return row;
+}
+
+export async function removeHeredado(temporadaId: string, tx: DbOrTx = db): Promise<void> {
+    await tx
+        .delete(ajustesBote)
+        .where(and(eq(ajustesBote.temporadaId, temporadaId), isNotNull(ajustesBote.origenTemporadaId)));
+}
+
+export async function updateHeredado(
+    id: string,
+    input: AjusteBoteInput,
+    tx: DbOrTx = db,
+): Promise<void> {
+    await tx.update(ajustesBote).set(input).where(eq(ajustesBote.id, id));
 }
