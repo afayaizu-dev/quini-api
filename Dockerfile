@@ -13,7 +13,9 @@ RUN npm run build
 # ---- runtime: solo lo necesario para ejecutar en producción ----
 FROM node:22-alpine AS runtime
 WORKDIR /app
+ARG GIT_SHA
 ENV NODE_ENV=production
+ENV APP_COMMIT=$GIT_SHA
 RUN npm install -g npm@12.0.2
 
 COPY package.json package-lock.json ./

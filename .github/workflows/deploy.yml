@@ -28,6 +28,8 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           tags: |
             ghcr.io/afayaizu-dev/quini-api:${{ github.sha }}
             ghcr.io/afayaizu-dev/quini-api:latest

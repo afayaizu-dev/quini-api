@@ -14,6 +14,10 @@ import swaggerUi from "swagger-ui-express";
 import { globalRateLimit } from "./middleware/rate-limit.js";
 
 
+const { version } = JSON.parse(readFileSync(path.join(process.cwd(), "package.json"), "utf-8")) as {
+    version: string;
+};
+
 export function createApp(): Application {
     const app = express();
 
@@ -31,7 +35,7 @@ export function createApp(): Application {
 
 
     app.get("/health", (_req, res) => {
-        res.status(200).json({ status: "ok", uptime: process.uptime() });
+        res.status(200).json({ status: "ok", version, commit: env.APP_COMMIT ?? null, uptime: process.uptime() });
     });
 
     app.use("/api/v1", router);
