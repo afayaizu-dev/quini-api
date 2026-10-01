@@ -61,7 +61,7 @@ registerPath("/calculos", {
             "401": { description: "Sin access token válido." },
             "403": { description: "El usuario autenticado no es admin." },
             "404": { description: "Temporada o jornada inexistentes; o no hay temporada activa y no se especificó ninguna." },
-            "409": { description: "Temporada no activa, apuestas todavía abiertas, sin resultados registrados, o sin ninguna apuesta." },
+            "409": { description: "Temporada no activa (no se recalculan jornadas de temporadas cerradas: el bote heredado quedaría desfasado), apuestas todavía abiertas, sin resultados registrados, o sin ninguna apuesta." },
         },
     },
     get: {

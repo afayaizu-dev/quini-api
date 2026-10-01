@@ -6142,7 +6142,7 @@
             "description": "Temporada o jornada inexistentes; o no hay temporada activa y no se especificó ninguna."
           },
           "409": {
-            "description": "Temporada no activa, apuestas todavía abiertas, sin resultados registrados, o sin ninguna apuesta."
+            "description": "Temporada no activa (no se recalculan jornadas de temporadas cerradas: el bote heredado quedaría desfasado), apuestas todavía abiertas, sin resultados registrados, o sin ninguna apuesta."
           }
         }
       },
