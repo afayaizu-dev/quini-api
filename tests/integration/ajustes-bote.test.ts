@@ -31,8 +31,10 @@ async function crearTemporada(
             fechaInicio: opciones.fechaInicio ?? "2026-08-15",
             fechaFin: opciones.fechaFin ?? "2027-05-30",
         });
+    expect(creada.status).toBe(201);
     if (opciones.activar ?? true) {
-        await request(app).post(`/api/v1/temporadas/${codigo}/activar`).set(header);
+        const activada = await request(app).post(`/api/v1/temporadas/${codigo}/activar`).set(header);
+        expect(activada.status).toBe(200);
     }
     return creada.body.id as string;
 }
@@ -142,11 +144,13 @@ describe("GET /api/v1/ajustes-bote", () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearTemporada(header);
-        await request(app).post("/api/v1/ajustes-bote").set(header).send(ajusteBoteBody());
-        await request(app)
+        const primerAjuste = await request(app).post("/api/v1/ajustes-bote").set(header).send(ajusteBoteBody());
+        expect(primerAjuste.status).toBe(201);
+        const segundoAjuste = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(header)
             .send(ajusteBoteBody({ importe: 15 }));
+        expect(segundoAjuste.status).toBe(201);
 
         const user = await createUser();
         const response = await request(app)
@@ -215,15 +219,17 @@ describe("Ajustes de bote por temporada", () => {
     // así estos tests no dependen de la lógica de herencia (Task 5).
     async function dosTemporadasConAjustes(header: Record<string, string>) {
         await crearTemporada(header, "2026-27");
-        await request(app)
+        const ajusteActual = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(header)
             .send(ajusteBoteBody({ importe: 15, fecha: "2026-09-01" }));
+        expect(ajusteActual.status).toBe(201);
         await crearTemporada(header, "2025-26", { fechaInicio: "2025-08-15", fechaFin: "2026-05-30" });
-        await request(app)
+        const ajusteAntiguo = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(header)
             .send(ajusteBoteBody({ importe: -25, fecha: "2025-09-01" }));
+        expect(ajusteAntiguo.status).toBe(201);
     }
 
     test("GET sin ?temporada -> solo los ajustes de la temporada activa", async () => {
@@ -348,10 +354,11 @@ describe("DELETE del bote heredado", () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
         await crearTemporada(header, "2025-26", { fechaInicio: "2025-08-15", fechaFin: "2026-05-30" });
-        await request(app)
+        const ajusteOrigen = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(header)
             .send(ajusteBoteBody({ importe: 10 }));
+        expect(ajusteOrigen.status).toBe(201);
         await crearTemporada(header, "2026-27");
         const lista = await request(app).get("/api/v1/ajustes-bote").set(header);
         const heredado = (lista.body as Array<{ id: string; origenTemporadaId: string | null }>).find(

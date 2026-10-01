@@ -31,11 +31,13 @@ async function crearYActivarTemporada(
     fechaInicio: string,
     fechaFin: string,
 ) {
-    await request(app)
+    const creada = await request(app)
         .post("/api/v1/temporadas")
         .set(header)
         .send({ codigo, nombre: `Temporada ${codigo}`, fechaInicio, fechaFin });
-    await request(app).post(`/api/v1/temporadas/${codigo}/activar`).set(header);
+    expect(creada.status).toBe(201);
+    const activada = await request(app).post(`/api/v1/temporadas/${codigo}/activar`).set(header);
+    expect(activada.status).toBe(200);
 }
 
 function partidosValidos() {
@@ -56,7 +58,7 @@ async function crearJornadaLista(header: Record<string, string>) {
 }
 
 async function abrirApuestas(header: Record<string, string>, numeroJornada = 1) {
-    await request(app)
+    const response = await request(app)
         .put(`/api/v1/jornadas/${numeroJornada}/fechas`)
         .set(header)
         .send({
@@ -64,10 +66,11 @@ async function abrirApuestas(header: Record<string, string>, numeroJornada = 1) 
             fechaCierreApuestas: "2099-01-01T00:00:00Z",
             fechaCierreJornada: null,
         });
+    expect(response.status).toBe(200);
 }
 
 async function cerrarVentanaApuestas(header: Record<string, string>, numeroJornada = 1) {
-    await request(app)
+    const response = await request(app)
         .put(`/api/v1/jornadas/${numeroJornada}/fechas`)
         .set(header)
         .send({
@@ -75,6 +78,7 @@ async function cerrarVentanaApuestas(header: Record<string, string>, numeroJorna
             fechaCierreApuestas: "2020-06-01T00:00:00Z",
             fechaCierreJornada: null,
         });
+    expect(response.status).toBe(200);
 }
 
 function resultadosBody() {
@@ -102,19 +106,25 @@ async function calcularJornadaConTresMiembros(
     numeroJornada: number,
     fecha: string,
 ) {
-    await request(app)
+    const jornada = await request(app)
         .post("/api/v1/jornadas")
         .set(adminHeader)
         .send({ numeroJornada, fecha, partidos: partidosValidos() });
+    expect(jornada.status).toBe(201);
     await abrirApuestas(adminHeader, numeroJornada);
     const aciertos = [10, 10, 4];
     for (const [i, header] of headers.entries()) {
-        await request(app)
+        const apuesta = await request(app)
             .post(`/api/v1/jornadas/${numeroJornada}/apuestas`)
             .set(header)
             .send({ numeroApuesta: 1, partidos: partidosConAciertos(aciertos[i] as number) });
+        expect(apuesta.status).toBe(201);
     }
-    await request(app).put(`/api/v1/jornadas/${numeroJornada}/resultados`).set(adminHeader).send(resultadosBody());
+    const resultados = await request(app)
+        .put(`/api/v1/jornadas/${numeroJornada}/resultados`)
+        .set(adminHeader)
+        .send(resultadosBody());
+    expect(resultados.status).toBe(201);
     await cerrarVentanaApuestas(adminHeader, numeroJornada);
     const calculo = await request(app).post("/api/v1/calculos").set(adminHeader).send({ jornada: numeroJornada });
     expect(calculo.status).toBe(200);
@@ -266,10 +276,11 @@ describe("GET /api/v1/dashboard/jornada", () => {
 
     test("en la última jornada y sin ajustes posteriores, boteJornadaAjustado == boteTotal", async () => {
         const { adminHeader, headers } = await prepararTemporadaConEquipos();
-        await request(app)
+        const ajuste = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(adminHeader)
             .send({ importe: 5.55, motivo: "Bote heredado manual", fecha: "2026-08-15" });
+        expect(ajuste.status).toBe(201);
         // Cada jornada deja 2.80 de bote (0.90 + 0.90 + 1.00).
         await calcularJornadaConTresMiembros(adminHeader, headers, 1, "2026-08-20");
         await calcularJornadaConTresMiembros(adminHeader, headers, 2, "2026-08-27");
@@ -292,7 +303,8 @@ describe("GET /api/v1/dashboard/jornada", () => {
             { importe: 4, motivo: "Posterior a la última jornada", fecha: "2026-09-30" },
         ];
         for (const ajuste of ajustes) {
-            await request(app).post("/api/v1/ajustes-bote").set(adminHeader).send(ajuste);
+            const creado = await request(app).post("/api/v1/ajustes-bote").set(adminHeader).send(ajuste);
+            expect(creado.status).toBe(201);
         }
         await calcularJornadaConTresMiembros(adminHeader, headers, 1, "2026-08-20");
         await calcularJornadaConTresMiembros(adminHeader, headers, 2, "2026-08-27");
@@ -406,16 +418,18 @@ describe("GET /api/v1/dashboard/temporada", () => {
         const admin = await createAdmin();
         const adminHeader = await authHeader(admin);
         await crearYActivarTemporada(adminHeader, "2026-27", "2026-08-15", "2027-05-30");
-        await request(app)
+        const ajusteActual = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(adminHeader)
             .send({ importe: 7, motivo: "Ajuste de 2026-27", fecha: "2026-09-01" });
+        expect(ajusteActual.status).toBe(201);
         // 2025-26 empieza antes: activarla no genera bote heredado.
         await crearYActivarTemporada(adminHeader, "2025-26", "2025-08-15", "2026-05-30");
-        await request(app)
+        const ajusteAntiguo = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(adminHeader)
             .send({ importe: 3, motivo: "Ajuste de 2025-26", fecha: "2025-09-01" });
+        expect(ajusteAntiguo.status).toBe(201);
 
         const activa = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
         const otra = await request(app).get("/api/v1/dashboard/temporada?temporada=2026-27").set(adminHeader);
@@ -440,10 +454,11 @@ describe("GET /api/v1/dashboard/temporada", () => {
             await authHeader(userB),
             await authHeader(userC),
         );
-        await request(app)
+        const ajuste = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(adminHeader)
             .send({ importe: 10.1, motivo: "Bote heredado manual", fecha: "2026-08-15" });
+        expect(ajuste.status).toBe(201);
 
         const response = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
 
