@@ -73,12 +73,17 @@ interface TemporadaRef {
 }
 
 // Crea (o recalcula, si ya existe) el ajuste "Bote heredado de <anterior>" en la nueva temporada.
+// Un heredado cuyo origen no es `anterior` no se toca: su bote de origen seguiría perdiéndose si se sobrescribiera.
 async function registrarBoteHeredado(
     anterior: TemporadaRef,
     nueva: TemporadaRef,
     registradoPor: string,
     tx: DbOrTx,
 ) {
+    const existente = await ajustesBoteRepository.findHeredado(nueva.id, tx);
+    if (existente && existente.origenTemporadaId !== anterior.id) {
+        return;
+    }
     const datos = {
         importe: await dashboardRepository.boteTemporada(anterior.id, tx),
         motivo: `Bote heredado de ${anterior.codigo}`,
@@ -87,7 +92,6 @@ async function registrarBoteHeredado(
         origenTemporadaId: anterior.id,
         registradoPor,
     };
-    const existente = await ajustesBoteRepository.findHeredado(nueva.id, tx);
     if (existente) {
         await ajustesBoteRepository.updateHeredado(existente.id, datos, tx);
     } else {

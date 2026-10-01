@@ -269,6 +269,13 @@ const TEMPORADA_B = {
     fechaFin: "2027-05-30",
 };
 
+const TEMPORADA_C = {
+    codigo: "2027-28",
+    nombre: "Temporada 2027/28",
+    fechaInicio: "2027-08-15",
+    fechaFin: "2028-05-30",
+};
+
 interface AjusteRespuesta {
     id: string;
     importe: number;
@@ -287,6 +294,7 @@ async function crearTemporadaHttp(
         .post("/api/v1/temporadas")
         .set(header)
         .send(temporadaBody(datos));
+    expect(response.status).toBe(201);
     return response.body.id as string;
 }
 
@@ -340,14 +348,16 @@ async function prepararTemporadaAConBote(header: Record<string, string>, adminId
     const idA = await crearTemporadaHttp(header, TEMPORADA_A);
     const idB = await crearTemporadaHttp(header, TEMPORADA_B);
     await activar(header, TEMPORADA_A.codigo);
-    await request(app)
+    const ajusteInicial = await request(app)
         .post("/api/v1/ajustes-bote")
         .set(header)
         .send({ importe: 10.1, motivo: "Bote inicial", fecha: "2025-08-15" });
-    await request(app)
+    expect(ajusteInicial.status).toBe(201);
+    const ajusteGastos = await request(app)
         .post("/api/v1/ajustes-bote")
         .set(header)
         .send({ importe: -2.05, motivo: "Gastos", fecha: "2025-09-01" });
+    expect(ajusteGastos.status).toBe(201);
     await sembrarJornadaCalculada(idA, 1, "2025-08-20", adminId, 3.35);
     await sembrarJornadaCalculada(idA, 2, "2025-08-27", adminId, 0.9);
     return { idA, idB };
@@ -417,22 +427,53 @@ describe("Bote heredado al activar una temporada", () => {
     test("volver a activar la nueva tras corregir la antigua recalcula su heredado sin duplicarlo", async () => {
         const admin = await createAdmin();
         const header = await authHeader(admin);
-        await prepararTemporadaAConBote(header, admin.id);
+        const { idA } = await prepararTemporadaAConBote(header, admin.id);
         await activar(header, TEMPORADA_B.codigo);
         const [heredadoInicial] = await ajustesDe(header, TEMPORADA_B.codigo);
         await activar(header, TEMPORADA_A.codigo);
-        await request(app)
+        const correccion = await request(app)
             .post("/api/v1/ajustes-bote")
             .set(header)
             .send({ importe: 5, motivo: "Corrección tardía", fecha: "2026-05-01" });
+        expect(correccion.status).toBe(201);
 
         await activar(header, TEMPORADA_B.codigo);
 
         const ajustesB = await ajustesDe(header, TEMPORADA_B.codigo);
         expect(ajustesB).toHaveLength(1);
         expect(ajustesB[0]?.id).toBe(heredadoInicial?.id);
-        expect(ajustesB[0]?.importe).toBe(17.3);
+        expect(ajustesB[0]).toMatchObject({
+            importe: 17.3,
+            motivo: "Bote heredado de 2025-26",
+            fecha: TEMPORADA_B.fechaInicio,
+            origenTemporadaId: idA,
+            registradoPor: admin.id,
+        });
         expect(await boteTotalDe(header, TEMPORADA_B.codigo)).toBe(17.3);
+    });
+
+    test("activar C directamente tras A->B->C->A no reemplaza el heredado de C (origen B)", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        const { idB } = await prepararTemporadaAConBote(header, admin.id);
+        const idC = await crearTemporadaHttp(header, TEMPORADA_C);
+        await activar(header, TEMPORADA_B.codigo);
+        await sembrarJornadaCalculada(idB, 1, "2026-09-01", admin.id, 2);
+        await activar(header, TEMPORADA_C.codigo);
+        const [heredadoInicial] = await ajustesDe(header, TEMPORADA_C.codigo);
+        expect(heredadoInicial).toMatchObject({
+            importe: 14.3,
+            motivo: "Bote heredado de 2026-27",
+            origenTemporadaId: idB,
+        });
+        await activar(header, TEMPORADA_A.codigo);
+
+        await activar(header, TEMPORADA_C.codigo);
+
+        const ajustesC = await ajustesDe(header, TEMPORADA_C.codigo);
+        expect(ajustesC).toHaveLength(1);
+        expect(ajustesC[0]).toEqual(heredadoInicial);
+        expect(ajustesC[0]?.temporadaId).toBe(idC);
     });
 
     test("el heredado cuenta en boteJornadaAjustado aunque la jornada sea anterior a fechaInicio", async () => {
