@@ -1101,7 +1101,7 @@
       "delete": {
         "operationId": "temporadasRemove",
         "summary": "Elimina una temporada",
-        "description": "Solo se puede borrar si no tiene jornadas asociadas (restricción RESTRICT en BD).",
+        "description": "Solo se puede borrar si no tiene jornadas ni ajustes de bote manuales y no es el origen del bote heredado de otra temporada (RESTRICT en BD). Su propio bote heredado se borra con ella.",
         "tags": ["temporadas"],
         "security": [
           {
@@ -1135,7 +1135,7 @@
             "description": "No existe una temporada con ese código."
           },
           "409": {
-            "description": "La temporada tiene jornadas asociadas (RESTRICT)."
+            "description": "La temporada tiene jornadas o ajustes de bote asociados, o es origen de un bote heredado (RESTRICT)."
           }
         }
       }
@@ -7520,7 +7520,7 @@
             "description": "No existe ese ajuste de bote."
           },
           "409": {
-            "description": "El ajuste pertenece a una temporada que no es la activa."
+            "description": "El ajuste es un bote heredado, o pertenece a una temporada que no es la activa."
           }
         }
       }

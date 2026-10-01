@@ -57,6 +57,12 @@ export async function findHeredado(
     return row;
 }
 
+export async function removeHeredado(temporadaId: string, tx: DbOrTx = db): Promise<void> {
+    await tx
+        .delete(ajustesBote)
+        .where(and(eq(ajustesBote.temporadaId, temporadaId), isNotNull(ajustesBote.origenTemporadaId)));
+}
+
 export async function updateHeredado(
     id: string,
     input: AjusteBoteInput,

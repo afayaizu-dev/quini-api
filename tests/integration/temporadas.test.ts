@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import request from "supertest";
 import { app, createAdmin, createUser, authHeader } from "../helpers/auth.js";
+import { eq } from "drizzle-orm";
 import { db } from "../../src/db/index.js";
+import { ajustesBote } from "../../src/db/schema/ajustes_bote.js";
 import { jornadas } from "../../src/db/schema/jornadas.js";
 import { resultadosMiembro } from "../../src/db/schema/resultados_miembro.js";
 import { expectMatchesOpenApiSchema } from "../helpers/openapi.js";
@@ -444,5 +446,61 @@ describe("Bote heredado al activar una temporada", () => {
 
         expect(response.status).toBe(200);
         expect(response.body.boteJornadaAjustado).toBe(13.8);
+    });
+});
+
+describe("DELETE de temporadas con ajustes de bote", () => {
+    test("temporada cuyo único ajuste es su bote heredado -> 204 y el heredado se borra con ella", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporadaHttp(header, TEMPORADA_A);
+        const idB = await crearTemporadaHttp(header, TEMPORADA_B);
+        await activar(header, TEMPORADA_A.codigo);
+        await activar(header, TEMPORADA_B.codigo);
+        await activar(header, TEMPORADA_A.codigo);
+
+        const response = await request(app)
+            .delete(`/api/v1/temporadas/${TEMPORADA_B.codigo}`)
+            .set(header);
+
+        expect(response.status).toBe(204);
+        expect(
+            await db.select().from(ajustesBote).where(eq(ajustesBote.temporadaId, idB)),
+        ).toHaveLength(0);
+    });
+
+    test("temporada con ajustes manuales -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporadaHttp(header, TEMPORADA_A);
+        await activar(header, TEMPORADA_A.codigo);
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send({ importe: 10, motivo: "Bote inicial", fecha: "2025-08-15" });
+
+        const response = await request(app)
+            .delete(`/api/v1/temporadas/${TEMPORADA_A.codigo}`)
+            .set(header);
+
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe(
+            "No se puede borrar una temporada que tiene jornadas o ajustes de bote asociados.",
+        );
+    });
+
+    test("temporada que es origen del bote heredado de otra -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporadaHttp(header, TEMPORADA_A);
+        await crearTemporadaHttp(header, TEMPORADA_B);
+        await activar(header, TEMPORADA_A.codigo);
+        await activar(header, TEMPORADA_B.codigo);
+
+        const response = await request(app)
+            .delete(`/api/v1/temporadas/${TEMPORADA_A.codigo}`)
+            .set(header);
+
+        expect(response.status).toBe(409);
     });
 });

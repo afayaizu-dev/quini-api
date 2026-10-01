@@ -46,6 +46,11 @@ export async function remove(id: string) {
     if (!existente) {
         throw new NotFoundError(`No existe el ajuste de bote ${id}.`);
     }
+    if (existente.origenTemporadaId !== null) {
+        throw new ConflictError(
+            "El bote heredado no se puede borrar a mano: se recalcula al activar la temporada.",
+        );
+    }
     const activa = await temporadasRepository.findActiva();
     if (activa?.id !== existente.temporadaId) {
         throw new ConflictError("Solo se pueden borrar ajustes de bote de la temporada activa.");

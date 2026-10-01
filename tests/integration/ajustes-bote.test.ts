@@ -342,3 +342,30 @@ describe("Ajustes de bote por temporada", () => {
         expect(despues.body).toHaveLength(1);
     });
 });
+
+describe("DELETE del bote heredado", () => {
+    test("-> 409 y sigue en la lista", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporada(header, "2025-26", { fechaInicio: "2025-08-15", fechaFin: "2026-05-30" });
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send(ajusteBoteBody({ importe: 10 }));
+        await crearTemporada(header, "2026-27");
+        const lista = await request(app).get("/api/v1/ajustes-bote").set(header);
+        const heredado = (lista.body as Array<{ id: string; origenTemporadaId: string | null }>).find(
+            (a) => a.origenTemporadaId !== null,
+        );
+        expect(heredado).toBeDefined();
+
+        const response = await request(app).delete(`/api/v1/ajustes-bote/${heredado?.id}`).set(header);
+
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe(
+            "El bote heredado no se puede borrar a mano: se recalcula al activar la temporada.",
+        );
+        const despues = await request(app).get("/api/v1/ajustes-bote").set(header);
+        expect(despues.body).toHaveLength(1);
+    });
+});

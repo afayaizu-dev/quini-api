@@ -132,7 +132,8 @@ registerPath("/temporadas/{codigo}", {
     delete: {
         operationId: "temporadasRemove",
         summary: "Elimina una temporada",
-        description: "Solo se puede borrar si no tiene jornadas asociadas (restricción RESTRICT en BD).",
+        description:
+            "Solo se puede borrar si no tiene jornadas ni ajustes de bote manuales y no es el origen del bote heredado de otra temporada (RESTRICT en BD). Su propio bote heredado se borra con ella.",
         tags: ["temporadas"],
         security: [{ bearerAuth: [] }],
         "x-required-role": "admin",
@@ -142,7 +143,7 @@ registerPath("/temporadas/{codigo}", {
             "401": { description: "Sin access token válido." },
             "403": { description: "El usuario autenticado no es admin." },
             "404": { description: "No existe una temporada con ese código." },
-            "409": { description: "La temporada tiene jornadas asociadas (RESTRICT)." },
+            "409": { description: "La temporada tiene jornadas o ajustes de bote asociados, o es origen de un bote heredado (RESTRICT)." },
         },
     },
 });

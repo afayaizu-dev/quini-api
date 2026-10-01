@@ -46,13 +46,20 @@ export async function update(codigo: string, input: UpdateTemporadaInput) {
 }
 
 export async function remove(codigo: string) {
-    await resolveTemporada(codigo);
+    const temporada = await resolveTemporada(codigo);
     try {
-        await temporadasRepository.remove(codigo);
+        await db.transaction(async (tx) => {
+            // El heredado propio se va con la temporada; jornadas, ajustes manuales o ser origen
+            // del heredado de otra temporada siguen bloqueando por FK RESTRICT.
+            await ajustesBoteRepository.removeHeredado(temporada.id, tx);
+            await temporadasRepository.remove(codigo, tx);
+        });
     } catch (err) {
         /* v8 ignore next -- @preserve */
         if (isForeignKeyViolation(err)) {
-            throw new ConflictError("No se puede borrar una temporada que tiene jornadas asociadas.");
+            throw new ConflictError(
+                "No se puede borrar una temporada que tiene jornadas o ajustes de bote asociados.",
+            );
         }
         /* v8 ignore next -- @preserve */
         throw err;

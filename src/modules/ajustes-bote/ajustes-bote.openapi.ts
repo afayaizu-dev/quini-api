@@ -122,7 +122,7 @@ registerPath("/ajustes-bote/{id}", {
             "401": { description: "Sin access token válido." },
             "403": { description: "El usuario autenticado no es admin." },
             "404": { description: "No existe ese ajuste de bote." },
-            "409": { description: "El ajuste pertenece a una temporada que no es la activa." },
+            "409": { description: "El ajuste es un bote heredado, o pertenece a una temporada que no es la activa." },
         },
     },
 });
