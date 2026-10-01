@@ -37,6 +37,9 @@ export async function createAuthorizationRequest(): Promise<AuthorizationRequest
 
     const url = client.generateAuthUrl({
         access_type: "online",
+        // Sin esto Google entra en silencio con la cuenta activa del navegador,
+        // que puede no ser la del socio cuando hay varias sesiones abiertas.
+        prompt: "select_account",
         scope: ["openid", "email", "profile"],
         state,
         code_challenge: codeChallenge,
