@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { ajustesBote } from "../../db/schema/ajustes_bote.js";
 
@@ -44,10 +44,4 @@ export async function findById(id: string, tx: DbOrTx = db): Promise<AjusteBoteF
 
 export async function remove(id: string, tx: DbOrTx = db) {
     await tx.delete(ajustesBote).where(eq(ajustesBote.id, id));
-}
-
-export async function sumaAjustesBote(tx: DbOrTx = db): Promise<number> {
-    const [row] = await tx.select({ total: sql<string>`COALESCE(SUM(${ajustesBote.importe}), 0)` }).from(ajustesBote);
-    /* v8 ignore next -- @preserve */
-    return row ? Number(row.total) : 0;
 }

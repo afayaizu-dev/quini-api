@@ -68,10 +68,25 @@ export async function agregados(filtros: AgregadosFiltros, tx: DbOrTx = db): Pro
 
 
 
-export async function sumaAjustesBote(tx: DbOrTx = db): Promise<number> {
-    const [row] = await tx.select({ total: sql<string>`COALESCE(SUM(${ajustesBote.importe}), 0)` }).from(ajustesBote);
+export interface AjustesBoteFiltros {
+    temporadaId: string;
+}
+
+export async function sumaAjustesBote(filtros: AjustesBoteFiltros, tx: DbOrTx = db): Promise<number> {
+    const [row] = await tx
+        .select({ total: sql<string>`COALESCE(SUM(${ajustesBote.importe}), 0)` })
+        .from(ajustesBote)
+        .where(eq(ajustesBote.temporadaId, filtros.temporadaId));
     /* v8 ignore next -- @preserve */
     return row ? Number(row.total) : 0;
+}
+
+// Bote de una temporada: sus ajustes (incluido el heredado) + el bote de todas sus jornadas calculadas.
+// Única fuente de verdad: lo usan boteTotal (dashboard) y el bote heredado (temporadas.activate).
+export async function boteTemporada(temporadaId: string, tx: DbOrTx = db): Promise<number> {
+    const ajustes = await sumaAjustesBote({ temporadaId }, tx);
+    const { sumaBote } = await agregados({ temporadaId }, tx);
+    return Math.round((ajustes + sumaBote) * 100) / 100;
 }
 
 export async function usuariosConAciertos(temporadaId: string, aciertos: number, tx: DbOrTx = db): Promise<string[]> {

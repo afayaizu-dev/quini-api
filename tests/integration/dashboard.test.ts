@@ -25,6 +25,19 @@ async function crearTemporada(header: Record<string, string>, codigo: string, ac
     }
 }
 
+async function crearYActivarTemporada(
+    header: Record<string, string>,
+    codigo: string,
+    fechaInicio: string,
+    fechaFin: string,
+) {
+    await request(app)
+        .post("/api/v1/temporadas")
+        .set(header)
+        .send({ codigo, nombre: `Temporada ${codigo}`, fechaInicio, fechaFin });
+    await request(app).post(`/api/v1/temporadas/${codigo}/activar`).set(header);
+}
+
 function partidosValidos() {
     return Array.from({ length: 15 }, (_, i) => ({
         orden: i + 1,
@@ -288,7 +301,7 @@ describe("GET /api/v1/dashboard/temporada", () => {
     });
 
 
-    test("con un ajuste de bote global -> boteTotal = sumaBote + ajuste (no ligado a temporada)", async () => {
+    test("con un ajuste de bote de la temporada -> boteTotal = sumaBote + ajuste", async () => {
         const admin = await createAdmin();
         const adminHeader = await authHeader(admin);
         const userA = await createUser();
@@ -314,6 +327,55 @@ describe("GET /api/v1/dashboard/temporada", () => {
 
         expect(conAjuste.status).toBe(200);
         expect(conAjuste.body.boteTotal).toBe(boteSinAjuste + 10);
+    });
+
+    test("boteTotal solo suma los ajustes de su propia temporada", async () => {
+        const admin = await createAdmin();
+        const adminHeader = await authHeader(admin);
+        await crearYActivarTemporada(adminHeader, "2026-27", "2026-08-15", "2027-05-30");
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(adminHeader)
+            .send({ importe: 7, motivo: "Ajuste de 2026-27", fecha: "2026-09-01" });
+        // 2025-26 empieza antes: activarla no genera bote heredado.
+        await crearYActivarTemporada(adminHeader, "2025-26", "2025-08-15", "2026-05-30");
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(adminHeader)
+            .send({ importe: 3, motivo: "Ajuste de 2025-26", fecha: "2025-09-01" });
+
+        const activa = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
+        const otra = await request(app).get("/api/v1/dashboard/temporada?temporada=2026-27").set(adminHeader);
+
+        expect(activa.status).toBe(200);
+        expect(activa.body.temporada).toBe("2025-26");
+        expect(activa.body.boteTotal).toBe(3);
+        expect(otra.status).toBe(200);
+        expect(otra.body.boteTotal).toBe(7);
+    });
+
+    test("ajuste con decimales -> boteTotal redondeado a céntimos", async () => {
+        const admin = await createAdmin();
+        const adminHeader = await authHeader(admin);
+        const userA = await createUser();
+        const userB = await createUser();
+        const userC = await createUser();
+        // Bote de la jornada: 0.90 + 0.90 + 1.00 = 2.80
+        await prepararJornadaConTresMiembros(
+            adminHeader,
+            await authHeader(userA),
+            await authHeader(userB),
+            await authHeader(userC),
+        );
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(adminHeader)
+            .send({ importe: 10.1, motivo: "Bote heredado manual", fecha: "2026-08-15" });
+
+        const response = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
+
+        expect(response.status).toBe(200);
+        expect(response.body.boteTotal).toBe(12.9);
     });
 
     test("sin temporada activa -> 404", async () => {
