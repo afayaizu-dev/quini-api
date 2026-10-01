@@ -152,7 +152,7 @@ registerPath("/temporadas/{codigo}/activar", {
         operationId: "temporadasActivate",
         summary: "Marca una temporada como la activa",
         description:
-            "Desactiva cualquier otra temporada activa y activa esta, en una única transacción (garantizado además por un índice único parcial en BD).",
+            "Desactiva cualquier otra temporada activa y activa esta, en una única transacción (garantizado además por un índice único parcial en BD). Si la temporada que estaba activa empezó antes que esta, en la misma transacción se crea (o se recalcula, si ya existía) en esta un ajuste 'Bote heredado de <código anterior>' con el bote final de la anterior y fecha = fechaInicio. Re-activar la misma temporada o una más antigua no toca ningún bote heredado.",
         tags: ["temporadas"],
         security: [{ bearerAuth: [] }],
         "x-required-role": "admin",

@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNotNull } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { ajustesBote } from "../../db/schema/ajustes_bote.js";
 
@@ -44,4 +44,23 @@ export async function findById(id: string, tx: DbOrTx = db): Promise<AjusteBoteF
 
 export async function remove(id: string, tx: DbOrTx = db) {
     await tx.delete(ajustesBote).where(eq(ajustesBote.id, id));
+}
+
+export async function findHeredado(
+    temporadaId: string,
+    tx: DbOrTx = db,
+): Promise<AjusteBoteFila | undefined> {
+    const [row] = await tx
+        .select()
+        .from(ajustesBote)
+        .where(and(eq(ajustesBote.temporadaId, temporadaId), isNotNull(ajustesBote.origenTemporadaId)));
+    return row;
+}
+
+export async function updateHeredado(
+    id: string,
+    input: AjusteBoteInput,
+    tx: DbOrTx = db,
+): Promise<void> {
+    await tx.update(ajustesBote).set(input).where(eq(ajustesBote.id, id));
 }

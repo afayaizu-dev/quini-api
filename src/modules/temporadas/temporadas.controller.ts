@@ -1,10 +1,19 @@
 import type { Request, Response } from "express";
+import { UnauthorizedError } from "../../core/errors.js";
 import * as temporadasService from "./temporadas.service.js";
 import type {
     CreateTemporadaInput,
     UpdateTemporadaInput,
     TemporadaCodigoParam,
 } from "./temporadas.schemas.js";
+
+function requireAuthContext(req: Request) {
+    /* v8 ignore next -- @preserve */
+    if (!req.auth) {
+        throw new UnauthorizedError();
+    }
+    return req.auth;
+}
 
 export async function create(req: Request, res: Response): Promise<void> {
     const body = req.body as CreateTemporadaInput;
@@ -38,6 +47,7 @@ export async function remove(req: Request, res: Response): Promise<void> {
 
 export async function activate(req: Request, res: Response): Promise<void> {
     const { codigo } = req.params as TemporadaCodigoParam;
-    const temporada = await temporadasService.activate(codigo);
+    const auth = requireAuthContext(req);
+    const temporada = await temporadasService.activate(codigo, auth.userId);
     res.status(200).json(temporada);
 }
