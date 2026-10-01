@@ -78,12 +78,21 @@ export async function jornada(query: DashboardJornadaQuery) {
     }
 
     const agg = await dashboardRepository.agregados({ jornadaId: jornadaResuelta.id });
+    const acumulado = await dashboardRepository.agregados({
+        temporadaId: temporadaActual.id,
+        hastaNumeroJornada: query.jornada,
+    });
+    const ajustesHastaJornada = await dashboardRepository.sumaAjustesBote({
+        temporadaId: temporadaActual.id,
+        hastaFecha: jornadaResuelta.fecha,
+    });
 
     return {
         jornada: query.jornada,
         temporada: temporadaActual.codigo,
         pagosJornada: agg.sumaImporteEscalon,
         boteJornada: agg.sumaBote,
+        boteJornadaAjustado: redondear(ajustesHastaJornada + acumulado.sumaBote),
         premiosTotales: agg.sumaPremios,
         mediaAciertosDosApuestas: agg.mediaAciertosAmbas,
         mediaAciertosMaximos: agg.mediaAciertosMax,

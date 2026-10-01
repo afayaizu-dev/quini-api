@@ -55,9 +55,9 @@ async function crearJornadaLista(header: Record<string, string>) {
         .send({ numeroJornada: 1, fecha: "2026-08-20", partidos: partidosValidos() });
 }
 
-async function abrirApuestas(header: Record<string, string>) {
+async function abrirApuestas(header: Record<string, string>, numeroJornada = 1) {
     await request(app)
-        .put("/api/v1/jornadas/1/fechas")
+        .put(`/api/v1/jornadas/${numeroJornada}/fechas`)
         .set(header)
         .send({
             fechaAperturaApuestas: "2020-01-01T00:00:00Z",
@@ -66,9 +66,9 @@ async function abrirApuestas(header: Record<string, string>) {
         });
 }
 
-async function cerrarVentanaApuestas(header: Record<string, string>) {
+async function cerrarVentanaApuestas(header: Record<string, string>, numeroJornada = 1) {
     await request(app)
-        .put("/api/v1/jornadas/1/fechas")
+        .put(`/api/v1/jornadas/${numeroJornada}/fechas`)
         .set(header)
         .send({
             fechaAperturaApuestas: "2020-01-01T00:00:00Z",
@@ -92,29 +92,57 @@ function partidosConAciertos(aciertos: number): string[] {
     });
 }
 
+type HeadersMiembros = [Record<string, string>, Record<string, string>, Record<string, string>];
+
+// Crea la jornada y la deja calculada: A y B con 10 aciertos, C con 4 (deja 2.80 de bote).
+// Asume equipos creados y temporada activa.
+async function calcularJornadaConTresMiembros(
+    adminHeader: Record<string, string>,
+    headers: HeadersMiembros,
+    numeroJornada: number,
+    fecha: string,
+) {
+    await request(app)
+        .post("/api/v1/jornadas")
+        .set(adminHeader)
+        .send({ numeroJornada, fecha, partidos: partidosValidos() });
+    await abrirApuestas(adminHeader, numeroJornada);
+    const aciertos = [10, 10, 4];
+    for (const [i, header] of headers.entries()) {
+        await request(app)
+            .post(`/api/v1/jornadas/${numeroJornada}/apuestas`)
+            .set(header)
+            .send({ numeroApuesta: 1, partidos: partidosConAciertos(aciertos[i] as number) });
+    }
+    await request(app).put(`/api/v1/jornadas/${numeroJornada}/resultados`).set(adminHeader).send(resultadosBody());
+    await cerrarVentanaApuestas(adminHeader, numeroJornada);
+    const calculo = await request(app).post("/api/v1/calculos").set(adminHeader).send({ jornada: numeroJornada });
+    expect(calculo.status).toBe(200);
+}
+
 async function prepararJornadaConTresMiembros(
     adminHeader: Record<string, string>,
     headerA: Record<string, string>,
     headerB: Record<string, string>,
     headerC: Record<string, string>,
 ) {
-    await crearJornadaLista(adminHeader);
-    await abrirApuestas(adminHeader);
-    await request(app)
-        .post("/api/v1/jornadas/1/apuestas")
-        .set(headerA)
-        .send({ numeroApuesta: 1, partidos: partidosConAciertos(10) });
-    await request(app)
-        .post("/api/v1/jornadas/1/apuestas")
-        .set(headerB)
-        .send({ numeroApuesta: 1, partidos: partidosConAciertos(10) });
-    await request(app)
-        .post("/api/v1/jornadas/1/apuestas")
-        .set(headerC)
-        .send({ numeroApuesta: 1, partidos: partidosConAciertos(4) });
-    await request(app).put("/api/v1/jornadas/1/resultados").set(adminHeader).send(resultadosBody());
-    await cerrarVentanaApuestas(adminHeader);
-    await request(app).post("/api/v1/calculos").set(adminHeader).send({ jornada: 1 });
+    await crearEquipos(adminHeader);
+    await crearTemporada(adminHeader, "2026-27");
+    await calcularJornadaConTresMiembros(adminHeader, [headerA, headerB, headerC], 1, "2026-08-20");
+}
+
+// Equipos y temporada "2026-27" activa, con un admin y tres miembros; sin jornadas.
+async function prepararTemporadaConEquipos() {
+    const admin = await createAdmin();
+    const adminHeader = await authHeader(admin);
+    const headers: HeadersMiembros = [
+        await authHeader(await createUser()),
+        await authHeader(await createUser()),
+        await authHeader(await createUser()),
+    ];
+    await crearEquipos(adminHeader);
+    await crearTemporada(adminHeader, "2026-27");
+    return { adminHeader, headers };
 }
 
 describe("GET /api/v1/dashboard/miembro", () => {
@@ -234,6 +262,51 @@ describe("GET /api/v1/dashboard/jornada", () => {
         const response = await request(app).get("/api/v1/dashboard/jornada?jornada=99").set(adminHeader);
 
         expect(response.status).toBe(404);
+    });
+
+    test("en la última jornada y sin ajustes posteriores, boteJornadaAjustado == boteTotal", async () => {
+        const { adminHeader, headers } = await prepararTemporadaConEquipos();
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(adminHeader)
+            .send({ importe: 5.55, motivo: "Bote heredado manual", fecha: "2026-08-15" });
+        // Cada jornada deja 2.80 de bote (0.90 + 0.90 + 1.00).
+        await calcularJornadaConTresMiembros(adminHeader, headers, 1, "2026-08-20");
+        await calcularJornadaConTresMiembros(adminHeader, headers, 2, "2026-08-27");
+
+        const jornada = await request(app).get("/api/v1/dashboard/jornada?jornada=2").set(adminHeader);
+        const temporada = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
+
+        expect(jornada.status).toBe(200);
+        expect(jornada.body.boteJornada).toBe(2.8);
+        expect(jornada.body.boteJornadaAjustado).toBe(11.15);
+        expect(jornada.body.boteJornadaAjustado).toBe(temporada.body.boteTotal);
+        expectMatchesOpenApiSchema({ path: "/dashboard/jornada", method: "get", status: 200, body: jornada.body });
+    });
+
+    test("ajustes antes del inicio, el mismo día y después de la jornada", async () => {
+        const { adminHeader, headers } = await prepararTemporadaConEquipos();
+        const ajustes = [
+            { importe: 5.55, motivo: "Anterior al inicio de temporada", fecha: "2026-08-01" },
+            { importe: -1.25, motivo: "Mismo día que la jornada 2", fecha: "2026-08-27" },
+            { importe: 4, motivo: "Posterior a la última jornada", fecha: "2026-09-30" },
+        ];
+        for (const ajuste of ajustes) {
+            await request(app).post("/api/v1/ajustes-bote").set(adminHeader).send(ajuste);
+        }
+        await calcularJornadaConTresMiembros(adminHeader, headers, 1, "2026-08-20");
+        await calcularJornadaConTresMiembros(adminHeader, headers, 2, "2026-08-27");
+
+        const jornada1 = await request(app).get("/api/v1/dashboard/jornada?jornada=1").set(adminHeader);
+        const jornada2 = await request(app).get("/api/v1/dashboard/jornada?jornada=2").set(adminHeader);
+        const temporada = await request(app).get("/api/v1/dashboard/temporada").set(adminHeader);
+
+        // J1: 5.55 + 2.80
+        expect(jornada1.body.boteJornadaAjustado).toBe(8.35);
+        // J2: 5.55 - 1.25 + 2.80 + 2.80
+        expect(jornada2.body.boteJornadaAjustado).toBe(9.9);
+        // Total: J2 + 4 (el ajuste posterior solo cuenta en el total)
+        expect(temporada.body.boteTotal).toBe(13.9);
     });
 });
 

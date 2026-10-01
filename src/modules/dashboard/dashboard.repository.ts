@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lte, sql, type SQL } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { resultadosMiembro } from "../../db/schema/resultados_miembro.js";
 import { jornadas } from "../../db/schema/jornadas.js";
@@ -8,6 +8,7 @@ export interface AgregadosFiltros {
     temporadaId?: string | undefined;
     jornadaId?: string | undefined;
     usuarioId?: string | undefined;
+    hastaNumeroJornada?: number | undefined; // numero_jornada <= n
 }
 
 export interface Agregados {
@@ -27,6 +28,8 @@ export async function agregados(filtros: AgregadosFiltros, tx: DbOrTx = db): Pro
     if (filtros.temporadaId !== undefined) condiciones.push(eq(jornadas.temporadaId, filtros.temporadaId));
     if (filtros.jornadaId !== undefined) condiciones.push(eq(resultadosMiembro.jornadaId, filtros.jornadaId));
     if (filtros.usuarioId !== undefined) condiciones.push(eq(resultadosMiembro.usuarioId, filtros.usuarioId));
+    if (filtros.hastaNumeroJornada !== undefined)
+        condiciones.push(lte(jornadas.numeroJornada, filtros.hastaNumeroJornada));
 
     const [row] = await tx
         .select({
@@ -70,13 +73,21 @@ export async function agregados(filtros: AgregadosFiltros, tx: DbOrTx = db): Pro
 
 export interface AjustesBoteFiltros {
     temporadaId: string;
+    hastaFecha?: string | undefined; // fecha <= hastaFecha OR es heredado
 }
 
 export async function sumaAjustesBote(filtros: AjustesBoteFiltros, tx: DbOrTx = db): Promise<number> {
+    const condiciones: SQL[] = [eq(ajustesBote.temporadaId, filtros.temporadaId)];
+    if (filtros.hastaFecha !== undefined) {
+        // El bote heredado cuenta siempre, aunque su fecha (fechaInicio) sea posterior a la jornada.
+        condiciones.push(
+            sql`(${ajustesBote.fecha} <= ${filtros.hastaFecha} OR ${ajustesBote.origenTemporadaId} IS NOT NULL)`,
+        );
+    }
     const [row] = await tx
         .select({ total: sql<string>`COALESCE(SUM(${ajustesBote.importe}), 0)` })
         .from(ajustesBote)
-        .where(eq(ajustesBote.temporadaId, filtros.temporadaId));
+        .where(and(...condiciones));
     /* v8 ignore next -- @preserve */
     return row ? Number(row.total) : 0;
 }
