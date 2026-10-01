@@ -7207,7 +7207,7 @@
       "post": {
         "operationId": "ajustesBoteCreate",
         "summary": "Registra un ajuste manual del bote",
-        "description": "Ajuste manual que suma o resta al bote de la temporada activa. El importe admite valores negativos.",
+        "description": "Ajuste manual que suma o resta al bote de una temporada. Sin 'temporada' en el body se usa la activa; solo se admiten ajustes en la temporada activa. El importe admite valores negativos.",
         "tags": ["ajustes-bote"],
         "security": [
           {
@@ -7238,6 +7238,10 @@
                     "type": "string",
                     "format": "date",
                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "temporada": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}$"
                   }
                 },
                 "required": ["importe", "motivo", "fecha"],
@@ -7332,7 +7336,7 @@
             }
           },
           "400": {
-            "description": "importe con más de 2 decimales, motivo vacío, o fecha con formato inválido."
+            "description": "importe con más de 2 decimales, motivo vacío, fecha o temporada con formato inválido."
           },
           "401": {
             "description": "Sin access token válido."
@@ -7341,26 +7345,51 @@
             "description": "El usuario autenticado no es admin."
           },
           "404": {
-            "description": "No hay ninguna temporada activa."
+            "description": "No existe esa temporada, o no hay temporada activa y no se especificó ninguna."
+          },
+          "409": {
+            "description": "La temporada indicada no es la activa."
           }
         }
       },
       "get": {
         "operationId": "ajustesBoteFindAll",
-        "summary": "Lista todos los ajustes de bote",
-        "description": "Lista global de ajustes, sin filtrar por temporada. Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
+        "summary": "Lista los ajustes de bote de una temporada",
+        "description": "Sin '?temporada=', lista los de la temporada activa. Incluye el bote heredado (origenTemporadaId no nulo). Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
         "tags": ["ajustes-bote"],
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "temporada",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "example": "2026-27"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Lista de ajustes de bote.",
+            "description": "Ajustes de bote de la temporada, ordenados por fecha.",
             "content": {
               "application/json": {
                 "example": [
+                  {
+                    "id": "019ffc0e-cccc-7c46-b05d-46bf7829c804",
+                    "temporadaId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
+                    "origenTemporadaId": "019ff7eb-1111-7b8c-a948-6ca9a14625e5",
+                    "importe": 123.45,
+                    "motivo": "Bote heredado de 2025-26",
+                    "fecha": "2026-08-15",
+                    "registradoPor": "019ff7eb-9999-7b8c-a948-6ca9a14625e6",
+                    "createdAt": "2026-08-15T10:00:00.000Z"
+                  },
                   {
                     "id": "019ffc0e-bbbb-7c46-b05d-46bf7829c803",
                     "temporadaId": "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
@@ -7437,8 +7466,14 @@
               }
             }
           },
+          "400": {
+            "description": "'temporada' con formato inválido."
+          },
           "401": {
             "description": "Sin access token válido."
+          },
+          "404": {
+            "description": "No existe esa temporada, o no hay temporada activa y no se especificó ninguna."
           }
         }
       }
@@ -7447,7 +7482,7 @@
       "delete": {
         "operationId": "ajustesBoteRemove",
         "summary": "Elimina un ajuste de bote",
-        "description": "Un ajuste mal apuntado se borra y se vuelve a crear; no existe PUT.",
+        "description": "Un ajuste mal apuntado se borra y se vuelve a crear; no existe PUT. Solo ajustes de la temporada activa.",
         "tags": ["ajustes-bote"],
         "security": [
           {
@@ -7478,6 +7513,9 @@
           },
           "404": {
             "description": "No existe ese ajuste de bote."
+          },
+          "409": {
+            "description": "El ajuste pertenece a una temporada que no es la activa."
           }
         }
       }

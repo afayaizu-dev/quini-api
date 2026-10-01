@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { ajustesBote } from "../../db/schema/ajustes_bote.js";
 
@@ -29,8 +29,12 @@ export async function create(input: AjusteBoteInput, tx: DbOrTx = db): Promise<A
     return row;
 }
 
-export async function findAll(tx: DbOrTx = db): Promise<AjusteBoteFila[]> {
-    return tx.select().from(ajustesBote);
+export async function findByTemporada(temporadaId: string, tx: DbOrTx = db): Promise<AjusteBoteFila[]> {
+    return tx
+        .select()
+        .from(ajustesBote)
+        .where(eq(ajustesBote.temporadaId, temporadaId))
+        .orderBy(asc(ajustesBote.fecha), asc(ajustesBote.createdAt));
 }
 
 export async function findById(id: string, tx: DbOrTx = db): Promise<AjusteBoteFila | undefined> {

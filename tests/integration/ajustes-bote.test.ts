@@ -208,3 +208,137 @@ describe("DELETE /api/v1/ajustes-bote/:id", () => {
         expect(response.status).toBe(404);
     });
 });
+
+
+describe("Ajustes de bote por temporada", () => {
+    // 2025-26 empieza antes que 2026-27: activarla después NO genera bote heredado,
+    // así estos tests no dependen de la lógica de herencia (Task 5).
+    async function dosTemporadasConAjustes(header: Record<string, string>) {
+        await crearTemporada(header, "2026-27");
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send(ajusteBoteBody({ importe: 15, fecha: "2026-09-01" }));
+        await crearTemporada(header, "2025-26", { fechaInicio: "2025-08-15", fechaFin: "2026-05-30" });
+        await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send(ajusteBoteBody({ importe: -25, fecha: "2025-09-01" }));
+    }
+
+    test("GET sin ?temporada -> solo los ajustes de la temporada activa", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await dosTemporadasConAjustes(header);
+
+        const response = await request(app).get("/api/v1/ajustes-bote").set(header);
+
+        expect(response.status).toBe(200);
+        expect(response.body.map((a: { importe: number }) => a.importe)).toEqual([-25]);
+    });
+
+    test("GET ?temporada=2026-27 -> los de esa temporada aunque no esté activa", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await dosTemporadasConAjustes(header);
+
+        const response = await request(app).get("/api/v1/ajustes-bote?temporada=2026-27").set(header);
+
+        expect(response.status).toBe(200);
+        expect(response.body.map((a: { importe: number }) => a.importe)).toEqual([15]);
+        expectMatchesOpenApiSchema({
+            path: "/ajustes-bote",
+            method: "get",
+            status: 200,
+            body: response.body,
+        });
+    });
+
+    test("GET ?temporada con formato inválido -> 400", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+
+        const response = await request(app).get("/api/v1/ajustes-bote?temporada=2026").set(header);
+
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe("VALIDATION_ERROR");
+    });
+
+    test("GET ?temporada inexistente -> 404", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+
+        const response = await request(app).get("/api/v1/ajustes-bote?temporada=2030-31").set(header);
+
+        expect(response.status).toBe(404);
+    });
+
+    test("GET sin temporada activa -> 404", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporada(header, "2026-27", { activar: false });
+
+        const response = await request(app).get("/api/v1/ajustes-bote").set(header);
+
+        expect(response.status).toBe(404);
+    });
+
+    test("POST con la temporada activa explícita -> 201 en esa temporada", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        const temporadaId = await crearTemporada(header, "2026-27");
+
+        const response = await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send({ ...ajusteBoteBody(), temporada: "2026-27" });
+
+        expect(response.status).toBe(201);
+        expect(response.body.temporadaId).toBe(temporadaId);
+    });
+
+    test("POST con una temporada no activa -> 409", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await dosTemporadasConAjustes(header);
+
+        const response = await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send({ ...ajusteBoteBody(), temporada: "2026-27" });
+
+        expect(response.status).toBe(409);
+        expect(response.body.error).toBe("CONFLICT");
+        expect(response.body.message).toBe(
+            "La temporada '2026-27' no está activa: solo se registran ajustes de bote en la temporada activa.",
+        );
+    });
+
+    test("POST con una temporada inexistente -> 404", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporada(header, "2026-27");
+
+        const response = await request(app)
+            .post("/api/v1/ajustes-bote")
+            .set(header)
+            .send({ ...ajusteBoteBody(), temporada: "2030-31" });
+
+        expect(response.status).toBe(404);
+    });
+
+    test("DELETE de un ajuste de una temporada no activa -> 409 y el ajuste sigue", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await dosTemporadasConAjustes(header);
+        const lista = await request(app).get("/api/v1/ajustes-bote?temporada=2026-27").set(header);
+        const id = lista.body[0].id as string;
+
+        const response = await request(app).delete(`/api/v1/ajustes-bote/${id}`).set(header);
+
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe("Solo se pueden borrar ajustes de bote de la temporada activa.");
+        const despues = await request(app).get("/api/v1/ajustes-bote?temporada=2026-27").set(header);
+        expect(despues.body).toHaveLength(1);
+    });
+});

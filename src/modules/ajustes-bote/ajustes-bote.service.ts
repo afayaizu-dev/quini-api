@@ -1,7 +1,8 @@
-import { NotFoundError } from "../../core/errors.js";
+import { ConflictError, NotFoundError } from "../../core/errors.js";
 import * as ajustesBoteRepository from "./ajustes-bote.repository.js";
 import type { AjusteBoteFila } from "./ajustes-bote.repository.js";
 import * as temporadasService from "../temporadas/temporadas.service.js";
+import * as temporadasRepository from "../temporadas/temporadas.repository.js";
 import type { CreateAjusteBoteInput } from "./ajustes-bote.schemas.js";
 
 function toResponse(fila: AjusteBoteFila) {
@@ -18,7 +19,12 @@ function toResponse(fila: AjusteBoteFila) {
 }
 
 export async function create(input: CreateAjusteBoteInput, registradoPor: string) {
-    const temporada = await temporadasService.resolveTemporada();
+    const temporada = await temporadasService.resolveTemporada(input.temporada);
+    if (!temporada.activa) {
+        throw new ConflictError(
+            `La temporada '${temporada.codigo}' no está activa: solo se registran ajustes de bote en la temporada activa.`,
+        );
+    }
     const fila = await ajustesBoteRepository.create({
         importe: input.importe,
         motivo: input.motivo,
@@ -29,8 +35,9 @@ export async function create(input: CreateAjusteBoteInput, registradoPor: string
     return toResponse(fila);
 }
 
-export async function findAll() {
-    const filas = await ajustesBoteRepository.findAll();
+export async function findAll(temporadaCodigo?: string) {
+    const temporada = await temporadasService.resolveTemporada(temporadaCodigo);
+    const filas = await ajustesBoteRepository.findByTemporada(temporada.id);
     return filas.map(toResponse);
 }
 
@@ -38,6 +45,10 @@ export async function remove(id: string) {
     const existente = await ajustesBoteRepository.findById(id);
     if (!existente) {
         throw new NotFoundError(`No existe el ajuste de bote ${id}.`);
+    }
+    const activa = await temporadasRepository.findActiva();
+    if (activa?.id !== existente.temporadaId) {
+        throw new ConflictError("Solo se pueden borrar ajustes de bote de la temporada activa.");
     }
     await ajustesBoteRepository.remove(id);
 }
