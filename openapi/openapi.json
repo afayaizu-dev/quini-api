@@ -7606,6 +7606,79 @@
           }
         }
       }
+    },
+    "/boletin/prueba": {
+      "post": {
+        "operationId": "boletinPrueba",
+        "summary": "Envía el boletín solo al admin autenticado, como prueba",
+        "description": "Mismo cuerpo que /boletin/enviar, pero el correo se envía únicamente al email del admin que hace la petición, para revisarlo antes del envío a todos los socios. Si el envío falla, el endpoint devuelve error.",
+        "tags": ["boletin"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-role": "admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "subject": "Boletín — Jornada 6",
+                "html": "<p>Resumen de la jornada 6...</p>"
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subject": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "html": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["subject", "html"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correo de prueba enviado al admin autenticado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "enviadoA": "admin@quiniweb.com"
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enviadoA": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  },
+                  "required": ["enviadoA"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El cuerpo de la petición no es válido."
+          },
+          "401": {
+            "description": "Sin access token válido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es admin."
+          }
+        }
+      }
     }
   },
   "components": {

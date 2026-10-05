@@ -9,11 +9,11 @@ import { sendMail } from "../../src/modules/mail/index.js";
 
 const sendMailMock = vi.mocked(sendMail);
 
-describe("POST /api/v1/boletin/enviar", () => {
+describe("POST /api/v1/boletin/prueba", () => {
     const validBody = { subject: "Boletín — Jornada 6", html: "<p>Resumen</p>" };
 
     test("sin cabecera Authorization -> 401", async () => {
-        const response = await request(app).post("/api/v1/boletin/enviar").send(validBody);
+        const response = await request(app).post("/api/v1/boletin/prueba").send(validBody);
 
         expect(response.status).toBe(401);
     });
@@ -22,7 +22,7 @@ describe("POST /api/v1/boletin/enviar", () => {
         const user = await createUser();
         const header = await authHeader(user);
 
-        const response = await request(app).post("/api/v1/boletin/enviar").set(header).send(validBody);
+        const response = await request(app).post("/api/v1/boletin/prueba").set(header).send(validBody);
 
         expect(response.status).toBe(403);
         expect(response.body.error).toBe("FORBIDDEN");
@@ -33,14 +33,14 @@ describe("POST /api/v1/boletin/enviar", () => {
         const header = await authHeader(admin);
 
         const response = await request(app)
-            .post("/api/v1/boletin/enviar")
+            .post("/api/v1/boletin/prueba")
             .set(header)
             .send({ subject: "Boletín" });
 
         expect(response.status).toBe(400);
     });
 
-    test("token de admin con body válido -> 200, envía a todos los usuarios", async () => {
+    test("token de admin con body válido -> 200, envía solo al admin autenticado", async () => {
         sendMailMock.mockReset().mockResolvedValue(undefined);
 
         const admin = await createAdmin();
@@ -48,31 +48,23 @@ describe("POST /api/v1/boletin/enviar", () => {
         await createUser();
         const header = await authHeader(admin);
 
-        const response = await request(app).post("/api/v1/boletin/enviar").set(header).send(validBody);
+        const response = await request(app).post("/api/v1/boletin/prueba").set(header).send(validBody);
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ enviados: 3, fallidos: [] });
-        expect(sendMailMock).toHaveBeenCalledTimes(3);
-        expectMatchesOpenApiSchema({ path: "/boletin/enviar", method: "post", status: 200, body: response.body });
+        expect(response.body).toEqual({ enviadoA: admin.email });
+        expect(sendMailMock).toHaveBeenCalledTimes(1);
+        expect(sendMailMock).toHaveBeenCalledWith({ to: admin.email, ...validBody });
+        expectMatchesOpenApiSchema({ path: "/boletin/prueba", method: "post", status: 200, body: response.body });
     });
 
-    test("un destinatario falla -> sigue con el resto, 200 con ese email en fallidos", async () => {
+    test("el envío falla -> error, no responde 200", async () => {
+        sendMailMock.mockReset().mockRejectedValue(new Error("Gmail API devolvió 500"));
+
         const admin = await createAdmin();
-        const fallido = await createUser();
-        await createUser();
         const header = await authHeader(admin);
 
-        sendMailMock.mockReset().mockImplementation(async ({ to }) => {
-            if (to === fallido.email) {
-                throw new Error("Gmail API devolvió 500");
-            }
-        });
+        const response = await request(app).post("/api/v1/boletin/prueba").set(header).send(validBody);
 
-        const response = await request(app).post("/api/v1/boletin/enviar").set(header).send(validBody);
-
-        expect(response.status).toBe(200);
-        expect(response.body.enviados).toBe(2);
-        expect(response.body.fallidos).toEqual([fallido.email]);
-        expect(sendMailMock).toHaveBeenCalledTimes(3);
+        expect(response.status).toBe(500);
     });
 });
