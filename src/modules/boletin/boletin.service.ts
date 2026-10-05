@@ -1,6 +1,6 @@
 import * as usuariosRepository from "../usuarios/usuarios.repository.js";
 import { sendMail } from "../mail/gmail.js";
-import type { EnviarBoletinResponse } from "./boletin.schemas.js";
+import type { EnviarBoletinResponse, PruebaBoletinResponse } from "./boletin.schemas.js";
 
 const CONCURRENCIA_ENVIO = 5;
 
@@ -23,4 +23,9 @@ export async function enviarBoletin(subject: string, html: string): Promise<Envi
     await Promise.all(Array.from({ length: Math.min(CONCURRENCIA_ENVIO, usuarios.length) }, worker));
 
     return { enviados: usuarios.length - fallidos.length, fallidos };
+}
+
+export async function enviarPrueba(to: string, subject: string, html: string): Promise<PruebaBoletinResponse> {
+    await sendMail({ to, subject, html });
+    return { enviadoA: to };
 }

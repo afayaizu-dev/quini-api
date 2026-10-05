@@ -11,3 +11,8 @@ export const EnviarBoletinResponseSchema = z.object({
     fallidos: z.array(z.email()),
 });
 export type EnviarBoletinResponse = z.infer<typeof EnviarBoletinResponseSchema>;
+
+export const PruebaBoletinResponseSchema = z.object({
+    enviadoA: z.email(),
+});
+export type PruebaBoletinResponse = z.infer<typeof PruebaBoletinResponseSchema>;
