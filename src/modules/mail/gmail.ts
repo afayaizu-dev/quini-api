@@ -1,5 +1,6 @@
 import { OAuth2Client } from "google-auth-library";
 import { env } from "../../config/env.js";
+import type { SendMailInput } from "./types.js";
 
 interface GmailConfig {
     client: OAuth2Client;
@@ -61,12 +62,6 @@ function buildRawMessage(from: string, to: string, subject: string, html: string
     ].join("\r\n");
 
     return Buffer.from(message, "utf-8").toString("base64url");
-}
-
-export interface SendMailInput {
-    to: string;
-    subject: string;
-    html: string;
 }
 
 /* v8 ignore start -- @preserve */

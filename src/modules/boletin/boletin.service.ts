@@ -1,5 +1,5 @@
 import * as usuariosRepository from "../usuarios/usuarios.repository.js";
-import { sendMail } from "../mail/gmail.js";
+import { sendMail } from "../mail/index.js";
 import type { EnviarBoletinResponse, PruebaBoletinResponse } from "./boletin.schemas.js";
 
 const CONCURRENCIA_ENVIO = 5;

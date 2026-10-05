@@ -3,9 +3,9 @@ import request from "supertest";
 import { app, createUser, createAdmin, authHeader } from "../helpers/auth.js";
 import { expectMatchesOpenApiSchema } from "../helpers/openapi.js";
 
-vi.mock("../../src/modules/mail/gmail.js", () => ({ sendMail: vi.fn() }));
+vi.mock("../../src/modules/mail/index.js", () => ({ sendMail: vi.fn() }));
 
-import { sendMail } from "../../src/modules/mail/gmail.js";
+import { sendMail } from "../../src/modules/mail/index.js";
 
 const sendMailMock = vi.mocked(sendMail);
 

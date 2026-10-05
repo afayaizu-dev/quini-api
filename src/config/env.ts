@@ -26,9 +26,22 @@ const EnvSchema = z.object({
     GOOGLE_REDIRECT_URI: z.url().optional(),
     GMAIL_REFRESH_TOKEN: z.string().optional(),
     GMAIL_SENDER_EMAIL: z.string().email().optional(),
+    MAIL_TRANSPORT: z.enum(["gmail", "smtp"]).default("gmail"),
+    MAIL_FROM: z.string().min(1).optional(),
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z.coerce.number().int().positive().default(587),
+    SMTP_USER: z.string().min(1).optional(),
+    SMTP_PASS: z.string().min(1).optional(),
     APP_COMMIT: z.string().optional(),
     METRICS_ENABLED: booleanString.default(true),
     METRICS_PATH: z.string().default("/metrics"),
+}).superRefine((env, ctx) => {
+    if (env.MAIL_TRANSPORT !== "smtp") return;
+    for (const key of ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "MAIL_FROM"] as const) {
+        if (!env[key]) {
+            ctx.addIssue({ code: "custom", path: [key], message: `Obligatoria con MAIL_TRANSPORT=smtp` });
+        }
+    }
 });
 
 const parsed = EnvSchema.safeParse(process.env);
