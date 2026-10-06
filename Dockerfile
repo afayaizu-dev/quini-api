@@ -14,8 +14,10 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ARG GIT_SHA
+ARG APP_VERSION
 ENV NODE_ENV=production
 ENV APP_COMMIT=$GIT_SHA
+ENV APP_VERSION=$APP_VERSION
 RUN npm install -g npm@12.0.2
 
 COPY package.json package-lock.json ./

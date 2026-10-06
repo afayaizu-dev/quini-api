@@ -12,11 +12,13 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
 import { globalRateLimit } from "./middleware/rate-limit.js";
+import { resolveAppVersion } from "./config/version.js";
 
 
-const { version } = JSON.parse(readFileSync(path.join(process.cwd(), "package.json"), "utf-8")) as {
+const packageJson = JSON.parse(readFileSync(path.join(process.cwd(), "package.json"), "utf-8")) as {
     version: string;
 };
+const version = resolveAppVersion(env.APP_VERSION, packageJson.version);
 
 export function createApp(): Application {
     const app = express();
@@ -41,7 +43,8 @@ export function createApp(): Application {
     app.use("/api/v1", router);
     const openapiDocument = JSON.parse(
         readFileSync(path.join(process.cwd(), "openapi/openapi.json"), "utf-8"),
-    );
+    ) as { info: { version: string } };
+    openapiDocument.info.version = version;
 
     app.get("/openapi.json", (_req, res) => {
         res.json(openapiDocument);
