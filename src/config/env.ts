@@ -33,6 +33,7 @@ const EnvSchema = z.object({
     SMTP_USER: z.string().min(1).optional(),
     SMTP_PASS: z.string().min(1).optional(),
     APP_COMMIT: z.string().optional(),
+    APP_VERSION: z.string().optional(),
     METRICS_ENABLED: booleanString.default(true),
     METRICS_PATH: z.string().default("/metrics"),
 }).superRefine((env, ctx) => {

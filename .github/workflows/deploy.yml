@@ -30,6 +30,7 @@ jobs:
           push: true
           build-args: |
             GIT_SHA=${{ github.sha }}
+            APP_VERSION=${{ github.ref_type == 'tag' && github.ref_name || '' }}
           tags: |
             ghcr.io/afayaizu-dev/quini-api:${{ github.sha }}
             ghcr.io/afayaizu-dev/quini-api:latest

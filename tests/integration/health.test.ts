@@ -12,4 +12,12 @@ describe("GET /health", () => {
         expect(response.body).toHaveProperty("commit");
         expect(typeof response.body.uptime).toBe("number");
     });
+
+    test("/openapi.json publica la misma versión que /health", async () => {
+        const health = await request(app).get("/health");
+        const openapi = await request(app).get("/openapi.json");
+
+        expect(openapi.status).toBe(200);
+        expect(openapi.body.info.version).toBe(health.body.version);
+    });
 });
