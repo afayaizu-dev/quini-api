@@ -30,6 +30,16 @@ const jornadaQueryParam = {
     example: 1,
 };
 
+const jornadaOpcionalQueryParam = {
+    name: "jornada",
+    in: "query" as const,
+    required: false,
+    description:
+        "Número de jornada de la temporada. Si se indica, los agregados son acumulados hasta esa jornada inclusive (resultados y apuestas con número <= N; pagos y crédito con fecha <= fecha de la jornada N).",
+    schema: { type: "integer" as const, minimum: 1 },
+    example: 12,
+};
+
 const miembroEjemplo = {
     usuarioId: "019ff7eb-22ae-7b8c-a948-6ca9a14625e6",
     temporada: "2026-27",
@@ -87,17 +97,21 @@ registerPath("/dashboard/miembro", {
         operationId: "dashboardMiembro",
         summary: "Agregados de un miembro",
         description:
-            "Sin '?usuario=', devuelve los datos del usuario autenticado. Cualquier usuario autenticado puede consultar los de cualquier miembro, como parte de la transparencia de la clasificación.",
+            "Sin '?usuario=', devuelve los datos del usuario autenticado. Cualquier usuario autenticado puede consultar los de cualquier miembro, como parte de la transparencia de la clasificación. Sin '?jornada=' son los totales de la temporada completa. Con '?jornada=N' son acumulados hasta la jornada N inclusive: 'pagosTotales', 'premiosTotales' y los aciertos suman las jornadas con número <= N; 'porcentajeApuestasPropias' usa las apuestas del socio en esas jornadas; 'ingresosTotales' y 'credito' solo cuentan pagos con fecha_pago <= fecha de la jornada N (y el escalón de las jornadas con fecha <= esa), de modo que pagos o ajustes posteriores quedan fuera. Igual que /dashboard/jornada, la jornada debe tener un cálculo ejecutado.",
         tags: ["dashboard"],
         security: [{ bearerAuth: [] }],
-        parameters: [temporadaQueryParam, usuarioQueryParam],
+        parameters: [temporadaQueryParam, usuarioQueryParam, jornadaOpcionalQueryParam],
         responses: {
             "200": {
                 description: "Agregados del miembro en la temporada.",
                 content: { "application/json": { schema: DashboardMiembroResponseSchema, example: miembroEjemplo } },
             },
+            "400": { description: "'jornada' no es un entero positivo." },
             "401": { description: "Sin access token válido." },
-            "404": { description: "Temporada o usuario inexistentes; o no hay temporada activa y no se especificó ninguna." },
+            "404": {
+                description:
+                    "Temporada, usuario o jornada inexistentes; la jornada aún no tiene cálculo ejecutado; o no hay temporada activa y no se especificó ninguna.",
+            },
         },
     },
 });

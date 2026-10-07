@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lte, sql } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { apuestas } from "../../db/schema/apuestas.js";
 import { jornadas } from "../../db/schema/jornadas.js";
@@ -109,6 +109,7 @@ export async function contarPorAutoria(
     usuarioId: string,
     temporadaId: string,
     tx: DbOrTx = db,
+    hastaNumeroJornada?: number,
 ): Promise<{ total: number; propias: number }> {
     const [row] = await tx
         .select({
@@ -117,7 +118,13 @@ export async function contarPorAutoria(
         })
         .from(apuestas)
         .innerJoin(jornadas, eq(jornadas.id, apuestas.jornadaId))
-        .where(and(eq(apuestas.usuarioId, usuarioId), eq(jornadas.temporadaId, temporadaId)));
+        .where(
+            and(
+                eq(apuestas.usuarioId, usuarioId),
+                eq(jornadas.temporadaId, temporadaId),
+                hastaNumeroJornada === undefined ? undefined : lte(jornadas.numeroJornada, hastaNumeroJornada),
+            ),
+        );
     /* v8 ignore next -- @preserve */
     return row ?? { total: 0, propias: 0 };
 }

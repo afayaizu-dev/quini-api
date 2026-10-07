@@ -48,10 +48,33 @@ export async function miembro(query: DashboardMiembroQuery, auth: AuthContext) {
         if (!existe) throw new NotFoundError(`No existe el usuario ${usuarioId}.`);
     }
 
-    const agg = await dashboardRepository.agregados({ temporadaId: temporadaActual.id, usuarioId });
-    const ingresosTotales = await pagosRepository.sumImportes(usuarioId);
-    const credito = await pagosService.getCredito(usuarioId);
-    const { total, propias } = await apuestasRepository.contarPorAutoria(usuarioId, temporadaActual.id);
+    // Con ?jornada=N todo se acota a esa jornada: resultados y apuestas por numero_jornada <= N; pagos y
+    // crédito por fecha <= fecha de la jornada N. Misma regla que dashboard/jornada: sin cálculo, 404.
+    let hastaJornada: number | undefined;
+    let hastaFecha: string | undefined;
+    if (query.jornada !== undefined) {
+        const jornadaResuelta = await jornadasService.findByNumero(query.jornada, temporadaActual.codigo);
+        const filas = await calculosRepository.findByJornada(jornadaResuelta.id);
+        if (filas.length === 0) {
+            throw new NotFoundError(`La jornada ${query.jornada} todavía no tiene un cálculo ejecutado.`);
+        }
+        hastaJornada = query.jornada;
+        hastaFecha = jornadaResuelta.fecha;
+    }
+
+    const agg = await dashboardRepository.agregados({
+        temporadaId: temporadaActual.id,
+        usuarioId,
+        hastaNumeroJornada: hastaJornada,
+    });
+    const ingresosTotales = await pagosRepository.sumImportes(usuarioId, undefined, hastaFecha);
+    const credito = await pagosService.getCredito(usuarioId, hastaFecha);
+    const { total, propias } = await apuestasRepository.contarPorAutoria(
+        usuarioId,
+        temporadaActual.id,
+        undefined,
+        hastaJornada,
+    );
 
     return {
         usuarioId,
