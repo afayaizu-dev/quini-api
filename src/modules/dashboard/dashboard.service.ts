@@ -49,17 +49,15 @@ export async function miembro(query: DashboardMiembroQuery, auth: AuthContext) {
     }
 
     // Con ?jornada=N todo se acota a esa jornada: resultados y apuestas por numero_jornada <= N; pagos y
-    // crédito por fecha <= fecha de la jornada N. Misma regla que dashboard/jornada: sin cálculo, 404.
+    // crédito por fecha <= fecha de la jornada. Si N existe pero no tiene cálculo, se usa la última jornada
+    // calculada <= N; si no hay ninguna, los agregados salen vacíos y los pagos se cortan en la fecha de N.
     let hastaJornada: number | undefined;
     let hastaFecha: string | undefined;
     if (query.jornada !== undefined) {
         const jornadaResuelta = await jornadasService.findByNumero(query.jornada, temporadaActual.codigo);
-        const filas = await calculosRepository.findByJornada(jornadaResuelta.id);
-        if (filas.length === 0) {
-            throw new NotFoundError(`La jornada ${query.jornada} todavía no tiene un cálculo ejecutado.`);
-        }
-        hastaJornada = query.jornada;
-        hastaFecha = jornadaResuelta.fecha;
+        const efectiva = await dashboardRepository.ultimaJornadaCalculada(temporadaActual.id, query.jornada);
+        hastaJornada = efectiva?.numeroJornada ?? query.jornada;
+        hastaFecha = efectiva?.fecha ?? jornadaResuelta.fecha;
     }
 
     const agg = await dashboardRepository.agregados({

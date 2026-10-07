@@ -6701,7 +6701,7 @@
       "get": {
         "operationId": "dashboardMiembro",
         "summary": "Agregados de un miembro",
-        "description": "Sin '?usuario=', devuelve los datos del usuario autenticado. Cualquier usuario autenticado puede consultar los de cualquier miembro, como parte de la transparencia de la clasificación. Sin '?jornada=' son los totales de la temporada completa. Con '?jornada=N' son acumulados hasta la jornada N inclusive: 'pagosTotales', 'premiosTotales' y los aciertos suman las jornadas con número <= N; 'porcentajeApuestasPropias' usa las apuestas del socio en esas jornadas; 'ingresosTotales' y 'credito' solo cuentan pagos con fecha_pago <= fecha de la jornada N (y el escalón de las jornadas con fecha <= esa), de modo que pagos o ajustes posteriores quedan fuera. Igual que /dashboard/jornada, la jornada debe tener un cálculo ejecutado.",
+        "description": "Sin '?usuario=', devuelve los datos del usuario autenticado. Cualquier usuario autenticado puede consultar los de cualquier miembro, como parte de la transparencia de la clasificación. Sin '?jornada=' son los totales de la temporada completa. Con '?jornada=N' son acumulados hasta la jornada N inclusive: 'pagosTotales', 'premiosTotales' y los aciertos suman las jornadas con número <= N; 'porcentajeApuestasPropias' usa las apuestas del socio en esas jornadas; 'ingresosTotales' y 'credito' solo cuentan pagos con fecha_pago <= fecha de la jornada N (y el escalón de las jornadas con fecha <= esa), de modo que pagos o ajustes posteriores quedan fuera. Si la jornada N existe pero aún no tiene cálculo, se responde como la última jornada calculada anterior a N; si no hay ninguna, los agregados salen vacíos (ceros / null) con 200.",
         "tags": ["dashboard"],
         "security": [
           {
@@ -6862,7 +6862,7 @@
             "description": "Sin access token válido."
           },
           "404": {
-            "description": "Temporada, usuario o jornada inexistentes; la jornada aún no tiene cálculo ejecutado; o no hay temporada activa y no se especificó ninguna."
+            "description": "Temporada, usuario o jornada inexistentes; o no hay temporada activa y no se especificó ninguna."
           }
         }
       }

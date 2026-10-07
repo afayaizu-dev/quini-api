@@ -243,6 +243,14 @@ describe("GET /api/v1/dashboard/miembro?jornada=", () => {
         return { adminHeader, userA, headerA: headers[0] };
     }
 
+    async function prepararTemporadaConUnaJornadaSinCalcular() {
+        const admin = await createAdmin();
+        const adminHeader = await authHeader(admin);
+        const headerA = await authHeader(await createUser());
+        await crearJornadaLista(adminHeader);
+        return { adminHeader, headerA };
+    }
+
     function miembroUrl(userId: string, jornada?: string | number) {
         const extra = jornada === undefined ? "" : `&jornada=${jornada}`;
         return `/api/v1/dashboard/miembro?usuario=${userId}${extra}`;
@@ -299,17 +307,34 @@ describe("GET /api/v1/dashboard/miembro?jornada=", () => {
         expect(response.status).toBe(404);
     });
 
-    test("jornada sin cálculo -> 404, como dashboard/jornada", async () => {
+    test("jornada sin cálculo -> mismo resultado que la última calculada anterior", async () => {
         const { adminHeader, userA } = await prepararDosJornadas();
+        await registrarPago(adminHeader, userA.id, 10, "2026-08-28");
         const creada = await request(app)
             .post("/api/v1/jornadas")
             .set(adminHeader)
             .send({ numeroJornada: 3, fecha: "2026-09-03", partidos: partidosValidos() });
         expect(creada.status).toBe(201);
 
-        const response = await request(app).get(miembroUrl(userA.id, 3)).set(adminHeader);
+        const hasta2 = await request(app).get(miembroUrl(userA.id, 2)).set(adminHeader);
+        const hasta3 = await request(app).get(miembroUrl(userA.id, 3)).set(adminHeader);
 
-        expect(response.status).toBe(404);
+        expect(hasta3.status).toBe(200);
+        expect(hasta3.body).toEqual(hasta2.body);
+    });
+
+    test("ninguna jornada calculada hasta N -> 200 con agregados vacíos", async () => {
+        const { adminHeader, headerA } = await prepararTemporadaConUnaJornadaSinCalcular();
+        const yo = await request(app).get("/api/v1/usuarios/me").set(headerA);
+
+        const response = await request(app).get(miembroUrl(yo.body.id, 1)).set(adminHeader);
+
+        expect(response.status).toBe(200);
+        expect(response.body.pagosTotales).toBe(0);
+        expect(response.body.credito).toBe(0);
+        expect(response.body.mediaAciertos).toBeNull();
+        expect(response.body.maxAciertos).toBeNull();
+        expect(response.body.porcentajeApuestasPropias).toBe(0);
     });
 
     test.each(["abc", "0", "-1", "1.5"])("jornada=%s -> 400", async (valor) => {
