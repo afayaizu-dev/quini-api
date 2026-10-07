@@ -1,4 +1,4 @@
-import { and, eq, lte, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, lte, sql, type SQL } from "drizzle-orm";
 import { db, type DbOrTx } from "../../db/index.js";
 import { resultadosMiembro } from "../../db/schema/resultados_miembro.js";
 import { jornadas } from "../../db/schema/jornadas.js";
@@ -107,4 +107,20 @@ export async function usuariosConAciertos(temporadaId: string, aciertos: number,
         .innerJoin(jornadas, eq(jornadas.id, resultadosMiembro.jornadaId))
         .where(and(eq(jornadas.temporadaId, temporadaId), eq(resultadosMiembro.aciertosMax, aciertos)));
     return filas.map((f) => f.usuarioId);
+}
+
+// Última jornada de la temporada con cálculo ejecutado y número <= hastaNumeroJornada.
+export async function ultimaJornadaCalculada(
+    temporadaId: string,
+    hastaNumeroJornada: number,
+    tx: DbOrTx = db,
+): Promise<{ numeroJornada: number; fecha: string } | undefined> {
+    const [row] = await tx
+        .selectDistinct({ numeroJornada: jornadas.numeroJornada, fecha: jornadas.fecha })
+        .from(resultadosMiembro)
+        .innerJoin(jornadas, eq(jornadas.id, resultadosMiembro.jornadaId))
+        .where(and(eq(jornadas.temporadaId, temporadaId), lte(jornadas.numeroJornada, hastaNumeroJornada)))
+        .orderBy(desc(jornadas.numeroJornada))
+        .limit(1);
+    return row;
 }

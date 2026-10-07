@@ -465,11 +465,11 @@ Base: `/api/v1`. La columna **Auth** indica lo mínimo exigido. Todas las rutas 
 
 | Método | Ruta                   | Auth   | Query                  | Devuelve                                                                                                                                                                                  |
 | ------ | ---------------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/dashboard/miembro`   | Bearer | `?temporada=&usuario=` | `pagosTotales` (Σ `importe_escalon`), `ingresosTotales` (Σ `pagos`), `credito`, `mediaAciertos`, `maxAciertos`, `minAciertos`, `maxPremio`, `premiosTotales`, `porcentajeApuestasPropias` |
+| GET    | `/dashboard/miembro`   | Bearer | `?temporada=&usuario=&jornada=` | `pagosTotales` (Σ `importe_escalon`), `ingresosTotales` (Σ `pagos`), `credito`, `mediaAciertos`, `maxAciertos`, `minAciertos`, `maxPremio`, `premiosTotales`, `porcentajeApuestasPropias` |
 | GET    | `/dashboard/jornada`   | Bearer | `?jornada=&temporada=` | `pagosJornada`, `boteJornada`, `mediaAciertosDosApuestas`, `mediaAciertosMaximos`, `premiosTotales`, `clasificacion[]`                                                                    |
 | GET    | `/dashboard/temporada` | Bearer | `?temporada=`          | `maxAciertos` + quiénes, `minAciertos` + quiénes, `premiosTotales`, `pagosTotales`, `boteTotal`, `jornadasCalculadas`                                                                     |
 
-Sin `?usuario=`, `/dashboard/miembro` devuelve el del token. Un `user` que pida otro recibe **403**; un `admin`, cualquiera.
+Sin `?usuario=`, `/dashboard/miembro` devuelve el del token. Un `user` que pida otro recibe **403**; un `admin`, cualquiera. Con `?jornada=N` los agregados son acumulados hasta la jornada N inclusive: resultados y apuestas con `numero_jornada <= N`; pagos y `credito` con `fecha_pago` / fecha de jornada `<=` la fecha de la jornada N. Jornada inexistente: **404**; si existe pero no tiene cálculo, se usa la última calculada anterior (o agregados vacíos con 200 si no hay ninguna); no entera o `< 1`: **400**. Sin el parámetro, temporada completa.
 
 ### 4.8 Aviso sobre `/usuarios/me` y el orden de las rutas
 

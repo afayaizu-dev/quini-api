@@ -53,11 +53,19 @@ export async function remove(id: string, tx: DbOrTx = db) {
     await tx.delete(pagos).where(eq(pagos.id, id));
 }
 
-export async function getCredito(usuarioId: string, tx: DbOrTx = db): Promise<number> {
+// Crédito = pagos - importe de escalón de las jornadas + saldo inicial. Con 'hastaFecha' (YYYY-MM-DD) solo cuenta
+// lo anterior o igual a esa fecha: pagos por fecha_pago y resultados por la fecha de su jornada.
+export async function getCredito(usuarioId: string, tx: DbOrTx = db, hastaFecha?: string): Promise<number> {
+    const pagosHasta = hastaFecha === undefined ? sql`` : sql` AND fecha_pago <= ${hastaFecha}::date`;
+    const resultadosHasta = hastaFecha === undefined ? sql`` : sql` AND j.fecha <= ${hastaFecha}::date`;
     const resultado = await tx.execute(sql`
         SELECT
-            COALESCE((SELECT SUM(importe) FROM pagos WHERE usuario_id = ${usuarioId}), 0)
-            - COALESCE((SELECT SUM(importe_escalon) FROM resultados_miembro WHERE usuario_id = ${usuarioId}), 0)
+            COALESCE((SELECT SUM(importe) FROM pagos WHERE usuario_id = ${usuarioId}${pagosHasta}), 0)
+            - COALESCE((
+                SELECT SUM(rm.importe_escalon) FROM resultados_miembro rm
+                JOIN jornadas j ON j.id = rm.jornada_id
+                WHERE rm.usuario_id = ${usuarioId}${resultadosHasta}
+            ), 0)
             + COALESCE((SELECT saldo_inicial FROM users WHERE id = ${usuarioId}), 0)
             AS credito
     `);
@@ -66,11 +74,13 @@ export async function getCredito(usuarioId: string, tx: DbOrTx = db): Promise<nu
     return fila ? Number(fila.credito) : 0;
 }
 
-export async function sumImportes(usuarioId: string, tx: DbOrTx = db): Promise<number> {
+export async function sumImportes(usuarioId: string, tx: DbOrTx = db, hastaFecha?: string): Promise<number> {
+    const condiciones = [eq(pagos.usuarioId, usuarioId)];
+    if (hastaFecha !== undefined) condiciones.push(lte(pagos.fechaPago, hastaFecha));
     const [row] = await tx
         .select({ total: sql<string>`COALESCE(SUM(${pagos.importe}), 0)` })
         .from(pagos)
-        .where(eq(pagos.usuarioId, usuarioId));
+        .where(and(...condiciones));
     /* v8 ignore next -- @preserve */
     return row ? Number(row.total) : 0;
 }

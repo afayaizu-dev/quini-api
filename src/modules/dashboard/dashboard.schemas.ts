@@ -6,6 +6,7 @@ import { LiquidacionMiembroResponseSchema } from "../calculos/calculos.schemas.j
 export const DashboardMiembroQuerySchema = z.object({
     temporada: codigoTemporada.optional(),
     usuario: z.uuid().optional(),
+    jornada: z.coerce.number().int().positive().optional(),
 });
 
 export type DashboardMiembroQuery = z.infer<typeof DashboardMiembroQuerySchema>;

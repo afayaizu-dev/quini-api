@@ -58,6 +58,6 @@ export async function remove(id: string) {
     await pagosRepository.remove(id);
 }
 
-export async function getCredito(usuarioId: string) {
-    return pagosRepository.getCredito(usuarioId);
+export async function getCredito(usuarioId: string, hastaFecha?: string) {
+    return pagosRepository.getCredito(usuarioId, undefined, hastaFecha);
 }

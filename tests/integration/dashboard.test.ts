@@ -229,6 +229,123 @@ describe("GET /api/v1/dashboard/miembro", () => {
     });
 });
 
+describe("GET /api/v1/dashboard/miembro?jornada=", () => {
+    // Dos jornadas calculadas (2026-08-20 y 2026-08-27) con tres miembros; devuelve al usuario A.
+    async function prepararDosJornadas() {
+        const admin = await createAdmin();
+        const adminHeader = await authHeader(admin);
+        const [userA, userB, userC] = [await createUser(), await createUser(), await createUser()];
+        const headers: HeadersMiembros = [await authHeader(userA), await authHeader(userB), await authHeader(userC)];
+        await crearEquipos(adminHeader);
+        await crearTemporada(adminHeader, "2026-27");
+        await calcularJornadaConTresMiembros(adminHeader, headers, 1, "2026-08-20");
+        await calcularJornadaConTresMiembros(adminHeader, headers, 2, "2026-08-27");
+        return { adminHeader, userA, headerA: headers[0] };
+    }
+
+    async function prepararTemporadaConUnaJornadaSinCalcular() {
+        const admin = await createAdmin();
+        const adminHeader = await authHeader(admin);
+        const headerA = await authHeader(await createUser());
+        await crearJornadaLista(adminHeader);
+        return { adminHeader, headerA };
+    }
+
+    function miembroUrl(userId: string, jornada?: string | number) {
+        const extra = jornada === undefined ? "" : `&jornada=${jornada}`;
+        return `/api/v1/dashboard/miembro?usuario=${userId}${extra}`;
+    }
+
+    async function registrarPago(adminHeader: Record<string, string>, usuarioId: string, importe: number, fechaPago: string) {
+        const r = await request(app).post("/api/v1/pagos").set(adminHeader).send({ usuarioId, importe, fechaPago });
+        expect(r.status).toBe(201);
+    }
+
+    test("con la última jornada calculada -> idéntico a la temporada completa", async () => {
+        const { adminHeader, userA } = await prepararDosJornadas();
+        await registrarPago(adminHeader, userA.id, 10, "2026-08-21");
+
+        const completa = await request(app).get(miembroUrl(userA.id)).set(adminHeader);
+        const hastaUltima = await request(app).get(miembroUrl(userA.id, 2)).set(adminHeader);
+
+        expect(hastaUltima.status).toBe(200);
+        expect(hastaUltima.body).toEqual(completa.body);
+        expectMatchesOpenApiSchema({ path: "/dashboard/miembro", method: "get", status: 200, body: hastaUltima.body });
+    });
+
+    test("jornada=1 -> solo la primera jornada; pagos posteriores quedan fuera", async () => {
+        const { adminHeader, userA } = await prepararDosJornadas();
+        await registrarPago(adminHeader, userA.id, 10, "2026-08-20"); // el mismo día de J1: cuenta
+        await registrarPago(adminHeader, userA.id, 7, "2026-08-21"); // entre J1 y J2: fuera
+
+        const j1 = await request(app).get("/api/v1/dashboard/jornada?jornada=1").set(adminHeader);
+        const escalonJ1 = j1.body.clasificacion.find((m: { usuarioId: string }) => m.usuarioId === userA.id).importeEscalon;
+        const hasta1 = await request(app).get(miembroUrl(userA.id, 1)).set(adminHeader);
+        const completa = await request(app).get(miembroUrl(userA.id)).set(adminHeader);
+
+        expect(hasta1.status).toBe(200);
+        expect(hasta1.body.pagosTotales).toBe(escalonJ1);
+        expect(hasta1.body.ingresosTotales).toBe(10);
+        expect(hasta1.body.credito).toBe(Math.round((10 - escalonJ1) * 100) / 100);
+        expect(hasta1.body.pagosTotales).toBeLessThan(completa.body.pagosTotales);
+        expect(completa.body.ingresosTotales).toBe(17);
+    });
+
+    test("porcentajeApuestasPropias se acota a las jornadas hasta N", async () => {
+        const { adminHeader, userA } = await prepararDosJornadas();
+
+        const hasta1 = await request(app).get(miembroUrl(userA.id, 1)).set(adminHeader);
+
+        expect(hasta1.body.porcentajeApuestasPropias).toBe(100);
+    });
+
+    test("jornada inexistente -> 404", async () => {
+        const { adminHeader, userA } = await prepararDosJornadas();
+
+        const response = await request(app).get(miembroUrl(userA.id, 99)).set(adminHeader);
+
+        expect(response.status).toBe(404);
+    });
+
+    test("jornada sin cálculo -> mismo resultado que la última calculada anterior", async () => {
+        const { adminHeader, userA } = await prepararDosJornadas();
+        await registrarPago(adminHeader, userA.id, 10, "2026-08-28");
+        const creada = await request(app)
+            .post("/api/v1/jornadas")
+            .set(adminHeader)
+            .send({ numeroJornada: 3, fecha: "2026-09-03", partidos: partidosValidos() });
+        expect(creada.status).toBe(201);
+
+        const hasta2 = await request(app).get(miembroUrl(userA.id, 2)).set(adminHeader);
+        const hasta3 = await request(app).get(miembroUrl(userA.id, 3)).set(adminHeader);
+
+        expect(hasta3.status).toBe(200);
+        expect(hasta3.body).toEqual(hasta2.body);
+    });
+
+    test("ninguna jornada calculada hasta N -> 200 con agregados vacíos", async () => {
+        const { adminHeader, headerA } = await prepararTemporadaConUnaJornadaSinCalcular();
+        const yo = await request(app).get("/api/v1/usuarios/me").set(headerA);
+
+        const response = await request(app).get(miembroUrl(yo.body.id, 1)).set(adminHeader);
+
+        expect(response.status).toBe(200);
+        expect(response.body.pagosTotales).toBe(0);
+        expect(response.body.credito).toBe(0);
+        expect(response.body.mediaAciertos).toBeNull();
+        expect(response.body.maxAciertos).toBeNull();
+        expect(response.body.porcentajeApuestasPropias).toBe(0);
+    });
+
+    test.each(["abc", "0", "-1", "1.5"])("jornada=%s -> 400", async (valor) => {
+        const { adminHeader, userA } = await prepararDosJornadas();
+
+        const response = await request(app).get(miembroUrl(userA.id, valor)).set(adminHeader);
+
+        expect(response.status).toBe(400);
+    });
+});
+
 describe("GET /api/v1/dashboard/jornada", () => {
     test("calculada -> 200 con la clasificación ordenada por ranking", async () => {
         const admin = await createAdmin();
