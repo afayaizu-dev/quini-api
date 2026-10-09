@@ -16,6 +16,14 @@ const usuarioQueryParam = {
     schema: { type: "string" as const, format: "uuid" },
 };
 
+const temporadaQueryParam = {
+    name: "temporada",
+    in: "query" as const,
+    required: false,
+    schema: { type: "string" as const, pattern: "^\\d{4}-\\d{2}$" },
+    example: "2026-27",
+};
+
 const desdeQueryParam = {
     name: "desde",
     in: "query" as const,
@@ -73,10 +81,10 @@ registerPath("/pagos", {
         operationId: "pagosFindAll",
         summary: "Lista los pagos, con filtros opcionales",
         description:
-            "Filtra por usuario y/o por rango de fechaPago (desde/hasta, ambos inclusive). Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
+            "Filtra por usuario, por temporada (fechas de inicio y fin de la temporada, ambas inclusive) y/o por rango de fechaPago (desde/hasta, ambos inclusive; si se combinan con temporada, solo la estrechan). Disponible para cualquier usuario autenticado, como parte de la transparencia de la clasificación.",
         tags: ["pagos"],
         security: [{ bearerAuth: [] }],
-        parameters: [usuarioQueryParam, desdeQueryParam, hastaQueryParam],
+        parameters: [usuarioQueryParam, temporadaQueryParam, desdeQueryParam, hastaQueryParam],
         responses: {
             "200": {
                 description: "Lista de pagos.",

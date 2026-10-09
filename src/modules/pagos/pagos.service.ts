@@ -1,5 +1,6 @@
 import { NotFoundError } from "../../core/errors.js";
 import * as pagosRepository from "./pagos.repository.js";
+import * as temporadasService from "../temporadas/temporadas.service.js";
 import * as usuariosRepository from "../usuarios/usuarios.repository.js";
 import type { CreatePagoInput, PagosQuery } from "./pagos.schemas.js";
 
@@ -37,11 +38,15 @@ export async function create(input: CreatePagoInput, registradoPor: string) {
 }
 
 export async function findAll(query: PagosQuery) {
-    const filas = await pagosRepository.findAll({
-        usuarioId: query.usuario,
-        desde: query.desde,
-        hasta: query.hasta,
-    });
+    let desde = query.desde;
+    let hasta = query.hasta;
+    // Con ?temporada=AAAA-AA el rango se acota a las fechas de la temporada; desde/hasta, si vienen, solo lo estrechan.
+    if (query.temporada !== undefined) {
+        const temporada = await temporadasService.resolveTemporada(query.temporada);
+        if (desde === undefined || desde < temporada.fechaInicio) desde = temporada.fechaInicio;
+        if (hasta === undefined || hasta > temporada.fechaFin) hasta = temporada.fechaFin;
+    }
+    const filas = await pagosRepository.findAll({ usuarioId: query.usuario, desde, hasta });
     return filas.map(toResponse);
 }
 
