@@ -224,6 +224,38 @@ describe("GET /api/v1/pagos", () => {
     });
 });
 
+describe("GET /api/v1/pagos?temporada=", () => {
+    test("devuelve solo los pagos entre las fechas de la temporada, de todos o de un usuario", async () => {
+        const admin = await createAdmin();
+        const header = await authHeader(admin);
+        await crearTemporada(header, "2026-27"); // 2026-08-15 .. 2027-05-30
+        const user = await createUser();
+        const otro = await createUser();
+        for (const [u, fechaPago] of [
+            [user, "2026-08-14"],
+            [user, "2026-09-01"],
+            [otro, "2027-05-30"],
+            [otro, "2027-06-01"],
+        ] as const) {
+            await request(app).post("/api/v1/pagos").set(header).send(pagoBody(u.id, { fechaPago }));
+        }
+
+        const todos = await request(app).get("/api/v1/pagos?temporada=2026-27").set(header);
+        expect(todos.status).toBe(200);
+        expect(todos.body.map((p: { fechaPago: string }) => p.fechaPago).sort()).toEqual(["2026-09-01", "2027-05-30"]);
+
+        const deUsuario = await request(app).get(`/api/v1/pagos?temporada=2026-27&usuario=${user.id}`).set(header);
+        expect(deUsuario.body).toHaveLength(1);
+        expect(deUsuario.body[0].fechaPago).toBe("2026-09-01");
+    });
+
+    test("404 si la temporada no existe", async () => {
+        const admin = await createAdmin();
+        const response = await request(app).get("/api/v1/pagos?temporada=2030-31").set(await authHeader(admin));
+        expect(response.status).toBe(404);
+    });
+});
+
 describe("GET /api/v1/pagos/mios", () => {
     test("200 solo los propios", async () => {
         const admin = await createAdmin();

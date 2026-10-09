@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { importeEuros } from "../resultados/resultados.schemas.js";
+import { codigoTemporada } from "../temporadas/temporadas.schemas.js";
 
 export const CreatePagoSchema = z
     .object({
@@ -13,6 +14,7 @@ export type CreatePagoInput = z.infer<typeof CreatePagoSchema>;
 
 export const PagosQuerySchema = z.object({
     usuario: z.uuid().optional(),
+    temporada: codigoTemporada.optional(),
     desde: z.iso.date().optional(),
     hasta: z.iso.date().optional(),
 });
